@@ -1,9 +1,11 @@
+"use client";
 import React from 'react';
 
 export interface VehicleTypeOption {
   label: string;
   value: string;
   description?: string;
+  icon?: string; // Add icon property
 }
 
 interface VehicleTypeSelectorProps {
@@ -12,18 +14,35 @@ interface VehicleTypeSelectorProps {
   onSelect: (value: string) => void;
 }
 
+const defaultIcons: Record<string, string> = {
+  private: '🚙',
+  shared: '🚐',
+  luxury: '🛻',
+};
+
 const VehicleTypeSelector: React.FC<VehicleTypeSelectorProps> = ({ options, selected, onSelect }) => {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
       {options.map((option) => (
         <button
           key={option.value}
           type="button"
-          className={`border rounded p-3 text-left transition focus:outline-none ${selected === option.value ? 'border-blue-600 bg-blue-50' : 'border-gray-300 bg-white hover:bg-gray-50'}`}
+          className={`flex items-center gap-4 border rounded-xl p-4 text-left transition focus:outline-none shadow-sm
+            bg-white
+            ${selected === option.value ? 'border-blue-600 ring-2 ring-blue-200 scale-[1.03]' : 'border-gray-200 hover:border-blue-400 hover:scale-[1.01]'}
+            hover:shadow-md active:scale-95 duration-150`}
           onClick={() => onSelect(option.value)}
         >
-          <div className="font-semibold">{option.label}</div>
-          {option.description && <div className="text-sm text-gray-500">{option.description}</div>}
+          <span className="text-3xl transition-transform duration-200">
+            {option.icon || defaultIcons[option.value] || '🚙'}
+          </span>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-blue-900 text-lg">{option.label}</div>
+            {option.description && <div className="text-sm text-gray-500">{option.description}</div>}
+          </div>
+          {selected === option.value && (
+            <span className="ml-2 text-blue-600 text-xl animate-bounce">✓</span>
+          )}
         </button>
       ))}
     </div>

@@ -1,6 +1,7 @@
 "use client";
 import React from 'react';
 import { ArrowRightIcon } from '@heroicons/react/24/solid';
+import Image from 'next/image';
 
 export interface ResourceLocation {
   id: string;
@@ -24,9 +25,11 @@ const ResourceLocationList: React.FC<ResourceLocationListProps> = ({ locations, 
           className="flex items-center bg-gradient-to-br from-blue-50 to-green-50 rounded-3xl shadow-lg p-6 gap-6 hover:shadow-2xl transition cursor-pointer flex-col sm:flex-row border border-blue-100"
           onClick={() => onSelect(location.id)}
         >
-          <img
+          <Image
             src={location.thumbnail}
             alt={location.name}
+            width={192}
+            height={192}
             className="w-full sm:w-48 h-48 object-cover rounded-2xl flex-shrink-0 mb-4 sm:mb-0 border-4 border-white shadow"
           />
           <div className="flex-1 min-w-0">

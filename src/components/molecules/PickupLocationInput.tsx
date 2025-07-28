@@ -1,3 +1,4 @@
+"use client";
 import React from 'react';
 
 interface PickupLocationInputProps {
@@ -10,7 +11,7 @@ interface PickupLocationInputProps {
 const PickupLocationInput: React.FC<PickupLocationInputProps> = ({ value, onChange, fromGate, onToggleGate }) => {
   return (
     <div className="flex flex-col gap-2">
-      <label className="flex items-center gap-2">
+      <label className="flex items-center gap-2 text-base font-medium text-blue-900">
         <input
           type="checkbox"
           checked={fromGate}
@@ -19,13 +20,17 @@ const PickupLocationInput: React.FC<PickupLocationInputProps> = ({ value, onChan
         Pickup from park gate
       </label>
       {!fromGate && (
-        <input
-          type="text"
-          className="border rounded p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Enter pickup location"
-          value={value}
-          onChange={e => onChange(e.target.value)}
-        />
+        <>
+          {/* TODO: Integrate Google Maps Autocomplete here */}
+          <input
+            type="text"
+            className="border-2 border-blue-200 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg text-gray-900 placeholder-gray-400 bg-white shadow-sm"
+            placeholder="Enter pickup location or hotel (Google Maps search)"
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            autoComplete="off"
+          />
+        </>
       )}
     </div>
   );

@@ -1,9 +1,10 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { VehicleTypeSelector, DatePicker, TimeSlotPicker, PickupLocationInput, BookingSummary } from '../../components/molecules';
 import { Button } from '../../components/atoms';
 import { useSearchParams } from 'next/navigation';
 import resourceLocations, { LocationDetails } from '../../data/resourceLocations';
+import Image from 'next/image';
 
 const vehicleOptions = [
   { label: 'Private Jeep (1–6 pax)', value: 'private', description: 'Exclusive jeep for your group' },
@@ -17,7 +18,7 @@ const timeSlotOptions = [
   { label: 'Full-day', value: 'fullday' },
 ];
 
-export default function BookingPage() {
+function BookingPageContent() {
   const searchParams = useSearchParams();
   const locationId = searchParams.get('location');
   const location: LocationDetails = resourceLocations.find((l: LocationDetails) => l.id === locationId) || resourceLocations[0];
@@ -54,7 +55,7 @@ export default function BookingPage() {
       <div className="w-full max-w-lg bg-white rounded-3xl shadow-xl overflow-hidden mt-0 sm:mt-8 p-0">
         {/* Header with location image and name */}
         <div className="relative h-48 w-full rounded-t-3xl overflow-hidden">
-          <img src={location.hero} alt={location.name} className="w-full h-full object-cover" />
+          <Image src={location.hero} alt={location.name} className="w-full h-full object-cover" fill priority />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="absolute bottom-4 left-6">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white drop-shadow mb-1">{location.name}</h1>
@@ -98,5 +99,13 @@ export default function BookingPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function BookingPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <BookingPageContent />
+    </Suspense>
   );
 } 

@@ -2,6 +2,7 @@
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { StarIcon, HeartIcon } from '@heroicons/react/24/solid';
+import Image from 'next/image';
 import resourceLocations, { LocationDetails } from '../../../data/resourceLocations';
 
 export default function LocationDetailsPage() {
@@ -17,7 +18,7 @@ export default function LocationDetailsPage() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-green-100">
         <div className="bg-white rounded-2xl shadow p-8 text-center">
           <h1 className="text-2xl font-bold text-blue-900 mb-2">Location Not Found</h1>
-          <p className="mb-4 text-gray-600">Sorry, we couldn't find the safari location you are looking for.</p>
+          <p className="mb-4 text-gray-600">Sorry, we couldn&apos;t find the safari location you are looking for.</p>
           <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold px-6 py-2 rounded-xl" onClick={() => router.back()}>Go Back</button>
         </div>
       </div>
@@ -29,7 +30,7 @@ export default function LocationDetailsPage() {
       <div className="w-full max-w-lg bg-white rounded-3xl shadow-xl overflow-hidden mt-0 sm:mt-8 relative">
         {/* Hero Image & Overlay */}
         <div className="relative h-64 sm:h-80 w-full">
-          <img src={location.hero} alt={location.name} className="w-full h-full object-cover" />
+          <Image src={location.hero} alt={location.name} className="w-full h-full object-cover" fill priority />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="absolute top-4 left-4 z-10">
             <button
@@ -64,7 +65,7 @@ export default function LocationDetailsPage() {
           {/* Image Carousel */}
           <div className="flex gap-3 mb-6 overflow-x-auto">
             {location.images.map((img: string, i: number) => (
-              <img key={i} src={img} alt="Gallery" className="w-20 h-20 rounded-xl object-cover border-2 border-blue-100" />
+              <Image key={i} src={img} alt="Gallery" className="w-20 h-20 rounded-xl object-cover border-2 border-blue-100" width={80} height={80} />
             ))}
           </div>
           {/* Facilities */}
