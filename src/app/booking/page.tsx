@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import resourceLocations, { LocationDetails } from '../../data/resourceLocations';
 import Image from 'next/image';
 import { useVehicleTypes } from '../../data/useVehicleTypes';
+import type { PickupLocation } from '../../components/molecules/PickupLocationInput';
 
 const timeSlotOptions = [
   { label: 'Morning (6:00 AM – 10:00 AM)', value: 'morning' },
@@ -21,7 +22,7 @@ function BookingPageContent() {
   const [vehicle, setVehicle] = useState('private');
   const [date, setDate] = useState('');
   const [timeSlot, setTimeSlot] = useState('morning');
-  const [pickup, setPickup] = useState('');
+  const [pickup, setPickup] = useState<PickupLocation>({});
   const [fromGate, setFromGate] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
 
@@ -31,7 +32,8 @@ function BookingPageContent() {
   const vehicleOptions = vehicleTypes?.map((v) => ({
     label: v.name,
     value: v.id,
-    // Optionally add description/icon if available from API
+    description: v.discription, // use API field
+    imageUrl: v.imageUrl,      // use API field
   })) || [];
 
   const summary = {
@@ -39,8 +41,15 @@ function BookingPageContent() {
     date,
     timeSlot: timeSlotOptions.find(t => t.value === timeSlot)?.label || '',
     vehicleType: vehicleOptions.find(v => v.value === vehicle)?.label || '',
-    pickupLocation: fromGate ? 'Pickup from park gate' : pickup,
+    pickupLocation: fromGate ? { address: 'Pickup from park gate' } : pickup,
   };
+
+  // Validation: all fields must be filled
+  const isFormValid =
+    !!vehicle &&
+    !!date &&
+    !!timeSlot &&
+    ((pickup && pickup.address && pickup.address.trim().length > 0) || fromGate);
 
   if (confirmed) {
     return (
@@ -102,7 +111,7 @@ function BookingPageContent() {
             variant="primary"
             className="w-full text-lg py-3"
             onClick={() => setConfirmed(true)}
-            disabled={!date || (!pickup && !fromGate)}
+            disabled={!isFormValid}
           >
             Confirm &amp; Book
           </Button>

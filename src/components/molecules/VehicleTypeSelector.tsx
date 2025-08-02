@@ -1,11 +1,13 @@
 "use client";
 import React from 'react';
+import CustomImage from '../atoms/CustomImage';
 
 export interface VehicleTypeOption {
   label: string;
   value: string;
   description?: string;
   icon?: string; // Add icon property
+  imageUrl?: string; // Add imageUrl property
 }
 
 interface VehicleTypeSelectorProps {
@@ -33,8 +35,12 @@ const VehicleTypeSelector: React.FC<VehicleTypeSelectorProps> = ({ options, sele
             hover:shadow-md active:scale-95 duration-150`}
           onClick={() => onSelect(option.value)}
         >
-          <span className="text-3xl transition-transform duration-200">
-            {option.icon || defaultIcons[option.value] || '🚙'}
+          <span className="w-12 h-12 flex items-center justify-center">
+            {option.imageUrl ? (
+              <CustomImage src={option.imageUrl} alt={option.label} width={48} height={48} className="rounded-lg object-cover" />
+            ) : (
+              <span className="text-3xl">{option.icon || defaultIcons[option.value] || '🚙'}</span>
+            )}
           </span>
           <div className="flex-1 min-w-0">
             <div className="font-semibold text-foreground text-lg">{option.label}</div>

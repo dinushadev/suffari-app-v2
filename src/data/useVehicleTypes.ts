@@ -4,6 +4,9 @@ import { API_BASE_URL } from "./apiConfig";
 export interface VehicleType {
   id: string;
   name: string;
+  discription: string; // from API
+  imageUrl: string;    // from API
+  catogory?: string;   // optional, from API
 }
 
 const fetchVehicleTypes = async (): Promise<VehicleType[]> => {
