@@ -5,12 +5,7 @@ import { Button } from '../../components/atoms';
 import { useSearchParams } from 'next/navigation';
 import resourceLocations, { LocationDetails } from '../../data/resourceLocations';
 import Image from 'next/image';
-
-const vehicleOptions = [
-  { label: 'Private Jeep (1–6 pax)', value: 'private', description: 'Exclusive jeep for your group' },
-  { label: 'Shared Jeep', value: 'shared', description: 'Share with other guests' },
-  { label: 'Luxury Safari Jeep', value: 'luxury', description: 'Premium comfort and features' },
-];
+import { useVehicleTypes } from '../../data/useVehicleTypes';
 
 const timeSlotOptions = [
   { label: 'Morning (6:00 AM – 10:00 AM)', value: 'morning' },
@@ -29,6 +24,15 @@ function BookingPageContent() {
   const [pickup, setPickup] = useState('');
   const [fromGate, setFromGate] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+
+  const { data: vehicleTypes, isLoading: vehicleTypesLoading, error: vehicleTypesError } = useVehicleTypes();
+
+  // Map API data to VehicleTypeSelector format
+  const vehicleOptions = vehicleTypes?.map((v) => ({
+    label: v.name,
+    value: v.id,
+    // Optionally add description/icon if available from API
+  })) || [];
 
   const summary = {
     location: location.name,
@@ -65,7 +69,13 @@ function BookingPageContent() {
         <div className="p-6">
           <div className="mb-6">
             <h2 className="font-bold text-lg mb-2 text-orange">Select Vehicle Type</h2>
-            <VehicleTypeSelector options={vehicleOptions} selected={vehicle} onSelect={setVehicle} />
+            {vehicleTypesLoading ? (
+              <div>Loading vehicle types...</div>
+            ) : vehicleTypesError ? (
+              <div className="text-red-500">Failed to load vehicle types.</div>
+            ) : (
+              <VehicleTypeSelector options={vehicleOptions} selected={vehicle} onSelect={setVehicle} />
+            )}
           </div>
           <div className="mb-6">
             <h2 className="font-bold text-lg mb-2 text-orange">Select Date</h2>
