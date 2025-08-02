@@ -11,7 +11,7 @@ interface PickupLocationInputProps {
 const PickupLocationInput: React.FC<PickupLocationInputProps> = ({ value, onChange, fromGate, onToggleGate }) => {
   return (
     <div className="flex flex-col gap-2">
-      <label className="flex items-center gap-2 text-base font-medium text-blue-900">
+      <label className="flex items-center gap-2 text-base font-medium text-foreground">
         <input
           type="checkbox"
           checked={fromGate}
@@ -24,7 +24,7 @@ const PickupLocationInput: React.FC<PickupLocationInputProps> = ({ value, onChan
           {/* TODO: Integrate Google Maps Autocomplete here */}
           <input
             type="text"
-            className="border-2 border-blue-200 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg text-gray-900 placeholder-gray-400 bg-white shadow-sm"
+            className="border-2 border-ash rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-orange text-lg text-foreground placeholder-ash bg-ivory shadow-sm"
             placeholder="Enter pickup location or hotel (Google Maps search)"
             value={value}
             onChange={e => onChange(e.target.value)}

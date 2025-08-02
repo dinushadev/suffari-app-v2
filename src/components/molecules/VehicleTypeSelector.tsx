@@ -27,9 +27,9 @@ const VehicleTypeSelector: React.FC<VehicleTypeSelectorProps> = ({ options, sele
         <button
           key={option.value}
           type="button"
-          className={`flex items-center gap-4 border rounded-xl p-4 text-left transition focus:outline-none shadow-sm
-            bg-white
-            ${selected === option.value ? 'border-blue-600 ring-2 ring-blue-200 scale-[1.03]' : 'border-gray-200 hover:border-blue-400 hover:scale-[1.01]'}
+          className={`flex items-center gap-4 border border-ash rounded-xl p-4 text-left transition focus:outline-none shadow-sm
+            bg-ivory
+            ${selected === option.value ? 'border-orange ring-2 ring-orange/30 scale-[1.03]' : 'hover:border-orange hover:scale-[1.01]'}
             hover:shadow-md active:scale-95 duration-150`}
           onClick={() => onSelect(option.value)}
         >
@@ -37,11 +37,11 @@ const VehicleTypeSelector: React.FC<VehicleTypeSelectorProps> = ({ options, sele
             {option.icon || defaultIcons[option.value] || '🚙'}
           </span>
           <div className="flex-1 min-w-0">
-            <div className="font-semibold text-blue-900 text-lg">{option.label}</div>
-            {option.description && <div className="text-sm text-gray-500">{option.description}</div>}
+            <div className="font-semibold text-foreground text-lg">{option.label}</div>
+            {option.description && <div className="text-sm text-ash">{option.description}</div>}
           </div>
           {selected === option.value && (
-            <span className="ml-2 text-blue-600 text-xl animate-bounce">✓</span>
+            <span className="ml-2 text-orange text-xl animate-bounce">✓</span>
           )}
         </button>
       ))}

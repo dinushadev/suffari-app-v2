@@ -18,7 +18,7 @@ const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({ options, selected, onSe
         <button
           key={option.value}
           type="button"
-          className={`px-4 py-2 rounded border transition focus:outline-none ${selected === option.value ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'}`}
+          className={`px-4 py-2 rounded border border-ash transition focus:outline-none ${selected === option.value ? 'bg-orange text-foreground border-orange' : 'bg-ivory text-foreground hover:bg-background'}`}
           onClick={() => onSelect(option.value)}
         >
           {option.label}

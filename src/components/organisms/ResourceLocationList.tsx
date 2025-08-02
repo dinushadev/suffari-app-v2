@@ -22,7 +22,7 @@ const ResourceLocationList: React.FC<ResourceLocationListProps> = ({ locations, 
       {locations.map((location) => (
         <div
           key={location.id}
-          className="flex items-center bg-gradient-to-br from-blue-50 to-green-50 rounded-3xl shadow-lg p-6 gap-6 hover:shadow-2xl transition cursor-pointer flex-col sm:flex-row border border-blue-100"
+          className="flex items-center bg-ivory border border-ash rounded-3xl shadow-lg p-6 gap-6 hover:shadow-2xl transition cursor-pointer flex-col sm:flex-row"
           onClick={() => onSelect(location.id)}
         >
           <Image
@@ -30,22 +30,22 @@ const ResourceLocationList: React.FC<ResourceLocationListProps> = ({ locations, 
             alt={location.name}
             width={192}
             height={192}
-            className="w-full sm:w-48 h-48 object-cover rounded-2xl flex-shrink-0 mb-4 sm:mb-0 border-4 border-white shadow"
+            className="w-full sm:w-48 h-48 object-cover rounded-2xl flex-shrink-0 mb-4 sm:mb-0 border-4 border-background shadow"
           />
           <div className="flex-1 min-w-0">
-            <div className="font-extrabold text-2xl text-blue-900 mb-2 drop-shadow-sm">{location.name}</div>
+            <div className="font-extrabold text-2xl text-foreground mb-2 drop-shadow-sm">{location.name}</div>
             {location.subtitle && (
-              <div className="text-green-700 text-base mb-2 font-medium">{location.subtitle}</div>
+              <div className="text-orange text-base mb-2 font-medium">{location.subtitle}</div>
             )}
-            <div className="text-gray-800 text-base whitespace-pre-line leading-relaxed">{location.description}</div>
+            <div className="text-ash text-base whitespace-pre-line leading-relaxed">{location.description}</div>
           </div>
           <button
-            className="ml-0 sm:ml-4 bg-blue-100 hover:bg-blue-200 rounded-full p-3 focus:outline-none self-start sm:self-center shadow"
+            className="ml-0 sm:ml-4 bg-background hover:bg-orange rounded-full p-3 focus:outline-none self-start sm:self-center shadow border border-ash"
             tabIndex={-1}
             aria-label={`View details for ${location.name}`}
             onClick={e => { e.stopPropagation(); onSelect(location.id); }}
           >
-            <ArrowRightIcon className="w-7 h-7 text-blue-500" />
+            <ArrowRightIcon className="w-7 h-7 text-orange" />
           </button>
         </div>
       ))}
