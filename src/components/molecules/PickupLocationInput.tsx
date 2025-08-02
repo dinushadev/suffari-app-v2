@@ -31,7 +31,7 @@ function extractCountry(results: google.maps.GeocoderResult[]): string | undefin
   return countryComp?.long_name;
 }
 
-function geocodeAddress(address: string, apiKey: string): Promise<PickupLocation | null> {
+function geocodeAddress(address: string): Promise<PickupLocation | null> {
   return new Promise((resolve) => {
     if (!address) return resolve(null);
     const geocoder = new window.google.maps.Geocoder();
@@ -60,7 +60,7 @@ const PickupLocationInput: React.FC<PickupLocationInputProps> = ({ value, onChan
   });
 
   // Reverse geocode for current location
-  async function reverseGeocode(lat: number, lng: number, apiKey: string): Promise<PickupLocation | null> {
+  async function reverseGeocode(lat: number, lng: number): Promise<PickupLocation | null> {
     return new Promise((resolve) => {
       const geocoder = new window.google.maps.Geocoder();
       geocoder.geocode({ location: { lat, lng } }, (results: google.maps.GeocoderResult[] | null, status: google.maps.GeocoderStatus) => {
@@ -89,14 +89,14 @@ const PickupLocationInput: React.FC<PickupLocationInputProps> = ({ value, onChan
         navigator.geolocation.getCurrentPosition(async (pos) => {
           const { latitude, longitude } = pos.coords;
           setCoords({ lat: latitude, lng: longitude });
-          const loc = await reverseGeocode(latitude, longitude, process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '');
+          const loc = await reverseGeocode(latitude, longitude);
           if (loc) onChange(loc);
         });
       }
     } else if (pickupMode === 'custom') {
       onToggleGate(false);
       if (value?.address && isLoaded && window.google) {
-        geocodeAddress(value.address, process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '').then((loc) => {
+        geocodeAddress(value.address).then((loc) => {
           setCoords(loc?.coordinate || null);
           if (loc) onChange(loc);
         });

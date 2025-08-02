@@ -11,19 +11,8 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 function StripePaymentForm({ amount }: { amount: number }) {
   const stripe = useStripe();
   const elements = useElements();
-  const [clientSecret, setClientSecret] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetch("/api/payment-intent", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount }),
-    })
-      .then((res) => res.json())
-      .then((data) => setClientSecret(data.clientSecret));
-  }, [amount]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,10 +36,12 @@ function StripePaymentForm({ amount }: { amount: number }) {
     setLoading(false);
   };
 
-  if (!clientSecret) return <div>Loading payment form...</div>;
-
   return (
     <form onSubmit={handleSubmit} className="mt-8">
+      {/* Show the amount to pay */}
+      <div className="mb-4 text-lg font-semibold text-center">
+        Amount to pay: ${(amount / 100).toFixed(2)}
+      </div>
       <PaymentElement />
       {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
       <Button type="submit" variant="primary" className="w-full text-lg py-3" disabled={loading}>
@@ -66,7 +57,7 @@ export default function PaymentPage() {
   const date = searchParams.get("date") || "";
   const timeSlot = searchParams.get("timeSlot") || "";
   const fromGate = searchParams.get("fromGate") === "true";
-  const pickup = searchParams.get("pickup") ? JSON.parse(searchParams.get("pickup")) : {};
+  const pickup = JSON.parse(searchParams.get("pickup") || "{}" );
   // TODO: Calculate amount based on booking details
   const amount = 1500; // Example: 1500 cents = $15.00
   const summary = {
@@ -76,6 +67,17 @@ export default function PaymentPage() {
     vehicleType: vehicle,
     pickupLocation: fromGate ? { address: "Pickup from park gate" } : pickup,
   };
+  const [clientSecret, setClientSecret] = useState("");
+  useEffect(() => {
+    fetch("/api/payment-intent", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amount }),
+    })
+      .then((res) => res.json())
+      .then((data) => setClientSecret(data.clientSecret));
+  }, [amount]);
+  if (!clientSecret) return <div>Loading payment form...</div>;
   return (
     <div className="min-h-screen flex flex-col items-center bg-background p-4">
       <div className="w-full max-w-lg bg-ivory rounded-3xl shadow-xl overflow-hidden mt-0 sm:mt-8 p-0">
