@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import Image from 'next/image';
+import { CustomImage } from '../atoms';
 
 export interface ResourceLocationCardProps {
   name: string;
@@ -16,7 +16,7 @@ const ResourceLocationCard: React.FC<ResourceLocationCardProps> = ({ name, thumb
       className="bg-white rounded shadow p-4 flex flex-col cursor-pointer hover:shadow-lg transition"
       onClick={onClick}
     >
-      <Image
+      <CustomImage
         src={thumbnail}
         alt={name}
         width={320}

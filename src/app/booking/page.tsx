@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, Suspense } from 'react';
 import { VehicleTypeSelector, DatePicker, TimeSlotPicker, PickupLocationInput, BookingSummary } from '../../components/molecules';
-import { Button } from '../../components/atoms';
+import { Button, CustomImage } from '../../components/atoms';
 import { useSearchParams } from 'next/navigation';
 import resourceLocations, { LocationDetails } from '../../data/resourceLocations';
 import Image from 'next/image';
@@ -59,7 +59,7 @@ function BookingPageContent() {
       <div className="w-full max-w-lg bg-ivory rounded-3xl shadow-xl overflow-hidden mt-0 sm:mt-8 p-0">
         {/* Header with location image and name */}
         <div className="relative h-48 w-full rounded-t-3xl overflow-hidden">
-          <Image src={location.hero} alt={location.name} className="w-full h-full object-cover" fill priority />
+          <CustomImage src={location.hero} alt={location.name} className="w-full h-full object-cover" fill priority />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="absolute bottom-4 left-6">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground drop-shadow mb-1">{location.name}</h1>
