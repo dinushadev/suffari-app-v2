@@ -5,7 +5,7 @@ import { StarIcon, HeartIcon } from '@heroicons/react/24/solid';
 import Image from 'next/image';
 import resourceLocations, { LocationDetails } from '../../../data/resourceLocations';
 import { useLocationDetails } from '../../../data/useLocationDetails';
-import { Button, CustomImage } from '../../../components/atoms';
+import { Button, CustomImage, Loader } from '../../../components/atoms';
 
 export default function LocationDetailsPage() {
   const params = useParams();
@@ -17,7 +17,7 @@ export default function LocationDetailsPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="bg-ivory border border-ash rounded-2xl shadow p-8 text-center">
-          <h1 className="text-2xl font-bold text-orange mb-2">Loading...</h1>
+          <Loader />
         </div>
       </div>
     );

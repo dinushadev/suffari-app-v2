@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, Suspense } from 'react';
 import { VehicleTypeSelector, DatePicker, TimeSlotPicker, PickupLocationInput, BookingSummary } from '../../components/molecules';
-import { Button, CustomImage } from '../../components/atoms';
+import { Button, CustomImage, Loader } from '../../components/atoms';
 import { useSearchParams } from 'next/navigation';
 import resourceLocations, { LocationDetails } from '../../data/resourceLocations';
 import Image from 'next/image';
@@ -70,7 +70,7 @@ function BookingPageContent() {
           <div className="mb-6">
             <h2 className="font-bold text-lg mb-2 text-orange">Select Vehicle Type</h2>
             {vehicleTypesLoading ? (
-              <div>Loading vehicle types...</div>
+              <Loader />
             ) : vehicleTypesError ? (
               <div className="text-red-500">Failed to load vehicle types.</div>
             ) : (
@@ -114,7 +114,7 @@ function BookingPageContent() {
 
 export default function BookingPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<Loader />}>
       <BookingPageContent />
     </Suspense>
   );
