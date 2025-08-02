@@ -7,6 +7,7 @@ import resourceLocations, { LocationDetails } from '../../data/resourceLocations
 import Image from 'next/image';
 import { useVehicleTypes } from '../../data/useVehicleTypes';
 import type { PickupLocation } from '../../components/molecules/PickupLocationInput';
+import { supabase } from "@/data/apiConfig";
 
 const timeSlotOptions = [
   { label: 'Morning (6:00 AM – 10:00 AM)', value: 'morning' },
@@ -51,6 +52,24 @@ function BookingPageContent() {
     !!timeSlot &&
     ((pickup && pickup.address && pickup.address.trim().length > 0) || fromGate);
 
+  // Prefill from localStorage if available
+  React.useEffect(() => {
+    const saved = localStorage.getItem("pendingBooking");
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        if (data) {
+          setVehicle(data.vehicle || 'private');
+          setDate(data.date || '');
+          setTimeSlot(data.timeSlot || 'morning');
+          setPickup(data.pickup || {});
+          setFromGate(!!data.fromGate);
+        }
+        localStorage.removeItem("pendingBooking");
+      } catch {}
+    }
+  }, []);
+
   if (confirmed) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
@@ -62,6 +81,24 @@ function BookingPageContent() {
       </div>
     );
   }
+
+  const handleConfirm = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      // Save booking info to localStorage
+      localStorage.setItem("pendingBooking", JSON.stringify({
+        vehicle,
+        date,
+        timeSlot,
+        pickup,
+        fromGate
+      }));
+      // Redirect to auth page
+      window.location.href = "/auth";
+      return;
+    }
+    setConfirmed(true);
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-background p-4">
@@ -110,7 +147,7 @@ function BookingPageContent() {
           <Button
             variant="primary"
             className="w-full text-lg py-3"
-            onClick={() => setConfirmed(true)}
+            onClick={handleConfirm}
             disabled={!isFormValid}
           >
             Confirm &amp; Book
