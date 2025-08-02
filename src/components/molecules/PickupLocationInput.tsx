@@ -54,6 +54,7 @@ function geocodeAddress(address: string): Promise<PickupLocation | null> {
 const PickupLocationInput: React.FC<PickupLocationInputProps> = ({ value, onChange, fromGate, onToggleGate }) => {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(value?.coordinate || null);
   const [pickupMode, setPickupMode] = useState<'gate' | 'current' | 'custom'>(fromGate ? 'gate' : value?.address ? 'custom' : 'custom');
+  const [inputAddress, setInputAddress] = useState(value?.address || ''); // NEW: local state for input
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
     libraries: ['places'],
@@ -83,6 +84,7 @@ const PickupLocationInput: React.FC<PickupLocationInputProps> = ({ value, onChan
       onToggleGate(true);
       setCoords(null);
       onChange({ address: 'Pickup from park gate' });
+      setInputAddress('Pickup from park gate'); // keep input in sync
     } else if (pickupMode === 'current') {
       onToggleGate(false);
       if (navigator.geolocation && isLoaded && window.google) {
@@ -90,7 +92,10 @@ const PickupLocationInput: React.FC<PickupLocationInputProps> = ({ value, onChan
           const { latitude, longitude } = pos.coords;
           setCoords({ lat: latitude, lng: longitude });
           const loc = await reverseGeocode(latitude, longitude);
-          if (loc) onChange(loc);
+          if (loc) {
+            onChange(loc);
+            setInputAddress(loc.address || ''); // keep input in sync
+          }
         });
       }
     } else if (pickupMode === 'custom') {
@@ -142,9 +147,12 @@ const PickupLocationInput: React.FC<PickupLocationInputProps> = ({ value, onChan
       {pickupMode === 'custom' && (
         <div className="relative w-full">
           <PlacesAutocomplete
-            value={value?.address || ''}
-            onChange={address => onChange({ ...value, address })}
-            onSelect={address => onChange({ ...value, address })}
+            value={inputAddress} // use local state
+            onChange={address => setInputAddress(address)} // only update local state
+            onSelect={(address, placeId) => {
+              setInputAddress(address); // update local state
+              onChange({ ...value, address, placeId }); // update parent with full location
+            }}
           >
             {({ getInputProps, suggestions, getSuggestionItemProps, loading }) => {
               return (
@@ -169,11 +177,14 @@ const PickupLocationInput: React.FC<PickupLocationInputProps> = ({ value, onChan
                           <div
                             {...getSuggestionItemProps(suggestion, { className })}
                             key={suggestion.placeId}
-                            onClick={() => onChange({
-                              ...value,
-                              address: suggestion.description,
-                              placeId: suggestion.placeId,
-                            })}
+                            onClick={() => {
+                              setInputAddress(suggestion.description);
+                              onChange({
+                                ...value,
+                                address: suggestion.description,
+                                placeId: suggestion.placeId,
+                              });
+                            }}
                           >
                             {suggestion.description}
                           </div>

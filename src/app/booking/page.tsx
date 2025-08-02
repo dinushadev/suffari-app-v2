@@ -86,7 +86,7 @@ function BookingPageContent() {
         fromGate
       }));
       // Redirect to auth page
-      router.push('/auth/signin');
+      router.push('/auth');
       return;
     }
     // Instead of confirming here, navigate to payment page with booking details
