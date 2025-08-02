@@ -2,7 +2,7 @@
 import React, { useState, Suspense } from 'react';
 import { VehicleTypeSelector, DatePicker, TimeSlotPicker, PickupLocationInput, BookingSummary } from '../../components/molecules';
 import { Button, CustomImage, Loader } from '../../components/atoms';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import resourceLocations, { LocationDetails } from '../../data/resourceLocations';
 import Image from 'next/image';
 import { useVehicleTypes } from '../../data/useVehicleTypes';
@@ -70,6 +70,8 @@ function BookingPageContent() {
     }
   }, []);
 
+  const router = useRouter();
+
   if (confirmed) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
@@ -85,7 +87,6 @@ function BookingPageContent() {
   const handleConfirm = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-      // Save booking info to localStorage
       localStorage.setItem("pendingBooking", JSON.stringify({
         vehicle,
         date,
@@ -94,10 +95,11 @@ function BookingPageContent() {
         fromGate
       }));
       // Redirect to auth page
-      window.location.href = "/auth";
+      router.push('/auth/signin');
       return;
     }
-    setConfirmed(true);
+    // Instead of confirming here, navigate to payment page with booking details
+    router.push(`/booking/payment?vehicle=${vehicle}&date=${date}&timeSlot=${timeSlot}&fromGate=${fromGate}&pickup=${encodeURIComponent(JSON.stringify(pickup))}`);
   };
 
   return (
@@ -136,13 +138,7 @@ function BookingPageContent() {
             <PickupLocationInput value={pickup} onChange={setPickup} fromGate={fromGate} onToggleGate={setFromGate} />
           </div>
           <div className="mb-8">
-            <BookingSummary
-              location={summary.location}
-              date={summary.date}
-              timeSlot={summary.timeSlot}
-              vehicleType={summary.vehicleType}
-              pickupLocation={summary.pickupLocation}
-            />
+            {/* BookingSummary will be shown on the payment page instead */}
           </div>
           <Button
             variant="primary"
