@@ -22,6 +22,7 @@ const CustomImage = (props: ImageProps) => {
         `${className ?? ''} transition-all duration-700 ease-in-out ` +
         (loaded ? 'opacity-100 blur-0' : 'opacity-60 blur-md')
       }
+      alt="custom image"
     />
   );
 

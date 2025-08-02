@@ -25,9 +25,9 @@ const mapContainerStyle = {
   marginTop: '0.5rem',
 };
 
-function extractCountry(results: any[]): string | undefined {
+function extractCountry(results: google.maps.GeocoderResult[]): string | undefined {
   if (!results || !results[0]) return undefined;
-  const countryComp = results[0].address_components?.find((c: any) => c.types.includes('country'));
+  const countryComp = results[0].address_components?.find((c: google.maps.GeocoderAddressComponent) => c.types.includes('country'));
   return countryComp?.long_name;
 }
 
@@ -35,7 +35,7 @@ function geocodeAddress(address: string, apiKey: string): Promise<PickupLocation
   return new Promise((resolve) => {
     if (!address) return resolve(null);
     const geocoder = new window.google.maps.Geocoder();
-    geocoder.geocode({ address }, (results, status) => {
+    geocoder.geocode({ address }, (results: google.maps.GeocoderResult[] | null, status: google.maps.GeocoderStatus) => {
       if (status === 'OK' && results && results[0]) {
         const location = results[0].geometry.location;
         resolve({
@@ -54,9 +54,8 @@ function geocodeAddress(address: string, apiKey: string): Promise<PickupLocation
 const PickupLocationInput: React.FC<PickupLocationInputProps> = ({ value, onChange, fromGate, onToggleGate }) => {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(value?.coordinate || null);
   const [pickupMode, setPickupMode] = useState<'gate' | 'current' | 'custom'>(fromGate ? 'gate' : value?.address ? 'custom' : 'custom');
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
   const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: apiKey,
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
     libraries: ['places'],
   });
 
@@ -64,7 +63,7 @@ const PickupLocationInput: React.FC<PickupLocationInputProps> = ({ value, onChan
   async function reverseGeocode(lat: number, lng: number, apiKey: string): Promise<PickupLocation | null> {
     return new Promise((resolve) => {
       const geocoder = new window.google.maps.Geocoder();
-      geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+      geocoder.geocode({ location: { lat, lng } }, (results: google.maps.GeocoderResult[] | null, status: google.maps.GeocoderStatus) => {
         if (status === 'OK' && results && results[0]) {
           resolve({
             coordinate: { lat, lng },
@@ -90,14 +89,14 @@ const PickupLocationInput: React.FC<PickupLocationInputProps> = ({ value, onChan
         navigator.geolocation.getCurrentPosition(async (pos) => {
           const { latitude, longitude } = pos.coords;
           setCoords({ lat: latitude, lng: longitude });
-          const loc = await reverseGeocode(latitude, longitude, apiKey);
+          const loc = await reverseGeocode(latitude, longitude, process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '');
           if (loc) onChange(loc);
         });
       }
     } else if (pickupMode === 'custom') {
       onToggleGate(false);
       if (value?.address && isLoaded && window.google) {
-        geocodeAddress(value.address, apiKey).then((loc) => {
+        geocodeAddress(value.address, process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '').then((loc) => {
           setCoords(loc?.coordinate || null);
           if (loc) onChange(loc);
         });
@@ -106,7 +105,7 @@ const PickupLocationInput: React.FC<PickupLocationInputProps> = ({ value, onChan
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pickupMode, value?.address, isLoaded, apiKey]);
+  }, [pickupMode, value?.address, isLoaded]);
 
   return (
     <div className="flex flex-col gap-2">

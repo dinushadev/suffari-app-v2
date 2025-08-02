@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation";
 import BookingSummary from "../../../components/molecules/BookingSummary";
 import { Button } from "../../../components/atoms";
 import { loadStripe } from "@stripe/stripe-js";
-import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import { Elements, PaymentElement } from "@stripe/react-stripe-js";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -13,9 +13,6 @@ function StripePaymentForm({ loading, error, handleSubmit }: {
   error: string | null,
   handleSubmit: (e: React.FormEvent) => void
 }) {
-  const stripe = useStripe();
-  const elements = useElements();
-
   // You can use stripe/elements here if needed for further logic
 
   return (

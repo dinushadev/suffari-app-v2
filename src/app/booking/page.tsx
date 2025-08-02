@@ -1,10 +1,9 @@
 "use client";
 import React, { useState, Suspense } from 'react';
-import { VehicleTypeSelector, DatePicker, TimeSlotPicker, PickupLocationInput, BookingSummary } from '../../components/molecules';
+import { VehicleTypeSelector, DatePicker, TimeSlotPicker, PickupLocationInput } from '../../components/molecules';
 import { Button, CustomImage, Loader } from '../../components/atoms';
 import { useSearchParams, useRouter } from 'next/navigation';
 import resourceLocations, { LocationDetails } from '../../data/resourceLocations';
-import Image from 'next/image';
 import { useVehicleTypes } from '../../data/useVehicleTypes';
 import type { PickupLocation } from '../../components/molecules/PickupLocationInput';
 import { supabase } from "@/data/apiConfig";
@@ -36,14 +35,6 @@ function BookingPageContent() {
     description: v.discription, // use API field
     imageUrl: v.imageUrl,      // use API field
   })) || [];
-
-  const summary = {
-    location: location.name,
-    date,
-    timeSlot: timeSlotOptions.find(t => t.value === timeSlot)?.label || '',
-    vehicleType: vehicleOptions.find(v => v.value === vehicle)?.label || '',
-    pickupLocation: fromGate ? { address: 'Pickup from park gate' } : pickup,
-  };
 
   // Validation: all fields must be filled
   const isFormValid =

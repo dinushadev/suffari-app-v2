@@ -2,8 +2,6 @@
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { StarIcon, HeartIcon } from '@heroicons/react/24/solid';
-import Image from 'next/image';
-import resourceLocations, { LocationDetails } from '../../../data/resourceLocations';
 import { useLocationDetails } from '../../../data/useLocationDetails';
 import { Button, CustomImage, Loader } from '../../../components/atoms';
 

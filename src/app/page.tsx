@@ -3,7 +3,7 @@
 import { ResourceLocationList } from '../components/organisms';
 import { useLocations } from '../data/useLocations';
 import { useRouter } from 'next/navigation';
-import { Button, Loader } from '../components/atoms';
+import { Loader } from '../components/atoms';
 
 export default function Home() {
   const router = useRouter();
