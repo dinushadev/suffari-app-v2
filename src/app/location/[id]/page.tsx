@@ -4,16 +4,25 @@ import { useParams, useRouter } from 'next/navigation';
 import { StarIcon, HeartIcon } from '@heroicons/react/24/solid';
 import Image from 'next/image';
 import resourceLocations, { LocationDetails } from '../../../data/resourceLocations';
+import { useLocationDetails } from '../../../data/useLocationDetails';
 
 export default function LocationDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
-  const location: LocationDetails | undefined = resourceLocations.find(
-    (loc: LocationDetails) => loc.id === id
-  );
+  const { data: location, isLoading, error } = useLocationDetails(id);
 
-  if (!location) {
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-green-100">
+        <div className="bg-white rounded-2xl shadow p-8 text-center">
+          <h1 className="text-2xl font-bold text-blue-900 mb-2">Loading...</h1>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !location) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-green-100">
         <div className="bg-white rounded-2xl shadow p-8 text-center">
@@ -30,7 +39,7 @@ export default function LocationDetailsPage() {
       <div className="w-full max-w-lg bg-white rounded-3xl shadow-xl overflow-hidden mt-0 sm:mt-8 relative">
         {/* Hero Image & Overlay */}
         <div className="relative h-64 sm:h-80 w-full">
-          <Image src={location.hero} alt={location.name} className="w-full h-full object-cover" fill priority />
+          <Image src={location.thumbnail} alt={location.name} className="w-full h-full object-cover" fill priority />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="absolute top-4 left-4 z-10">
             <button
@@ -52,7 +61,7 @@ export default function LocationDetailsPage() {
           <div className="absolute bottom-6 left-6">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white drop-shadow mb-1">{location.name}</h1>
             <div className="flex items-center gap-4 flex-wrap">
-              <span className="text-white/90 text-base font-medium">{location.subtitle}</span>
+              <span className="text-white/90 text-base font-medium">{location.address}</span>
               <span className="text-white/90 text-base font-semibold">${location.price}/Package</span>
               <span className="flex items-center gap-1 text-yellow-300 font-bold text-base"><StarIcon className="w-5 h-5" /> {location.rating}</span>
             </div>
@@ -64,17 +73,16 @@ export default function LocationDetailsPage() {
           <p className="text-gray-600 mb-4">{location.about}</p>
           {/* Image Carousel */}
           <div className="flex gap-3 mb-6 overflow-x-auto">
-            {location.images.map((img: string, i: number) => (
+            {location.images?.map((img: string, i: number) => (
               <Image key={i} src={img} alt="Gallery" className="w-20 h-20 rounded-xl object-cover border-2 border-blue-100" width={80} height={80} />
             ))}
           </div>
           {/* Facilities */}
           <h3 className="font-bold text-base mb-2">Package Facilities</h3>
           <div className="flex gap-4 flex-wrap mb-8">
-            {location.facilities.map((f: {icon: string; label: string}, i: number) => (
+            {location.facilities?.map((f: string, i: number) => (
               <div key={i} className="flex flex-col items-center bg-blue-50 rounded-xl px-3 py-2 min-w-[64px]">
-                <span className="text-2xl mb-1">{f.icon}</span>
-                <span className="text-xs text-blue-900 font-medium">{f.label}</span>
+                <span className="text-xs text-blue-900 font-medium">{f}</span>
               </div>
             ))}
           </div>
