@@ -91,7 +91,7 @@ export default function LocationDetailsPage() {
         {/* Sticky Book Now Button for mobile */}
         <div className="sticky bottom-0 left-0 right-0 bg-ivory border-t border-ash rounded-b-3xl px-6 pb-6 pt-4 z-20">
           <Button
-            className="w-full text-lg py-4 rounded-2xl shadow-lg border border-ash"
+            className="w-full text-lg py-4 rounded-2xl shadow-lg "
             onClick={() => router.push(`/booking?location=${location.id}`)}
           >
             Book Now
