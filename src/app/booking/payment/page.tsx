@@ -5,6 +5,7 @@ import BookingSummary from "../../../components/molecules/BookingSummary";
 import { Button } from "../../../components/atoms";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement } from "@stripe/react-stripe-js";
+import { Suspense } from "react";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -58,7 +59,15 @@ function StripePaymentWrapper({ amount }: { amount: number }) {
   );
 }
 
-export default function PaymentPage() {
+export default function PaymentPageWrapper() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PaymentPage />
+    </Suspense>
+  );
+}
+
+function PaymentPage() {
   const searchParams = useSearchParams();
   const vehicle = searchParams.get("vehicle") || "";
   const date = searchParams.get("date") || "";
