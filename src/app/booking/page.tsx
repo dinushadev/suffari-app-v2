@@ -6,7 +6,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import resourceLocations, { LocationDetails } from '../../data/resourceLocations';
 import { useVehicleTypes } from '../../data/useVehicleTypes';
 import type { PickupLocation } from '../../components/molecules/PickupLocationInput';
-import { supabase } from "@/data/apiConfig";
+//import { supabase } from "@/data/apiConfig";
 
 const timeSlotOptions = [
   { label: 'Morning (6:00 AM – 10:00 AM)', value: 'morning' },
