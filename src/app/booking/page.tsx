@@ -76,7 +76,7 @@ function BookingPageContent() {
   }
 
   const handleConfirm = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+ //   const { data: { session } } = await supabase.auth.getSession();
     // if (!session) {
     //   localStorage.setItem("pendingBooking", JSON.stringify({
     //     vehicle,
