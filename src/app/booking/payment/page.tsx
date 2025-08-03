@@ -7,6 +7,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, PaymentRequestButtonElement, useStripe } from "@stripe/react-stripe-js";
 import { Suspense } from "react";
 import Loader from '../../../components/atoms/Loader';
+import type { PaymentRequest as StripePaymentRequest } from "@stripe/stripe-js";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -17,7 +18,8 @@ function StripePaymentForm({ loading, error, handleSubmit, amount }: {
   amount: number,
 }) {
   const stripe = useStripe();
-  const [paymentRequest, setPaymentRequest] = useState<any>(null);
+  
+  const [paymentRequest, setPaymentRequest] = useState<StripePaymentRequest | null>(null);
   //const [prButtonReady, setPrButtonReady] = useState(false);
 
   useEffect(() => {
@@ -47,12 +49,12 @@ function StripePaymentForm({ loading, error, handleSubmit, amount }: {
           <PaymentRequestButtonElement
             options={{
               paymentRequest: paymentRequest,
-              style: { paymentRequestButton: { type: 'default', theme: 'dark', height: '44px' } },
+              style: { paymentRequestButton:  { type: 'default', theme: 'dark', height: '44px' } },
             }}
           //  onReady={() => setPrButtonReady(true)}
-            onClick={event => {
-              // Optionally handle click events
-            }}
+            // onClick={event => {
+            //   // Optionally handle click events
+            // }}
           />
         </div>
       )}
