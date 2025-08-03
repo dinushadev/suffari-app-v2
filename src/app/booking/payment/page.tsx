@@ -18,7 +18,7 @@ function StripePaymentForm({ loading, error, handleSubmit, amount }: {
 }) {
   const stripe = useStripe();
   const [paymentRequest, setPaymentRequest] = useState<any>(null);
-  const [prButtonReady, setPrButtonReady] = useState(false);
+  //const [prButtonReady, setPrButtonReady] = useState(false);
 
   useEffect(() => {
     if (stripe) {
@@ -49,7 +49,7 @@ function StripePaymentForm({ loading, error, handleSubmit, amount }: {
               paymentRequest: paymentRequest,
               style: { paymentRequestButton: { type: 'default', theme: 'dark', height: '44px' } },
             }}
-            onReady={() => setPrButtonReady(true)}
+          //  onReady={() => setPrButtonReady(true)}
             onClick={event => {
               // Optionally handle click events
             }}
