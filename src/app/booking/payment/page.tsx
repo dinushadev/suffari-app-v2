@@ -4,20 +4,58 @@ import { useSearchParams } from "next/navigation";
 import BookingSummary from "../../../components/molecules/BookingSummary";
 import { Button } from "../../../components/atoms";
 import { loadStripe } from "@stripe/stripe-js";
-import { Elements, PaymentElement } from "@stripe/react-stripe-js";
+import { Elements, PaymentElement, PaymentRequestButtonElement, useStripe } from "@stripe/react-stripe-js";
 import { Suspense } from "react";
+import Loader from '../../../components/atoms/Loader';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
-function StripePaymentForm({ loading, error, handleSubmit }: {
+function StripePaymentForm({ loading, error, handleSubmit, amount }: {
   loading: boolean,
   error: string | null,
-  handleSubmit: (e: React.FormEvent) => void
+  handleSubmit: (e: React.FormEvent) => void,
+  amount: number,
 }) {
-  // You can use stripe/elements here if needed for further logic
+  const stripe = useStripe();
+  const [paymentRequest, setPaymentRequest] = useState<any>(null);
+  const [prButtonReady, setPrButtonReady] = useState(false);
+
+  useEffect(() => {
+    if (stripe) {
+      const pr = stripe.paymentRequest({
+        country: 'US',
+        currency: 'usd',
+        total: {
+          label: 'Safari Booking',
+          amount: amount,
+        },
+        requestPayerName: true,
+        requestPayerEmail: true,
+      });
+      pr.canMakePayment().then(result => {
+        if (result) {
+          setPaymentRequest(pr);
+        }
+      });
+    }
+  }, [stripe, amount]);
 
   return (
     <form onSubmit={handleSubmit} className="mt-8">
+      {paymentRequest && (
+        <div className="mb-4">
+          <PaymentRequestButtonElement
+            options={{
+              paymentRequest: paymentRequest,
+              style: { paymentRequestButton: { type: 'default', theme: 'dark', height: '44px' } },
+            }}
+            onReady={() => setPrButtonReady(true)}
+            onClick={event => {
+              // Optionally handle click events
+            }}
+          />
+        </div>
+      )}
       <PaymentElement />
       {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
       <Button type="submit" variant="primary" className="w-full text-lg py-3" disabled={loading}>
@@ -36,7 +74,7 @@ function StripePaymentWrapper({ amount }: { amount: number }) {
     fetch("/api/payment-intent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount }),
+      body: JSON.stringify({ amount, currency: 'usd' }), // send currency
     })
       .then((res) => res.json())
       .then((data) => setClientSecret(data.clientSecret));
@@ -50,11 +88,11 @@ function StripePaymentWrapper({ amount }: { amount: number }) {
     setLoading(false);
   };
 
-  if (!clientSecret) return <div>Loading payment form...</div>;
+  if (!clientSecret) return <Loader />;
 
   return (
     <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "stripe" } }}>
-      <StripePaymentForm loading={loading} error={error} handleSubmit={handleSubmit} />
+      <StripePaymentForm loading={loading} error={error} handleSubmit={handleSubmit} amount={amount} />
     </Elements>
   );
 }
@@ -88,13 +126,14 @@ function PaymentPage() {
     <div className="min-h-screen flex flex-col items-center bg-background p-4">
       <div className="w-full max-w-lg bg-ivory rounded-3xl shadow-xl overflow-hidden mt-0 sm:mt-8 p-0">
         <div className="p-6">
-          <h2 className="font-bold text-lg mb-4 text-orange">Booking Summary</h2>
+
           <BookingSummary
             location={summary.location}
             date={summary.date}
             timeSlot={summary.timeSlot}
             vehicleType={summary.vehicleType}
             pickupLocation={summary.pickupLocation}
+            paymentAmount={amount}
           />
           <StripePaymentWrapper amount={amount} />
         </div>

@@ -76,7 +76,7 @@ export default function LocationDetailsPage() {
             ))}
           </div>
           {/* Facilities */}
-          <h3 className="font-bold text-base mb-2 text-orange">Package Facilities</h3>
+          <h3 className="font-bold text-base mb-2 text-orange">What can do</h3>
           <div className="flex gap-4 flex-wrap mb-8">
             {location.facilities?.map((f: string, i: number) => (
               <div key={i} className="flex flex-col items-center bg-orange/10 border border-ash rounded-xl px-3 py-2 min-w-[64px]">
@@ -91,7 +91,7 @@ export default function LocationDetailsPage() {
             className="w-full text-lg py-4 rounded-2xl shadow-lg "
             onClick={() => router.push(`/booking?location=${location.id}`)}
           >
-            Book Now
+            Reserve Now 15 USD
           </Button>
         </div>
       </div>

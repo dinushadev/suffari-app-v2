@@ -13,9 +13,10 @@ interface BookingSummaryProps {
   timeSlot: string;
   vehicleType: string;
   pickupLocation: PickupLocation;
+  paymentAmount?: number; // NEW
 }
 
-const BookingSummary: React.FC<BookingSummaryProps> = ({ location, date, timeSlot, vehicleType, pickupLocation }) => {
+const BookingSummary: React.FC<BookingSummaryProps> = ({ location, date, timeSlot, vehicleType, pickupLocation, paymentAmount }) => {
   return (
     <div className="bg-gradient-to-br from-orange-50 to-amber-100 rounded-2xl shadow-lg p-6 border border-orange-100">
       <h3 className="font-extrabold text-xl mb-4 text-orange-600 tracking-tight">Booking Summary</h3>
@@ -46,6 +47,12 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({ location, date, timeSlo
             <span className="text-gray-400 text-xs">Lat: {pickupLocation.coordinate.lat}, Lng: {pickupLocation.coordinate.lng}</span>
           )}
         </li>
+        {typeof paymentAmount === 'number' && (
+          <li className="py-2 flex items-center justify-between">
+            <span className="text-gray-500 font-medium">Payment Amount</span>
+            <span className="text-gray-900 font-semibold">${(paymentAmount / 100).toFixed(2)} USD</span>
+          </li>
+        )}
       </ul>
     </div>
   );

@@ -77,18 +77,18 @@ function BookingPageContent() {
 
   const handleConfirm = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      localStorage.setItem("pendingBooking", JSON.stringify({
-        vehicle,
-        date,
-        timeSlot,
-        pickup,
-        fromGate
-      }));
-      // Redirect to auth page
-      router.push('/auth');
-      return;
-    }
+    // if (!session) {
+    //   localStorage.setItem("pendingBooking", JSON.stringify({
+    //     vehicle,
+    //     date,
+    //     timeSlot,
+    //     pickup,
+    //     fromGate
+    //   }));
+    //   // Redirect to auth page
+    //   router.push('/auth');
+    //   return;
+    // }
     // Instead of confirming here, navigate to payment page with booking details
     router.push(`/booking/payment?vehicle=${vehicle}&date=${date}&timeSlot=${timeSlot}&fromGate=${fromGate}&pickup=${encodeURIComponent(JSON.stringify(pickup))}`);
   };
