@@ -1,24 +1,33 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import BookingSummary from "../../../components/molecules/BookingSummary";
 import { Button } from "../../../components/atoms";
 import { loadStripe } from "@stripe/stripe-js";
-import { Elements, PaymentElement, PaymentRequestButtonElement, useStripe } from "@stripe/react-stripe-js";
+import { Elements, PaymentElement, PaymentRequestButtonElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { Suspense } from "react";
 import Loader from '../../../components/atoms/Loader';
 import type { PaymentRequest as StripePaymentRequest } from "@stripe/stripe-js";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
-function StripePaymentForm({ loading, error, handleSubmit, amount }: {
+function StripePaymentForm({ loading, setLoading, error, setError, amount }: {
   loading: boolean,
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>,
   error: string | null,
-  handleSubmit: (e: React.FormEvent) => void,
+  setError: React.Dispatch<React.SetStateAction<string | null>>,
   amount: number,
 }) {
   const stripe = useStripe();
-  
+  const elements = useElements();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const vehicle = searchParams.get("vehicle") || "";
+  const date = searchParams.get("date") || "";
+  const timeSlot = searchParams.get("timeSlot") || "";
+  const fromGate = searchParams.get("fromGate") || "";
+  const pickup = searchParams.get("pickup") || "";
+
   const [paymentRequest, setPaymentRequest] = useState<StripePaymentRequest | null>(null);
   //const [prButtonReady, setPrButtonReady] = useState(false);
 
@@ -41,6 +50,42 @@ function StripePaymentForm({ loading, error, handleSubmit, amount }: {
       });
     }
   }, [stripe, amount]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    if (!stripe || !elements) {
+      setError("Stripe has not loaded yet.");
+      setLoading(false);
+      return;
+    }
+    const { error, paymentIntent } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        // return_url: "https://your-website.com/payment-success",
+      },
+      redirect: "if_required",
+    });
+    if (error) {
+      setError(error.message || "Payment failed");
+      setLoading(false);
+      return;
+    }
+    // If no redirect is required, show the success page with summary
+    if (paymentIntent && paymentIntent.status === "succeeded") {
+      const params = new URLSearchParams({
+        vehicle,
+        date,
+        timeSlot,
+        fromGate,
+        pickup,
+        amount: amount.toString(),
+      });
+      router.push(`/booking/payment/success?${params.toString()}`);
+    }
+    setLoading(false);
+  };
 
   return (
     <form onSubmit={handleSubmit} className="mt-8">
@@ -72,30 +117,47 @@ function StripePaymentWrapper({ amount }: { amount: number }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetch("/api/payment-intent", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount, currency: 'usd' }), // send currency
-    })
-      .then((res) => res.json())
-      .then((data) => setClientSecret(data.clientSecret));
-  }, [amount]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const fetchPaymentIntent = async () => {
     setLoading(true);
     setError(null);
-    // Stripe logic can be added here if needed
-    setLoading(false);
+    try {
+      const res = await fetch("/api/payment-intent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount, currency: 'usd' }),
+      });
+      const data = await res.json();
+      setClientSecret(data.clientSecret);
+    } catch (err) {
+      setError("Failed to create payment intent. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPaymentIntent();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [amount]);
+
+  const handleTryAgain = () => {
+    fetchPaymentIntent();
   };
 
   if (!clientSecret) return <Loader />;
 
   return (
-    <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "stripe" } }}>
-      <StripePaymentForm loading={loading} error={error} handleSubmit={handleSubmit} amount={amount} />
-    </Elements>
+    <>
+      {error && (
+        <div className="mb-4">
+          <div className="text-red-500 text-sm mb-2">{error}</div>
+          <Button onClick={handleTryAgain} variant="secondary" className="w-full mb-4">Try Again</Button>
+        </div>
+      )}
+      <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "stripe" } }}>
+        <StripePaymentForm loading={loading} setLoading={setLoading} error={error} setError={setError} amount={amount} />
+      </Elements>
+    </>
   );
 }
 
