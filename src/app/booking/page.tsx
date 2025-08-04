@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, Suspense } from 'react';
-import { VehicleTypeSelector, DatePicker, TimeSlotPicker, PickupLocationInput } from '../../components/molecules';
+import { VehicleTypeSelector, DatePicker, TimeSlotPicker, PickupLocationInput, GroupTypeSelector } from '../../components/molecules';
 import { Button, CustomImage, Loader } from '../../components/atoms';
 import { useSearchParams, useRouter } from 'next/navigation';
 import resourceLocations, { LocationDetails } from '../../data/resourceLocations';
@@ -9,9 +9,21 @@ import type { PickupLocation } from '../../components/molecules/PickupLocationIn
 //import { supabase } from "@/data/apiConfig";
 
 const timeSlotOptions = [
-  { label: 'Morning (6:00 AM – 10:00 AM)', value: 'morning' },
-  { label: 'Afternoon (2:00 PM – 6:00 PM)', value: 'afternoon' },
-  { label: 'Full-day', value: 'fullday' },
+  {
+    label: 'Full Day',
+    value: 'fullday',
+    description: '6:00 AM - 6:00 PM • Complete wilderness experience with lunch break',
+  },
+  {
+    label: 'Morning',
+    value: 'morning',
+    description: '6:00 AM - 10:00 AM • Best for wildlife activity and cooler temperatures',
+  },
+  {
+    label: 'Evening',
+    value: 'evening',
+    description: '3:30 PM - 7:00 PM • Perfect for spotting predators and golden hour photography',
+  },
 ];
 
 function BookingPageContent() {
@@ -25,6 +37,7 @@ function BookingPageContent() {
   const [pickup, setPickup] = useState<PickupLocation>({});
   const [fromGate, setFromGate] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+  const [groupType, setGroupType] = useState('small');
 
   const { data: vehicleTypes, isLoading: vehicleTypesLoading, error: vehicleTypesError } = useVehicleTypes();
 
@@ -105,9 +118,32 @@ function BookingPageContent() {
             <div className="text-foreground/90 text-base font-medium">{location.subtitle}</div>
           </div>
         </div>
+        {/* UX Note: Booking Recommendation */}
+        <div className="mx-6 mt-4 mb-6 flex items-start gap-2 bg-orange/10 border-l-4 border-orange rounded-xl p-4">
+          <svg className="w-6 h-6 text-orange flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01"/></svg>
+          <div className="text-sm text-foreground/80">
+            <span className="font-semibold text-orange">Note:</span> We recommend booking at least <span className="font-semibold">24 hours in advance</span> for the best safari experience. Our expert guides will ensure you have an unforgettable wildlife adventure while practicing responsible tourism.
+          </div>
+        </div>
         <div className="p-6">
           <div className="mb-6">
-            <h2 className="font-bold text-lg mb-2 text-orange">Select Vehicle Type</h2>
+            <h2 className="font-bold text-lg mb-2 text-orange">Pickup Location</h2>
+            <PickupLocationInput value={pickup} onChange={setPickup} fromGate={fromGate} onToggleGate={setFromGate} />
+          </div>
+          <div className="mb-6">
+            <h2 className="font-bold text-lg mb-2 text-orange">Date</h2>
+            <DatePicker value={date} onChange={setDate} min={new Date().toISOString().split('T')[0]} />
+          </div>
+          <div className="mb-6">
+            <h2 className="font-bold text-lg mb-2 text-orange">Time Slot</h2>
+            <TimeSlotPicker options={timeSlotOptions} selected={timeSlot} onSelect={setTimeSlot} />
+          </div>
+          <div className="mb-6">
+            <h2 className="font-bold text-lg mb-2 text-orange">Group Type</h2>
+            <GroupTypeSelector selected={groupType} onSelect={setGroupType} />
+          </div>
+          <div className="mb-6">
+            <h2 className="font-bold text-lg mb-2 text-orange">Vehicle Type</h2>
             {vehicleTypesLoading ? (
               <Loader />
             ) : vehicleTypesError ? (
@@ -116,28 +152,16 @@ function BookingPageContent() {
               <VehicleTypeSelector options={vehicleOptions} selected={vehicle} onSelect={setVehicle} />
             )}
           </div>
-          <div className="mb-6">
-            <h2 className="font-bold text-lg mb-2 text-orange">Select Date</h2>
-            <DatePicker value={date} onChange={setDate} min={new Date().toISOString().split('T')[0]} />
-          </div>
-          <div className="mb-6">
-            <h2 className="font-bold text-lg mb-2 text-orange">Select Time Slot</h2>
-            <TimeSlotPicker options={timeSlotOptions} selected={timeSlot} onSelect={setTimeSlot} />
-          </div>
-          <div className="mb-6">
-            <h2 className="font-bold text-lg mb-2 text-orange">Pickup Location</h2>
-            <PickupLocationInput value={pickup} onChange={setPickup} fromGate={fromGate} onToggleGate={setFromGate} />
-          </div>
           <div className="mb-8">
             {/* BookingSummary will be shown on the payment page instead */}
           </div>
           <Button
             variant="primary"
-            className="w-full text-lg py-3"
+            className="w-full text-lg py-3 transition-transform duration-150 hover:scale-105"
             onClick={handleConfirm}
             disabled={!isFormValid}
           >
-            Confirm &amp; Book
+            Confirm & Book
           </Button>
         </div>
       </div>

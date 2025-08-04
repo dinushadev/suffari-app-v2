@@ -8,6 +8,7 @@ import { Elements, PaymentElement, PaymentRequestButtonElement, useStripe, useEl
 import { Suspense } from "react";
 import Loader from '../../../components/atoms/Loader';
 import type { PaymentRequest as StripePaymentRequest } from "@stripe/stripe-js";
+import { useCreateBooking } from "../../../data/useCreateBooking";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -25,8 +26,12 @@ function StripePaymentForm({ loading, setLoading, error, setError, amount }: {
   const vehicle = searchParams.get("vehicle") || "";
   const date = searchParams.get("date") || "";
   const timeSlot = searchParams.get("timeSlot") || "";
-  const fromGate = searchParams.get("fromGate") || "";
-  const pickup = searchParams.get("pickup") || "";
+  const fromGate = searchParams.get("fromGate") === "true";
+  const pickupRaw = searchParams.get("pickup");
+  const pickup = pickupRaw ? JSON.parse(pickupRaw) : {};
+  const userId = searchParams.get("userId") || ""; // Adjust as needed
+  const locationId = searchParams.get("locationId") || ""; // Adjust as needed
+  const resourceId = searchParams.get("resourceId") || ""; // Adjust as needed
 
   const [paymentRequest, setPaymentRequest] = useState<StripePaymentRequest | null>(null);
   //const [prButtonReady, setPrButtonReady] = useState(false);
@@ -51,6 +56,8 @@ function StripePaymentForm({ loading, setLoading, error, setError, amount }: {
     }
   }, [stripe, amount]);
 
+  const createBookingMutation = useCreateBooking();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -62,9 +69,7 @@ function StripePaymentForm({ loading, setLoading, error, setError, amount }: {
     }
     const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
-      confirmParams: {
-        // return_url: "https://your-website.com/payment-success",
-      },
+      confirmParams: {},
       redirect: "if_required",
     });
     if (error) {
@@ -72,17 +77,35 @@ function StripePaymentForm({ loading, setLoading, error, setError, amount }: {
       setLoading(false);
       return;
     }
-    // If no redirect is required, show the success page with summary
     if (paymentIntent && paymentIntent.status === "succeeded") {
-      const params = new URLSearchParams({
-        vehicle,
+      // Prepare booking data
+      const bookingData = {
+        userId,
+        locationId,
+        resourceId,
         date,
         timeSlot,
-        fromGate,
-        pickup,
-        amount: amount.toString(),
-      });
-      router.push(`/booking/payment/success?${params.toString()}`);
+        pickupLocation: fromGate ? {
+          placeId: "",
+          coordinate: { lat: 0, lng: 0 },
+          address: "Pickup from park gate",
+          country: "",
+        } : pickup,
+      };
+      try {
+        await createBookingMutation.mutateAsync(bookingData);
+        const params = new URLSearchParams({
+          vehicle,
+          date,
+          timeSlot,
+          fromGate: fromGate ? "true" : "false",
+          pickup: JSON.stringify(pickup),
+          amount: amount.toString(),
+        });
+        router.push(`/booking/payment/success?${params.toString()}`);
+      } catch (err) {
+        setError((err as Error).message || "Booking failed");
+      }
     }
     setLoading(false);
   };
