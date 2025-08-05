@@ -47,6 +47,9 @@ function BookingPageContent() {
     value: v.id,
     description: v.discription, // use API field
     imageUrl: v.imageUrl,      // use API field
+    price: v.price,
+    featureList: v.featureList,
+    numberOfGuests: v.numberOfGuests,
   })) || [];
 
   // Validation: all fields must be filled
@@ -103,7 +106,7 @@ function BookingPageContent() {
     //   return;
     // }
     // Instead of confirming here, navigate to payment page with booking details
-    router.push(`/booking/payment?vehicle=${vehicle}&date=${date}&timeSlot=${timeSlot}&fromGate=${fromGate}&pickup=${encodeURIComponent(JSON.stringify(pickup))}`);
+    router.push(`/booking/payment?vehicle=${vehicle}&date=${date}&timeSlot=${timeSlot}&fromGate=${fromGate}&pickup=${encodeURIComponent(JSON.stringify(pickup))}&groupType=${groupType}&locationId=${locationId}`);
   };
 
   return (

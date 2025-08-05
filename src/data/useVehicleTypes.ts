@@ -7,6 +7,9 @@ export interface VehicleType {
   discription: string; // from API
   imageUrl: string;    // from API
   catogory?: string;   // optional, from API
+  price?: number;
+  featureList?: string[];
+  numberOfGuests?: number;
 }
 
 const fetchVehicleTypes = async (): Promise<VehicleType[]> => {

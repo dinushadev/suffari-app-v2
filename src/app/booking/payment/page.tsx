@@ -9,6 +9,8 @@ import { Suspense } from "react";
 import Loader from '../../../components/atoms/Loader';
 import type { PaymentRequest as StripePaymentRequest } from "@stripe/stripe-js";
 import { useCreateBooking } from "../../../data/useCreateBooking";
+import { groupTypes } from '../../../components/molecules/GroupTypeSelector';
+import { useVehicleTypes } from "../../../data/useVehicleTypes";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -32,6 +34,7 @@ function StripePaymentForm({ loading, setLoading, error, setError, amount }: {
   const userId = searchParams.get("userId") || ""; // Adjust as needed
   const locationId = searchParams.get("locationId") || ""; // Adjust as needed
   const resourceId = searchParams.get("resourceId") || ""; // Adjust as needed
+  const groupType = searchParams.get("groupType") || "";
 
   const [paymentRequest, setPaymentRequest] = useState<StripePaymentRequest | null>(null);
   //const [prButtonReady, setPrButtonReady] = useState(false);
@@ -67,17 +70,48 @@ function StripePaymentForm({ loading, setLoading, error, setError, amount }: {
       setLoading(false);
       return;
     }
-    const { error, paymentIntent } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {},
-      redirect: "if_required",
-    });
-    if (error) {
-      setError(error.message || "Payment failed");
-      setLoading(false);
-      return;
-    }
-    if (paymentIntent && paymentIntent.status === "succeeded") {
+    // const { error, paymentIntent } = await stripe.confirmPayment({
+    //   elements,
+    //   confirmParams: {},
+    //   redirect: "if_required",
+    // });
+    // if (error) {
+    //   setError(error.message || "Payment failed");
+    //   setLoading(false);
+    //   return;
+    // }
+    // if (paymentIntent && paymentIntent.status === "succeeded") {
+    //   // Prepare booking data
+    //   const bookingData = {
+    //     userId,
+    //     locationId,
+    //     resourceId,
+    //     date,
+    //     timeSlot,
+    //     groupType, // Add groupType to booking payload
+    //     pickupLocation: fromGate ? {
+    //       placeId: "",
+    //       coordinate: { lat: 0, lng: 0 },
+    //       address: "Pickup from park gate",
+    //       country: "",
+    //     } : pickup,
+    //   };
+    //   try {
+    //     await createBookingMutation.mutateAsync(bookingData);
+    //     const params = new URLSearchParams({
+    //       vehicle,
+    //       date,
+    //       timeSlot,
+    //       fromGate: fromGate ? "true" : "false",
+    //       pickup: JSON.stringify(pickup),
+    //       amount: amount.toString(),
+    //     });
+    //     router.push(`/booking/payment/success?${params.toString()}`);
+    //   } catch (err) {
+    //     setError((err as Error).message || "Booking failed");
+    //   }
+    // }
+
       // Prepare booking data
       const bookingData = {
         userId,
@@ -85,6 +119,7 @@ function StripePaymentForm({ loading, setLoading, error, setError, amount }: {
         resourceId,
         date,
         timeSlot,
+        groupType, // Add groupType to booking payload
         pickupLocation: fromGate ? {
           placeId: "",
           coordinate: { lat: 0, lng: 0 },
@@ -106,7 +141,6 @@ function StripePaymentForm({ loading, setLoading, error, setError, amount }: {
       } catch (err) {
         setError((err as Error).message || "Booking failed");
       }
-    }
     setLoading(false);
   };
 
@@ -200,25 +234,42 @@ function PaymentPage() {
   const fromGate = searchParams.get("fromGate") === "true";
   const pickupRaw = searchParams.get("pickup");
   const pickup = pickupRaw ? JSON.parse(pickupRaw) : {};
-  // TODO: Calculate amount based on booking details
-  const amount = 1500; // Example: 1500 cents = $15.00
+  const groupTypeValue = searchParams.get("groupType") || "";
+  const groupTypeObj = groupTypes.find(g => g.value === groupTypeValue);
+  const groupTypeLabel = groupTypeObj ? `${groupTypeObj.label} (${groupTypeObj.size})` : groupTypeValue;
+
+  // Fetch vehicle types
+  const { data: vehicleTypes, isLoading: vehicleTypesLoading, error: vehicleTypesError } = useVehicleTypes();
+
+  // Find the selected vehicle
+  const selectedVehicle = vehicleTypes?.find(v => v.id === vehicle);
+
+  // Use its price (convert to cents for Stripe)
+  const amount = selectedVehicle?.price ? selectedVehicle.price * 100 : 0;
+
   const summary = {
     location: "Selected Location",
     date,
     timeSlot,
     vehicleType: vehicle,
+    groupType: groupTypeLabel,
     pickupLocation: fromGate ? { address: "Pickup from park gate" } : pickup,
   };
+
+  if (vehicleTypesLoading) return <div>Loading vehicle types...</div>;
+  if (vehicleTypesError) return <div>Error loading vehicle types</div>;
+  if (!selectedVehicle) return <div>Vehicle not found</div>;
+
   return (
     <div className="min-h-screen flex flex-col items-center bg-background p-4">
       <div className="w-full max-w-lg bg-ivory rounded-3xl shadow-xl overflow-hidden mt-0 sm:mt-8 p-0">
         <div className="p-6">
-
           <BookingSummary
             location={summary.location}
             date={summary.date}
             timeSlot={summary.timeSlot}
             vehicleType={summary.vehicleType}
+            groupType={summary.groupType}
             pickupLocation={summary.pickupLocation}
             paymentAmount={amount}
           />

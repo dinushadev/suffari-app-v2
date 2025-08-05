@@ -5,9 +5,10 @@ interface GroupTypeOption {
   value: string;
   description: string;
   icon: React.ReactNode;
+  size: string; // Added group size
 }
 
-const groupTypes: GroupTypeOption[] = [
+export const groupTypes: GroupTypeOption[] = [
   {
     label: 'Small',
     value: 'small',
@@ -15,6 +16,7 @@ const groupTypes: GroupTypeOption[] = [
     icon: (
       <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="2" fill="#DBEAFE"/><path strokeLinecap="round" strokeLinejoin="round" d="M4 20c0-2.21 3.58-4 8-4s8 1.79 8 4" /></svg>
     ),
+    size: '1-2', // Added size
   },
   {
     label: 'Medium',
@@ -23,6 +25,7 @@ const groupTypes: GroupTypeOption[] = [
     icon: (
       <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="7" cy="8" r="3" stroke="currentColor" strokeWidth="2" fill="#BBF7D0"/><circle cx="17" cy="8" r="3" stroke="currentColor" strokeWidth="2" fill="#BBF7D0"/><circle cx="12" cy="14" r="4" stroke="currentColor" strokeWidth="2" fill="#BBF7D0"/></svg>
     ),
+    size: '3-6', // Added size
   },
   {
     label: 'Large',
@@ -31,6 +34,7 @@ const groupTypes: GroupTypeOption[] = [
     icon: (
       <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="2" y="13" width="7" height="5" rx="2" fill="#FED7AA" stroke="currentColor" strokeWidth="2"/><rect x="15" y="13" width="7" height="5" rx="2" fill="#FED7AA" stroke="currentColor" strokeWidth="2"/><rect x="7" y="7" width="10" height="7" rx="2" fill="#FDBA74" stroke="currentColor" strokeWidth="2"/></svg>
     ),
+    size: '6+', // Added size
   },
 ];
 
@@ -64,6 +68,7 @@ const GroupTypeSelector: React.FC<GroupTypeSelectorProps> = ({ selected, onSelec
                 {option.icon}
                 <span className="font-semibold text-sm sm:text-base">{option.label}</span>
               </div>
+              <span className="text-xs sm:text-sm font-normal -mt-1">{option.size}</span>
             </button>
           );
         })}

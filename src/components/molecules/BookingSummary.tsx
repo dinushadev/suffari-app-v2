@@ -12,11 +12,12 @@ interface BookingSummaryProps {
   date: string;
   timeSlot: string;
   vehicleType: string;
+  groupType: string; // Added groupType
   pickupLocation: PickupLocation;
   paymentAmount?: number; // NEW
 }
 
-const BookingSummary: React.FC<BookingSummaryProps> = ({ location, date, timeSlot, vehicleType, pickupLocation, paymentAmount }) => {
+const BookingSummary: React.FC<BookingSummaryProps> = ({ location, date, timeSlot, vehicleType, groupType, pickupLocation, paymentAmount }) => {
   return (
     <div className="bg-gradient-to-br from-orange-50 to-amber-100 rounded-2xl shadow-lg p-6 border border-orange-100">
       <h3 className="font-extrabold text-xl mb-4 text-orange-600 tracking-tight">Booking Summary</h3>
@@ -36,6 +37,10 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({ location, date, timeSlo
         <li className="py-2 flex items-center justify-between">
           <span className="text-gray-500 font-medium">Vehicle Type</span>
           <span className="text-gray-900 font-semibold">{vehicleType}</span>
+        </li>
+        <li className="py-2 flex items-center justify-between">
+          <span className="text-gray-500 font-medium">Group Type</span>
+          <span className="text-gray-900 font-semibold">{groupType}</span>
         </li>
         <li className="py-2 flex flex-col items-start">
           <span className="text-gray-500 font-medium mb-1">Pickup Location</span>
