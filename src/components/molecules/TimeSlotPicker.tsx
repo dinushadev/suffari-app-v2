@@ -41,7 +41,6 @@ const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({ options, selected, onSe
               `}
               onClick={() => onSelect(option.value)}
               tabIndex={0}
-              aria-selected={isSelected}
               style={{ userSelect: 'none' }}
             >
               <div className="flex items-center gap-1 mb-1">

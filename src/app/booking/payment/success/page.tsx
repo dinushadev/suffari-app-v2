@@ -37,7 +37,7 @@ export default function PaymentSuccessPage() {
             <CheckCircleIcon className="h-12 w-12 text-green-600" />
             <div className="text-2xl font-bold text-green-700">Booking Confirmed!</div>
             <div className="text-base text-orange font-medium">Booking ID: <span className="font-mono">{bookingId}</span></div>
-            <div className="text-center mt-2">Your booking is confirmed & locked in our system<br/>We've successfully reserved your safari experience. Our local partner will contact you shortly to finalize the details and confirm your adventure.</div>
+            <div className="text-center mt-2">Your booking is confirmed &amp; locked in our system<br/>We&apos;ve successfully reserved your safari experience. Our local partner will contact you shortly to finalize the details and confirm your adventure.</div>
           </div>
 
           {/* Expected Host Contact */}
@@ -62,7 +62,7 @@ export default function PaymentSuccessPage() {
             <div className="flex items-center gap-2 text-yellow-700 font-semibold">
               <ShieldCheckIcon className="h-5 w-5" /> Payment Protection
             </div>
-            <div className="text-sm text-gray-700">You won't be charged until you confirm the vehicle with your host. This ensures you're completely satisfied with your safari arrangement before any payment is processed.</div>
+            <div className="text-sm text-gray-700">You won&apos;t be charged until you confirm the vehicle with your host. This ensures you&apos;re completely satisfied with your safari arrangement before any payment is processed.</div>
           </div>
 
           {/* Safari Details */}

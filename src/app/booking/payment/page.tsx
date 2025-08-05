@@ -186,6 +186,7 @@ function StripePaymentWrapper({ amount }: { amount: number }) {
       const data = await res.json();
       setClientSecret(data.clientSecret);
     } catch (err) {
+      console.error(err); // log the error to avoid unused variable warning
       setError("Failed to create payment intent. Please try again.");
     } finally {
       setLoading(false);

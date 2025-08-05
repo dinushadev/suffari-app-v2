@@ -61,7 +61,6 @@ const GroupTypeSelector: React.FC<GroupTypeSelectorProps> = ({ selected, onSelec
               `}
               onClick={() => onSelect(option.value)}
               tabIndex={0}
-              aria-selected={isSelected}
               style={{ userSelect: 'none' }}
             >
               <div className="flex items-center gap-1 mb-1">
