@@ -12,7 +12,12 @@ import { useCreateBooking } from "../../../data/useCreateBooking";
 import { groupTypes } from '../../../components/molecules/GroupTypeSelector';
 import { useVehicleTypes } from "../../../data/useVehicleTypes";
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+// Validate Stripe publishable key
+if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
+  throw new Error("NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is not configured in environment variables");
+}
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
 function StripePaymentForm({ loading, setLoading, error, setError, amount }: {
   loading: boolean,
@@ -183,11 +188,23 @@ function StripePaymentWrapper({ amount }: { amount: number }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ amount, currency: 'usd' }),
       });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || `HTTP error! status: ${res.status}`);
+      }
+      
       const data = await res.json();
+      
+      if (!data.clientSecret) {
+        throw new Error("Invalid response from payment service");
+      }
+      
       setClientSecret(data.clientSecret);
     } catch (err) {
-      console.error(err); // log the error to avoid unused variable warning
-      setError("Failed to create payment intent. Please try again.");
+      console.error("Payment intent creation failed:", err);
+      const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
+      setError(`Failed to create payment intent: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
