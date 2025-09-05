@@ -6,7 +6,8 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import resourceLocations, { LocationDetails } from '../../data/resourceLocations';
 import { useVehicleTypes } from '../../data/useVehicleTypes';
 import type { PickupLocation } from '../../components/molecules/PickupLocationInput';
-//import { supabase } from "@/data/apiConfig";
+import { supabase } from "../../data/apiConfig";
+import { useCreateBooking } from "../../data/useCreateBooking";
 
 const timeSlotOptions = [
   {
@@ -26,6 +27,10 @@ const timeSlotOptions = [
   },
 ];
 
+function generateSessionId() {
+  return 'sess_' + Math.random().toString(36).substr(2, 9) + Date.now();
+}
+
 function BookingPageContent() {
   const searchParams = useSearchParams();
   const locationId = searchParams.get('location');
@@ -41,6 +46,7 @@ function BookingPageContent() {
   const [children, setChildren] = useState(0);
 
   const { data: vehicleTypes, isLoading: vehicleTypesLoading, error: vehicleTypesError } = useVehicleTypes();
+  const createBookingMutation = useCreateBooking();
 
   // Map API data to VehicleTypeSelector format
   const vehicleOptions = vehicleTypes?.map((v) => ({
@@ -93,21 +99,77 @@ function BookingPageContent() {
   }
 
   const handleConfirm = async () => {
- //   const { data: { session } } = await supabase.auth.getSession();
-    // if (!session) {
-    //   localStorage.setItem("pendingBooking", JSON.stringify({
-    //     vehicle,
-    //     date,
-    //     timeSlot,
-    //     pickup,
-    //     fromGate
-    //   }));
-    //   // Redirect to auth page
-    //   router.push('/auth');
-    //   return;
-    // }
-    // Instead of confirming here, navigate to payment page with booking details
-    router.push(`/booking/payment?vehicle=${vehicle}&date=${date}&timeSlot=${timeSlot}&fromGate=${fromGate}&pickup=${encodeURIComponent(JSON.stringify(pickup))}&adults=${adults}&children=${children}&locationId=${locationId}`);
+    // Check if user is logged in
+    const { data: { session } } = await supabase.auth.getSession();
+    let customer = {
+      email: null as string | null,
+      phone: null as string | null,
+      sessionId: null as string | null,
+    };
+    if (!session || !session.user) {
+      // Guest user
+      let sessionId = localStorage.getItem('raahi_session_id');
+      if (!sessionId) {
+        sessionId = generateSessionId();
+        localStorage.setItem('raahi_session_id', sessionId);
+      }
+      customer.sessionId = sessionId;
+      // Optionally, collect guest email/phone from form if available
+    } else {
+      // Logged in user
+      const { email = null, phone = null } = session.user;
+      customer.email = email || null;
+      customer.phone = phone || null;
+      customer.sessionId = null;
+    }
+    // Prepare booking data in required structure, using null for missing values
+    const bookingData = {
+      customer,
+      locationId: locationId || null,
+      resourceTypeId: vehicle || null,
+      schedule: {
+        date: date || null,
+        timeSlot: timeSlot || null,
+      },
+      group: {
+        adults: adults ?? null,
+        children: children ?? null,
+        size: (adults != null && children != null) ? adults + children : null,
+      },
+      pickupLocation: fromGate
+        ? {
+            placeId: null,
+            coordinate: { lat: 0, lng: 0 },
+            address: 'Pickup from park gate',
+            country: null,
+          }
+        : {
+            placeId: pickup.placeId || null,
+            coordinate: pickup.coordinate || { lat: 0, lng: 0 },
+            address: pickup.address || null,
+            country: pickup.country || null,
+          },
+    };
+    try {
+      await createBookingMutation.mutateAsync(bookingData);
+      // Pass sessionId or user info to payment page
+      const params = new URLSearchParams({
+        vehicle,
+        date,
+        timeSlot,
+        fromGate: fromGate ? "true" : "false",
+        pickup: JSON.stringify(pickup),
+        adults: adults.toString(),
+        children: children.toString(),
+        locationId: locationId || "",
+        sessionId: customer.sessionId || "",
+        email: customer.email || "",
+        phone: customer.phone || "",
+      });
+      router.push(`/booking/payment?${params.toString()}`);
+    } catch (err) {
+      alert((err as Error).message || "Booking failed");
+    }
   };
 
   return (
@@ -170,7 +232,7 @@ function BookingPageContent() {
             onClick={handleConfirm}
             disabled={!isFormValid}
           >
-            Confirm & Book
+            Confirm & Pay
           </Button>
         </div>
       </div>
