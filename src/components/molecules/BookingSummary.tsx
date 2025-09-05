@@ -39,7 +39,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({ location, date, timeSlo
           <span className="text-gray-900 font-semibold">{vehicleType}</span>
         </li>
         <li className="py-2 flex items-center justify-between">
-          <span className="text-gray-500 font-medium">Group Type</span>
+          <span className="text-gray-500 font-medium">Group Size</span>
           <span className="text-gray-900 font-semibold">{groupType}</span>
         </li>
         <li className="py-2 flex flex-col items-start">

@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, Suspense } from 'react';
-import { VehicleTypeSelector, DatePicker, TimeSlotPicker, PickupLocationInput, GroupTypeSelector } from '../../components/molecules';
+import { VehicleTypeSelector, DatePicker, TimeSlotPicker, PickupLocationInput, GroupSizeSelector } from '../../components/molecules';
 import { Button, CustomImage, Loader } from '../../components/atoms';
 import { useSearchParams, useRouter } from 'next/navigation';
 import resourceLocations, { LocationDetails } from '../../data/resourceLocations';
@@ -37,7 +37,8 @@ function BookingPageContent() {
   const [pickup, setPickup] = useState<PickupLocation>({});
   const [fromGate, setFromGate] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
-  const [groupType, setGroupType] = useState('small');
+  const [adults, setAdults] = useState(1);
+  const [children, setChildren] = useState(0);
 
   const { data: vehicleTypes, isLoading: vehicleTypesLoading, error: vehicleTypesError } = useVehicleTypes();
 
@@ -106,7 +107,7 @@ function BookingPageContent() {
     //   return;
     // }
     // Instead of confirming here, navigate to payment page with booking details
-    router.push(`/booking/payment?vehicle=${vehicle}&date=${date}&timeSlot=${timeSlot}&fromGate=${fromGate}&pickup=${encodeURIComponent(JSON.stringify(pickup))}&groupType=${groupType}&locationId=${locationId}`);
+    router.push(`/booking/payment?vehicle=${vehicle}&date=${date}&timeSlot=${timeSlot}&fromGate=${fromGate}&pickup=${encodeURIComponent(JSON.stringify(pickup))}&adults=${adults}&children=${children}&locationId=${locationId}`);
   };
 
   return (
@@ -142,8 +143,13 @@ function BookingPageContent() {
             <TimeSlotPicker options={timeSlotOptions} selected={timeSlot} onSelect={setTimeSlot} />
           </div>
           <div className="mb-6">
-            <h2 className="font-bold text-lg mb-2 text-orange">Group Type</h2>
-            <GroupTypeSelector selected={groupType} onSelect={setGroupType} />
+            <h2 className="font-bold text-lg mb-2 text-orange">Group Size</h2>
+            <GroupSizeSelector 
+              adults={adults} 
+              children={children}
+              onAdultsChange={setAdults}
+              onChildrenChange={setChildren}
+            />
           </div>
           <div className="mb-6">
             <h2 className="font-bold text-lg mb-2 text-orange">Vehicle Type</h2>

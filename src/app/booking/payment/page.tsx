@@ -9,7 +9,6 @@ import { Suspense } from "react";
 import Loader from '../../../components/atoms/Loader';
 import type { PaymentRequest as StripePaymentRequest } from "@stripe/stripe-js";
 import { useCreateBooking } from "../../../data/useCreateBooking";
-import { groupTypes } from '../../../components/molecules/GroupTypeSelector';
 import { useVehicleTypes } from "../../../data/useVehicleTypes";
 
 // Validate Stripe publishable key
@@ -39,7 +38,8 @@ function StripePaymentForm({ loading, setLoading, error, setError, amount }: {
   const userId = searchParams.get("userId") || ""; // Adjust as needed
   const locationId = searchParams.get("locationId") || ""; // Adjust as needed
   const resourceId = searchParams.get("resourceId") || ""; // Adjust as needed
-  const groupType = searchParams.get("groupType") || "";
+  const adults = parseInt(searchParams.get("adults") || "1", 10);
+  const children = parseInt(searchParams.get("children") || "0", 10);
 
   const [paymentRequest, setPaymentRequest] = useState<StripePaymentRequest | null>(null);
   //const [prButtonReady, setPrButtonReady] = useState(false);
@@ -75,56 +75,31 @@ function StripePaymentForm({ loading, setLoading, error, setError, amount }: {
       setLoading(false);
       return;
     }
-    // const { error, paymentIntent } = await stripe.confirmPayment({
-    //   elements,
-    //   confirmParams: {},
-    //   redirect: "if_required",
-    // });
-    // if (error) {
-    //   setError(error.message || "Payment failed");
-    //   setLoading(false);
-    //   return;
-    // }
-    // if (paymentIntent && paymentIntent.status === "succeeded") {
-    //   // Prepare booking data
-    //   const bookingData = {
-    //     userId,
-    //     locationId,
-    //     resourceId,
-    //     date,
-    //     timeSlot,
-    //     groupType, // Add groupType to booking payload
-    //     pickupLocation: fromGate ? {
-    //       placeId: "",
-    //       coordinate: { lat: 0, lng: 0 },
-    //       address: "Pickup from park gate",
-    //       country: "",
-    //     } : pickup,
-    //   };
-    //   try {
-    //     await createBookingMutation.mutateAsync(bookingData);
-    //     const params = new URLSearchParams({
-    //       vehicle,
-    //       date,
-    //       timeSlot,
-    //       fromGate: fromGate ? "true" : "false",
-    //       pickup: JSON.stringify(pickup),
-    //       amount: amount.toString(),
-    //     });
-    //     router.push(`/booking/payment/success?${params.toString()}`);
-    //   } catch (err) {
-    //     setError((err as Error).message || "Booking failed");
-    //   }
-    // }
-
-      // Prepare booking data
+    let paymentSucceeded = false;
+    if (process.env.NEXT_PUBLIC_ENABLE_PAYMENTS === 'true') {
+      const { error, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {},
+        redirect: "if_required",
+      });
+      if (error) {
+        setError(error.message || "Payment failed");
+        setLoading(false);
+        return;
+      }
+      paymentSucceeded = !!(paymentIntent && paymentIntent.status === "succeeded");
+    } else {
+      paymentSucceeded = true;
+    }
+    if (paymentSucceeded) {
       const bookingData = {
         userId,
         locationId,
         resourceId,
         date,
         timeSlot,
-        groupType, // Add groupType to booking payload
+        adults,
+        children,
         pickupLocation: fromGate ? {
           placeId: "",
           coordinate: { lat: 0, lng: 0 },
@@ -146,6 +121,7 @@ function StripePaymentForm({ loading, setLoading, error, setError, amount }: {
       } catch (err) {
         setError((err as Error).message || "Booking failed");
       }
+    }
     setLoading(false);
   };
 
@@ -252,9 +228,13 @@ function PaymentPage() {
   const fromGate = searchParams.get("fromGate") === "true";
   const pickupRaw = searchParams.get("pickup");
   const pickup = pickupRaw ? JSON.parse(pickupRaw) : {};
-  const groupTypeValue = searchParams.get("groupType") || "";
-  const groupTypeObj = groupTypes.find(g => g.value === groupTypeValue);
-  const groupTypeLabel = groupTypeObj ? `${groupTypeObj.label} (${groupTypeObj.size})` : groupTypeValue;
+  const adults = parseInt(searchParams.get("adults") || "1", 10);
+  const children = parseInt(searchParams.get("children") || "0", 10);
+  const totalGuests = adults + children;
+  const groupSizeLabel = `${adults} Adult${adults !== 1 ? 's' : ''}${children > 0 ? `, ${children} Child${children !== 1 ? 'ren' : ''}` : ''}`;
+  const userId = searchParams.get("userId") || ""; // TODO: Implement proper user ID
+  const locationId = searchParams.get("locationId") || "";
+  const resourceId = searchParams.get("resourceId") || ""; // TODO: Implement proper resource ID
 
   // Fetch vehicle types
   const { data: vehicleTypes, isLoading: vehicleTypesLoading, error: vehicleTypesError } = useVehicleTypes();
@@ -270,7 +250,7 @@ function PaymentPage() {
     date,
     timeSlot,
     vehicleType: vehicle,
-    groupType: groupTypeLabel,
+    groupType: groupSizeLabel,
     pickupLocation: fromGate ? { address: "Pickup from park gate" } : pickup,
   };
 
@@ -291,9 +271,80 @@ function PaymentPage() {
             pickupLocation={summary.pickupLocation}
             paymentAmount={amount}
           />
-          <StripePaymentWrapper amount={amount} />
+          {process.env.NEXT_PUBLIC_ENABLE_PAYMENTS === 'true' ? (
+            <StripePaymentWrapper amount={amount} />
+          ) : (
+            <DirectBookingConfirmation
+              bookingData={{
+                userId,
+                locationId,
+                resourceId,
+                date,
+                timeSlot,
+                adults,
+                children,
+                pickupLocation: fromGate ? {
+                  placeId: "",
+                  coordinate: { lat: 0, lng: 0 },
+                  address: "Pickup from park gate",
+                  country: "",
+                } : pickup,
+              }}
+              vehicle={vehicle}
+              fromGate={fromGate}
+              pickup={pickup}
+              amount={amount}
+            />
+          )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function DirectBookingConfirmation({ bookingData, vehicle, fromGate, pickup, amount }: {
+  bookingData: any;
+  vehicle: string;
+  fromGate: boolean;
+  pickup: any;
+  amount: number;
+}) {
+  const router = useRouter();
+  const createBookingMutation = useCreateBooking();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleConfirm = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await createBookingMutation.mutateAsync(bookingData);
+      const params = new URLSearchParams({
+        vehicle,
+        date: bookingData.date,
+        timeSlot: bookingData.timeSlot,
+        fromGate: fromGate ? "true" : "false",
+        pickup: JSON.stringify(pickup),
+        amount: amount.toString(),
+      });
+      router.push(`/booking/payment/success?${params.toString()}`);
+    } catch (err) {
+      setError((err as Error).message || "Booking failed");
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="mt-8">
+      {error && <div className="text-red-500 text-sm mb-4">{error}</div>}
+      <Button 
+        onClick={handleConfirm} 
+        variant="primary" 
+        className="w-full text-lg py-3" 
+        disabled={loading}
+      >
+        {loading ? "Processing..." : "Confirm Booking (Payment Disabled)"}
+      </Button>
     </div>
   );
 }
