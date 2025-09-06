@@ -59,7 +59,7 @@ const VehicleTypeSelector: React.FC<VehicleTypeSelectorProps> = ({ options, sele
               </div>
               {option.price !== undefined && (
                 <div className="bg-orange/10 text-orange font-bold px-3 py-1 rounded-lg text-sm whitespace-nowrap shadow-sm border border-orange/20">
-                  LKR {option.price.toLocaleString()}
+                   {option.price.toLocaleString()} USD
                 </div>
               )}
             </div>
