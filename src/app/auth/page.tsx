@@ -53,7 +53,7 @@ function AuthPageContent() {
           const pendingData = JSON.parse(pendingDataStr);
           const bookingId = pendingData.bookingId;
           try {
-            await associateBooking.mutateAsync({ bookingId, userId: session.user.id });
+           // await associateBooking.mutateAsync({ bookingId, userId: session.user.id });
             localStorage.removeItem('pendingBookingData');
             router.push(returnUrl);
           } catch (err) {
@@ -74,7 +74,7 @@ function AuthPageContent() {
   const handleOAuth = async (provider: 'google' | 'facebook') => {
     setOauthLoading(prev => ({ ...prev, [provider]: true }));
     setError("");
-    const { error } = await supabase.auth.signInWithOAuth({ provider });
+    const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: `${window.location.origin}/auth?returnUrl=${returnUrl}` } });
     setOauthLoading(prev => ({ ...prev, [provider]: false }));
     if (error) {
       setError(error.message);
