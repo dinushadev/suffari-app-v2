@@ -11,7 +11,7 @@ const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, min, max }) =>
   return (
     <input
       type="date"
-      className="border rounded p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+      className="border-2 border-ash rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-orange text-lg text-foreground placeholder-ash bg-ivory shadow-sm"
       value={value}
       onChange={e => onChange(e.target.value)}
       min={min}
