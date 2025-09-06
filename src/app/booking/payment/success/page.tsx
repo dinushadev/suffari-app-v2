@@ -1,19 +1,41 @@
 "use client";
 import React from "react";
 import { Button } from "../../../../components/atoms";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircleIcon, ShieldCheckIcon, PhoneIcon, CalendarIcon, MapPinIcon, EnvelopeIcon } from "@heroicons/react/24/outline";
 
 export default function PaymentSuccessPage() {
   const router = useRouter();
-  // Demo data, replace with real data as needed
-  const bookingId = "RAAHI-62347452";
-  const contactWithin = "24 minutes";
-  const email = "ffdd@ddd.v";
-  const location = "Bandhavgarh National Park, Madhya Pradesh";
-  const dateTime = "8/21/2025 • evening";
-  const contactName = "hghh";
-  const vehicle = "Standard Safari Jeep";
+  const searchParams = useSearchParams();
+
+  const bookingId = searchParams.get("bookingId") || "";
+  const vehicle = searchParams.get("vehicle") || "";
+  const date = searchParams.get("date") || "";
+  const timeSlot = searchParams.get("timeSlot") || "";
+  const fromGate = searchParams.get("fromGate") === "true";
+  const pickupRaw = searchParams.get("pickup");
+  const pickup = pickupRaw ? JSON.parse(pickupRaw) : {};
+  const amount = parseFloat(searchParams.get("amount") || "0");
+
+  // Dummy data for contact info (these are not passed via URL)
+  const contactWithin = "24 minutes"; // This will eventually come from the backend
+  const email = "customer@example.com"; // This will eventually come from the user's session
+  const location = "Bandhavgarh National Park, Madhya Pradesh"; // This will eventually come from a lookup based on bookingId
+  const contactName = "Support Team"; // This will eventually come from the backend
+
+  // Helper to format date and time slot
+  const formatDateTime = (dateStr: string, timeSlotStr: string) => {
+    if (!dateStr || !timeSlotStr) return "N/A";
+    try {
+      const d = new Date(dateStr);
+      return `${d.toLocaleDateString()} • ${timeSlotStr}`;
+    } catch (e) {
+      console.error("Error formatting date time:", e);
+      return `${dateStr} • ${timeSlotStr}`;
+    }
+  };
+
+  const dateTime = formatDateTime(date, timeSlot);
 
   // Calculate estimated contact time: 30 minutes from now
   function getEstimatedContactTime() {
@@ -70,7 +92,8 @@ export default function PaymentSuccessPage() {
             <div className="text-lg font-semibold text-gray-800 mb-1">Your Safari Details</div>
             <div className="flex items-center gap-2 text-gray-700"><MapPinIcon className="h-5 w-5" /> <span className="font-medium">Location:</span> {location}</div>
             <div className="flex items-center gap-2 text-gray-700"><CalendarIcon className="h-5 w-5" /> <span className="font-medium">Date & Time:</span> {dateTime}</div>
-            <div className="flex items-center gap-2 text-gray-700"><PhoneIcon className="h-5 w-5" /> <span className="font-medium">Contact:</span> {contactName}</div>
+            <div className="flex items-center gap-2 text-gray-700"><EnvelopeIcon className="h-5 w-5" /> <span className="font-medium">Email:</span> {email}</div>
+            <div className="flex items-center gap-2 text-gray-700"><PhoneIcon className="h-5 w-5" /> <span className="font-medium">Pickup:</span> {fromGate ? 'Pickup from park gate' : pickup.address}</div>
             <div className="flex items-center gap-2 text-gray-700">
               <span className="inline-block">
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">

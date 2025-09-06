@@ -6,7 +6,7 @@ import { supabase } from "@/data/apiConfig";
 import { useAssociateBooking } from "@/data/useAssociateBooking";
 import { useOtpSend } from "@/data/useOtpSend";
 import { useOtpVerify } from "@/data/useOtpVerify";
-
+import { useSearchParams } from 'next/navigation';
 // Client-side component for checking pending booking
 function PendingBookingNotice() {
   const [hasPendingBooking, setHasPendingBooking] = useState(false);
@@ -41,6 +41,8 @@ export default function AuthPage() {
   // React Query hooks for OTP operations
   const otpSendMutation = useOtpSend();
   const otpVerifyMutation = useOtpVerify();
+  const searchParams = useSearchParams();
+  const returnUrl = searchParams.get('returnUrl') || '/';
 
   useEffect(() => {
     const associateIfPending = async () => {
@@ -54,7 +56,7 @@ export default function AuthPage() {
             await associateBooking.mutateAsync({ bookingId, userId: session.user.id });
             localStorage.removeItem('pendingBookingData');
             const params = new URLSearchParams(pendingData.params);
-            router.push(`/booking/payment?${params.toString()}`);
+            router.push(returnUrl);
           } catch (err) {
             setError((err as Error).message || 'Failed to associate booking');
           }
@@ -63,7 +65,7 @@ export default function AuthPage() {
         // If no pending booking and user is logged in, redirect to home
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user?.id) {
-          router.push('/');
+          router.push(returnUrl);
         }
       }
     };
@@ -113,7 +115,7 @@ export default function AuthPage() {
         
         // Redirect to payment page
         const params = new URLSearchParams(pendingData.params);
-        router.push(`/booking/payment?${params.toString()}`);
+        router.push(returnUrl);
         return;
       }
       
@@ -121,7 +123,7 @@ export default function AuthPage() {
       if (typeof window !== 'undefined' && localStorage.getItem('pendingBooking')) {
         router.push('/booking');
       } else {
-        router.push("/");
+        router.push(returnUrl);
       }
     } catch (err) {
       setError((err as Error).message);

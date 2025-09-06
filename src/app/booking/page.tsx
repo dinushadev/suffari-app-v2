@@ -189,7 +189,7 @@ function BookingPageContent() {
           // Removed other params as they are no longer needed on the payment page
         };
         localStorage.setItem('pendingBookingData', JSON.stringify(pendingData));
-        router.push('/auth');
+        router.push(`/auth?returnUrl=/booking/payment?orderId=${bookingId}`);
       }
     } catch (err) {
       alert((err as Error).message || "Booking failed");
