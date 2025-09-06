@@ -37,7 +37,36 @@ function BookingPageContent() {
   const locationId = searchParams.get('location');
   const router = useRouter();
 
+  const [vehicle, setVehicle] = useState('');
+  const [date, setDate] = useState('');
+  const [timeSlot, setTimeSlot] = useState('morning');
+  const [pickup, setPickup] = useState<PickupLocation>({});
+  const [fromGate, setFromGate] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
+  const [adults, setAdults] = useState(1);
+  const [children, setChildren] = useState(0);
+
   const { data: location, isLoading: locationLoading, error: locationError } = useLocationDetails(locationId || '');
+  const { data: vehicleTypes, isLoading: vehicleTypesLoading, error: vehicleTypesError } = useVehicleTypes();
+  const createBookingMutation = useCreateBooking();
+
+  // Prefill from localStorage if available
+  React.useEffect(() => {
+    const saved = localStorage.getItem("pendingBooking");
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        if (data) {
+          setVehicle(data.vehicle || '');
+          setDate(data.date || '');
+          setTimeSlot(data.timeSlot || 'morning');
+          setPickup(data.pickup || {});
+          setFromGate(!!data.fromGate);
+        }
+        localStorage.removeItem("pendingBooking");
+      } catch {}
+    }
+  }, []);
 
   // Redirect if no locationId
   React.useEffect(() => {
@@ -66,18 +95,6 @@ function BookingPageContent() {
     );
   }
 
-  const [vehicle, setVehicle] = useState('private');
-  const [date, setDate] = useState('');
-  const [timeSlot, setTimeSlot] = useState('morning');
-  const [pickup, setPickup] = useState<PickupLocation>({});
-  const [fromGate, setFromGate] = useState(false);
-  const [confirmed, setConfirmed] = useState(false);
-  const [adults, setAdults] = useState(1);
-  const [children, setChildren] = useState(0);
-
-  const { data: vehicleTypes, isLoading: vehicleTypesLoading, error: vehicleTypesError } = useVehicleTypes();
-  const createBookingMutation = useCreateBooking();
-
   // Map API data to VehicleTypeSelector format
   const vehicleOptions = vehicleTypes?.map((v) => ({
     label: v.name,
@@ -95,24 +112,6 @@ function BookingPageContent() {
     !!date &&
     !!timeSlot &&
     ((pickup && pickup.address && pickup.address.trim().length > 0) || fromGate);
-
-  // Prefill from localStorage if available
-  React.useEffect(() => {
-    const saved = localStorage.getItem("pendingBooking");
-    if (saved) {
-      try {
-        const data = JSON.parse(saved);
-        if (data) {
-          setVehicle(data.vehicle || 'private');
-          setDate(data.date || '');
-          setTimeSlot(data.timeSlot || 'morning');
-          setPickup(data.pickup || {});
-          setFromGate(!!data.fromGate);
-        }
-        localStorage.removeItem("pendingBooking");
-      } catch {}
-    }
-  }, []);
 
   if (confirmed) {
     return (

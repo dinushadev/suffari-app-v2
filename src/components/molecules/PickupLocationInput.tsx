@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import PlacesAutocomplete from 'react-places-autocomplete';
 import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
 import { PickupOption } from '../atoms';
 
@@ -24,6 +23,8 @@ const mapContainerStyle = {
   borderRadius: '0.75rem', // rounded-xl
   marginTop: '0.5rem',
 };
+
+const libraries: ('places')[] = ['places'];
 
 function extractCountry(results: google.maps.GeocoderResult[]): string | undefined {
   if (!results || !results[0]) return undefined;
@@ -54,10 +55,14 @@ function geocodeAddress(address: string): Promise<PickupLocation | null> {
 const PickupLocationInput: React.FC<PickupLocationInputProps> = ({ value, onChange, fromGate, onToggleGate }) => {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(value?.coordinate || null);
   const [pickupMode, setPickupMode] = useState<'gate' | 'current' | 'custom'>(fromGate ? 'gate' : value?.address ? 'custom' : 'custom');
-  const [inputAddress, setInputAddress] = useState(value?.address || ''); // NEW: local state for input
+  const [inputAddress, setInputAddress] = useState(value?.address || '');
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [sessionToken, setSessionToken] = useState<google.maps.places.AutocompleteSessionToken | null>(null);
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
-    libraries: ['places'],
+    libraries,
   });
 
   // Reverse geocode for current location
@@ -78,6 +83,50 @@ const PickupLocationInput: React.FC<PickupLocationInputProps> = ({ value, onChan
       });
     });
   }
+
+  // Custom autocomplete logic
+  useEffect(() => {
+    if (!isLoaded || !window.google || !inputAddress || pickupMode !== 'custom') {
+      setSuggestions([]);
+      setLoadingSuggestions(false);
+      setSessionToken(null); // Clear session token if input is empty or mode changes
+      return;
+    }
+
+    if (!sessionToken) {
+      setSessionToken(new window.google.maps.places.AutocompleteSessionToken());
+    }
+
+    setLoadingSuggestions(true);
+    const service = new window.google.maps.places.AutocompleteService();
+    service.getPlacePredictions({ input: inputAddress, componentRestrictions: { country: 'lk' }, sessionToken: sessionToken || undefined }, (predictions: any[] | null) => {
+      setSuggestions(predictions || []);
+      setLoadingSuggestions(false);
+    });
+  }, [inputAddress, isLoaded, pickupMode, sessionToken]);
+
+  // Handle suggestion click
+  const handleSuggestionClick = (suggestion: any) => {
+    setInputAddress(suggestion.description);
+    setShowSuggestions(false);
+    if (isLoaded && window.google) {
+      const geocoder = new window.google.maps.Geocoder();
+      geocoder.geocode({ placeId: suggestion.place_id }, (results: google.maps.GeocoderResult[] | null, status: google.maps.GeocoderStatus) => {
+        if (status === 'OK' && results && results[0]) {
+          const location = results[0].geometry.location;
+          const loc: PickupLocation = {
+            coordinate: { lat: location.lat(), lng: location.lng() },
+            address: results[0].formatted_address,
+            country: extractCountry(results),
+            placeId: results[0].place_id,
+          };
+          setCoords(loc.coordinate ?? null);
+          onChange(loc);
+        }
+        setSessionToken(null); // End session after place selection
+      });
+    }
+  };
 
   useEffect(() => {
     if (pickupMode === 'gate') {
@@ -102,7 +151,7 @@ const PickupLocationInput: React.FC<PickupLocationInputProps> = ({ value, onChan
       onToggleGate(false);
       if (value?.address && isLoaded && window.google) {
         geocodeAddress(value.address).then((loc) => {
-          setCoords(loc?.coordinate || null);
+          setCoords((loc && loc.coordinate ? loc.coordinate : null) as { lat: number; lng: number } | null);
           if (loc) onChange(loc);
         });
       } else {
@@ -146,73 +195,54 @@ const PickupLocationInput: React.FC<PickupLocationInputProps> = ({ value, onChan
       </div>
       {pickupMode === 'custom' && (
         <div className="relative w-full">
-          <PlacesAutocomplete
-            value={inputAddress} // use local state
-            onChange={address => setInputAddress(address)} // only update local state
-            onSelect={(address, placeId) => {
-              setInputAddress(address); // update local state
-              onChange({ ...value, address, placeId }); // update parent with full location
+          <input
+            value={inputAddress}
+            onChange={e => {
+              setInputAddress(e.target.value);
+              setShowSuggestions(true);
+              if (!sessionToken) {
+                setSessionToken(new window.google.maps.places.AutocompleteSessionToken());
+              }
             }}
-          >
-            {({ getInputProps, suggestions, getSuggestionItemProps, loading }) => {
-              return (
-                <div>
-                  <input
-                    {...getInputProps({
-                      placeholder: 'Enter pickup location or hotel (Google Maps search)',
-                      className:
-                        'border-2 border-ash rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-orange text-lg text-foreground placeholder-ash bg-ivory shadow-sm',
-                      autoComplete: 'off',
-                    })}
-                  />
-                  {suggestions.length > 0 && (
-                    <div className="absolute left-0 right-0 mt-1 z-20 bg-background border border-ash w-full rounded shadow overflow-hidden">
-                      {loading && <div className="p-2 text-gray-400">Loading...</div>}
-                      {suggestions.map((suggestion) => {
-                        const className =
-                          suggestion.active
-                            ? 'p-2 bg-orange-100/10 text-orange cursor-pointer'
-                            : 'p-2 text-foreground cursor-pointer';
-                        return (
-                          <div
-                            {...getSuggestionItemProps(suggestion, { className })}
-                            key={suggestion.placeId}
-                            onClick={() => {
-                              setInputAddress(suggestion.description);
-                              onChange({
-                                ...value,
-                                address: suggestion.description,
-                                placeId: suggestion.placeId,
-                              });
-                            }}
-                          >
-                            {suggestion.description}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                  {/* Interactive map with pin for selected location */}
-                  {isLoaded && coords && (
-                    <div style={mapContainerStyle}>
-                      <GoogleMap
-                        mapContainerStyle={{ width: '100%', height: '100%', borderRadius: '0.75rem' }}
-                        center={coords}
-                        zoom={15}
-                        options={{
-                          disableDefaultUI: true,
-                          clickableIcons: false,
-                          gestureHandling: 'greedy',
-                        }}
-                      >
-                        <Marker position={coords} />
-                      </GoogleMap>
-                    </div>
-                  )}
-                </div>
-              );
-            }}
-          </PlacesAutocomplete>
+            onFocus={() => setShowSuggestions(true)}
+            placeholder="Enter pickup location or hotel (Google Maps search)"
+            className="border-2 border-ash rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-orange text-lg text-foreground placeholder-ash bg-ivory shadow-sm"
+            autoComplete="off"
+          />
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="absolute left-0 right-0 mt-1 z-20 bg-background border border-ash w-full rounded shadow overflow-hidden">
+              {loadingSuggestions && <div className="p-2 text-gray-400">Loading...</div>}
+              {suggestions.map((suggestion) => {
+                const className = 'p-2 text-foreground cursor-pointer hover:bg-orange-100/10 hover:text-orange';
+                return (
+                  <div
+                    key={suggestion.place_id}
+                    className={className}
+                    onClick={() => handleSuggestionClick(suggestion)}
+                  >
+                    {suggestion.description}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {/* Interactive map with pin for selected location */}
+          {isLoaded && coords && (
+            <div style={mapContainerStyle}>
+              <GoogleMap
+                mapContainerStyle={{ width: '100%', height: '100%', borderRadius: '0.75rem' }}
+                center={coords}
+                zoom={15}
+                options={{
+                  disableDefaultUI: true,
+                  clickableIcons: false,
+                  gestureHandling: 'greedy',
+                }}
+              >
+                <Marker position={coords} />
+              </GoogleMap>
+            </div>
+          )}
         </div>
       )}
       {/* Show map for current location mode too */}
