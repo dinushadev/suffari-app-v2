@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
 import { PickupOption } from '../atoms';
 
+type Prediction = google.maps.places.AutocompletePrediction;
+
 export interface PickupLocation {
   placeId?: string;
   coordinate?: { lat: number; lng: number };
@@ -56,7 +58,7 @@ const PickupLocationInput: React.FC<PickupLocationInputProps> = ({ value, onChan
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(value?.coordinate || null);
   const [pickupMode, setPickupMode] = useState<'gate' | 'current' | 'custom'>(fromGate ? 'gate' : value?.address ? 'custom' : 'custom');
   const [inputAddress, setInputAddress] = useState(value?.address || '');
-  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [suggestions, setSuggestions] = useState<Prediction[]>([]); // Changed from any[]
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [sessionToken, setSessionToken] = useState<google.maps.places.AutocompleteSessionToken | null>(null);
@@ -99,14 +101,14 @@ const PickupLocationInput: React.FC<PickupLocationInputProps> = ({ value, onChan
 
     setLoadingSuggestions(true);
     const service = new window.google.maps.places.AutocompleteService();
-    service.getPlacePredictions({ input: inputAddress, componentRestrictions: { country: 'lk' }, sessionToken: sessionToken || undefined }, (predictions: any[] | null) => {
+    service.getPlacePredictions({ input: inputAddress, componentRestrictions: { country: 'lk' }, sessionToken: sessionToken || undefined }, (predictions: Prediction[] | null) => { // Changed from any[]
       setSuggestions(predictions || []);
       setLoadingSuggestions(false);
     });
   }, [inputAddress, isLoaded, pickupMode, sessionToken]);
 
   // Handle suggestion click
-  const handleSuggestionClick = (suggestion: any) => {
+  const handleSuggestionClick = (suggestion: Prediction) => { // Changed from any
     setInputAddress(suggestion.description);
     setShowSuggestions(false);
     if (isLoaded && window.google) {
@@ -145,6 +147,11 @@ const PickupLocationInput: React.FC<PickupLocationInputProps> = ({ value, onChan
             onChange(loc);
             setInputAddress(loc.address || ''); // keep input in sync
           }
+        }, (error) => {
+          console.error("Geolocation error:", error);
+          alert("Unable to retrieve your current location. Please ensure location services are enabled and granted permission.");
+          // Optionally, fall back to 'custom' mode or show a message to the user
+          setPickupMode('custom');
         });
       }
     } else if (pickupMode === 'custom') {

@@ -2,7 +2,7 @@ import React from 'react';
 
 interface GroupSizeSelectorProps {
   adults: number;
-  children: number;
+  numChildren: number; // Renamed from children
   onAdultsChange: (value: number) => void;
   onChildrenChange: (value: number) => void;
   maxAdults?: number;
@@ -11,7 +11,7 @@ interface GroupSizeSelectorProps {
 
 const GroupSizeSelector: React.FC<GroupSizeSelectorProps> = ({
   adults,
-  children,
+  numChildren, // Renamed from children
   onAdultsChange,
   onChildrenChange,
   maxAdults = 12,
@@ -103,7 +103,7 @@ const GroupSizeSelector: React.FC<GroupSizeSelectorProps> = ({
     </div>
   );
 
-  const totalGuests = adults + children;
+  const totalGuests = adults + numChildren; // Updated from children
 
   return (
     <div className="w-full space-y-3">
@@ -130,7 +130,7 @@ const GroupSizeSelector: React.FC<GroupSizeSelectorProps> = ({
       />
       <CounterInput
         label="Children"
-        value={children}
+        value={numChildren} // Updated from children
         onChange={onChildrenChange}
         max={maxChildren}
         icon={

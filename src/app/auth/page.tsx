@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/data/apiConfig";
 import { useAssociateBooking } from "@/data/useAssociateBooking";
@@ -29,7 +29,7 @@ function PendingBookingNotice() {
   );
 }
 
-export default function AuthPage() {
+function AuthPageContent() {
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
@@ -55,7 +55,6 @@ export default function AuthPage() {
           try {
             await associateBooking.mutateAsync({ bookingId, userId: session.user.id });
             localStorage.removeItem('pendingBookingData');
-            const params = new URLSearchParams(pendingData.params);
             router.push(returnUrl);
           } catch (err) {
             setError((err as Error).message || 'Failed to associate booking');
@@ -70,7 +69,7 @@ export default function AuthPage() {
       }
     };
     associateIfPending();
-  }, [router]);
+  }, [router, associateBooking, returnUrl]);
 
   const handleOAuth = async (provider: 'google' | 'facebook') => {
     setOauthLoading(prev => ({ ...prev, [provider]: true }));
@@ -114,7 +113,6 @@ export default function AuthPage() {
         localStorage.removeItem('pendingBookingData');
         
         // Redirect to payment page
-        const params = new URLSearchParams(pendingData.params);
         router.push(returnUrl);
         return;
       }
@@ -213,5 +211,12 @@ export default function AuthPage() {
         )}
       </div>
     </main>
+  );
+}
+export default function AuthPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AuthPageContent />
+    </Suspense>
   );
 }

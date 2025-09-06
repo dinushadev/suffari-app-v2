@@ -8,7 +8,6 @@ import { Elements, PaymentElement, PaymentRequestButtonElement, useStripe, useEl
 import { Suspense } from "react";
 import Loader from '../../../components/atoms/Loader';
 import type { PaymentRequest as StripePaymentRequest } from "@stripe/stripe-js";
-import { useCreateBooking } from "../../../data/useCreateBooking";
 import { useConfirmBooking } from "../../../data/useConfirmBooking";
 import { useVehicleTypes } from "../../../data/useVehicleTypes";
 import { useLocationDetails } from "../../../data/useLocationDetails";
@@ -38,8 +37,6 @@ function StripePaymentForm({ loading, setLoading, error, setError, amount }: {
   const fromGate = searchParams.get("fromGate") === "true";
   const pickupRaw = searchParams.get("pickup");
   const pickup = pickupRaw ? JSON.parse(pickupRaw) : {};
-  const adults = parseInt(searchParams.get("adults") || "1", 10);
-  const children = parseInt(searchParams.get("children") || "0", 10);
   const bookingId = searchParams.get("bookingId") || "";
 
   const [paymentRequest, setPaymentRequest] = useState<StripePaymentRequest | null>(null);
@@ -248,8 +245,8 @@ function PaymentPage() {
       <div className="w-full max-w-lg bg-ivory rounded-3xl shadow-xl overflow-hidden mt-0 sm:mt-8 p-0">
         <div className="p-6">
           <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-primary mb-2">You're One Click Away!</h1>
-            <p className="text-gray-600">Complete your payment to secure your safari adventure</p>
+            <h1 className="text-2xl font-bold text-primary mb-2">You&apos;re One Click Away!</h1>
+            <p className="text-foreground/70">Confirm your booking details and proceed to payment.</p>
           </div>
           <BookingSummary
             location={summary.location}
@@ -275,7 +272,7 @@ function PaymentPage() {
 }
 
 function DirectBookingConfirmation({ booking, amount }: {
-  booking: any;
+  booking: { id: string };
   amount: number;
 }) {
   const router = useRouter();

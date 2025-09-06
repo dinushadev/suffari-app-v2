@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from './apiConfig';
 import { apiClient } from './apiClient';
+import { User } from '@supabase/supabase-js'; // Import User type
 
 interface OtpVerifyRequest {
   email: string;
@@ -17,10 +18,10 @@ interface OtpVerifyResponse {
  * @returns Mutation object for OTP verification
  */
 export function useOtpVerify() {
-  return useMutation<{ user: any }, Error, OtpVerifyRequest>({
+  return useMutation<{ user: User | null }, Error, OtpVerifyRequest>({
     mutationFn: async ({ email, otp }) => {
       // First verify the OTP through our API using apiClient
-      const { access_token, refresh_token } = await apiClient('api/otp/verify', {
+      const { access_token, refresh_token }: OtpVerifyResponse = await apiClient('api/otp/verify', {
         method: 'POST',
         body: { email, otp },
         baseUrl: window.location.origin

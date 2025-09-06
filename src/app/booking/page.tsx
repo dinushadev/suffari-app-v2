@@ -3,7 +3,6 @@ import React, { useState, Suspense } from 'react';
 import { VehicleTypeSelector, DatePicker, TimeSlotPicker, PickupLocationInput, GroupSizeSelector } from '../../components/molecules';
 import { Button, CustomImage, Loader } from '../../components/atoms';
 import { useSearchParams, useRouter } from 'next/navigation';
-import resourceLocations, { LocationDetails } from '../../data/resourceLocations';
 import { useVehicleTypes } from '../../data/useVehicleTypes';
 import type { PickupLocation } from '../../components/molecules/PickupLocationInput';
 import { supabase } from "../../data/apiConfig";
@@ -128,7 +127,7 @@ function BookingPageContent() {
   const handleConfirm = async () => {
     // Check if user is logged in
     const { data: { session } } = await supabase.auth.getSession();
-    let customer = {
+    const customer = {
       email: null as string | null,
       phone: null as string | null,
       sessionId: null as string | null,
@@ -232,7 +231,7 @@ function BookingPageContent() {
             <h2 className="font-bold text-lg mb-2 text-orange">Group Size</h2>
             <GroupSizeSelector 
               adults={adults} 
-              children={children}
+              numChildren={children}
               onAdultsChange={setAdults}
               onChildrenChange={setChildren}
             />

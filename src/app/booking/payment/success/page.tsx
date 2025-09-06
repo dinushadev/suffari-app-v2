@@ -3,8 +3,9 @@ import React from "react";
 import { Button } from "../../../../components/atoms";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircleIcon, ShieldCheckIcon, PhoneIcon, CalendarIcon, MapPinIcon, EnvelopeIcon } from "@heroicons/react/24/outline";
+import { Suspense } from "react";
 
-export default function PaymentSuccessPage() {
+function PaymentSuccessPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -21,7 +22,6 @@ export default function PaymentSuccessPage() {
   const contactWithin = "24 minutes"; // This will eventually come from the backend
   const email = "customer@example.com"; // This will eventually come from the user's session
   const location = "Bandhavgarh National Park, Madhya Pradesh"; // This will eventually come from a lookup based on bookingId
-  const contactName = "Support Team"; // This will eventually come from the backend
 
   // Helper to format date and time slot
   const formatDateTime = (dateStr: string, timeSlotStr: string) => {
@@ -104,6 +104,15 @@ export default function PaymentSuccessPage() {
             </div>
           </div>
 
+          {/* Payment Details */}
+          <div className="w-full bg-white rounded-xl p-4 flex flex-col gap-3 border border-gray-100">
+            <div className="text-lg font-semibold text-gray-800 mb-1">Payment Details</div>
+            <div className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+              <span className="text-foreground/80">Total Amount Paid:</span>
+              <span className="font-bold text-lg text-green-600">Rs. {amount.toLocaleString()}</span>
+            </div>
+          </div>
+
           {/* What Happens Next */}
           <div className="w-full bg-gray-50 rounded-xl p-4 flex flex-col gap-2 border border-gray-100">
             <div className="text-lg font-semibold text-gray-800 mb-1">What Happens Next?</div>
@@ -120,5 +129,13 @@ export default function PaymentSuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PaymentSuccessPageContent />
+    </Suspense>
   );
 }
