@@ -44,6 +44,7 @@ function BookingPageContent() {
   const [confirmed, setConfirmed] = useState(false);
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
+  const [isButtonLoading, setIsButtonLoading] = useState(false);
 
   const { data: location, isLoading: locationLoading, error: locationError } = useLocationDetails(locationId || '');
   const { data: vehicleTypes, isLoading: vehicleTypesLoading, error: vehicleTypesError } = useVehicleTypes();
@@ -125,6 +126,8 @@ function BookingPageContent() {
   }
 
   const handleConfirm = async () => {
+    setIsButtonLoading(true); // Start loading
+    await new Promise(resolve => setTimeout(resolve, 2000)); // Add a 2-second delay for debugging
     // Check if user is logged in
     const { data: { session } } = await supabase.auth.getSession();
     const customer = {
@@ -192,6 +195,8 @@ function BookingPageContent() {
       }
     } catch (err) {
       alert((err as Error).message || "Booking failed");
+    } finally {
+      setIsButtonLoading(false); // End loading
     }
   };
 
@@ -253,9 +258,16 @@ function BookingPageContent() {
             variant="primary"
             className="w-full text-lg py-3 transition-transform duration-150 hover:scale-105"
             onClick={handleConfirm}
-            disabled={!isFormValid}
+            disabled={!isFormValid || isButtonLoading}
           >
-            Confirm & Pay
+            {isButtonLoading ? (
+              <div className="flex items-center justify-center">
+                <Loader />
+                <span>Confirming...</span>
+              </div>
+            ) : (
+              "Confirm & Pay"
+            )}
           </Button>
         </div>
       </div>

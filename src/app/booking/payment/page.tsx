@@ -40,6 +40,7 @@ function StripePaymentForm({ loading, setLoading, error, setError, amount }: {
   const bookingId = searchParams.get("bookingId") || "";
 
   const [paymentRequest, setPaymentRequest] = useState<StripePaymentRequest | null>(null);
+  const [isSubmittingPayment, setIsSubmittingPayment] = useState(false); // New state for button loading
   //const [prButtonReady, setPrButtonReady] = useState(false);
 
   useEffect(() => {
@@ -66,11 +67,11 @@ function StripePaymentForm({ loading, setLoading, error, setError, amount }: {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setIsSubmittingPayment(true); // Start loading immediately on click
     setError(null);
     if (!stripe || !elements) {
       setError("Stripe has not loaded yet.");
-      setLoading(false);
+      setIsSubmittingPayment(false); // Stop loading if Stripe not loaded
       return;
     }
     let paymentSucceeded = false;
@@ -82,7 +83,7 @@ function StripePaymentForm({ loading, setLoading, error, setError, amount }: {
       });
       if (error) {
         setError(error.message || "Payment failed");
-        setLoading(false);
+        setIsSubmittingPayment(false); // Stop loading on payment error
         return;
       }
       paymentSucceeded = !!(paymentIntent && paymentIntent.status === "succeeded");
@@ -103,9 +104,12 @@ function StripePaymentForm({ loading, setLoading, error, setError, amount }: {
         router.push(`/booking/payment/success?${params.toString()}`);
       } catch (err) {
         setError((err as Error).message || "Confirmation failed");
+      } finally {
+        setIsSubmittingPayment(false); // Stop loading after booking confirmation attempt
       }
+    } else {
+      setIsSubmittingPayment(false); // Stop loading if payment didn't succeed for other reasons
     }
-    setLoading(false);
   };
 
   return (
@@ -126,8 +130,15 @@ function StripePaymentForm({ loading, setLoading, error, setError, amount }: {
       )}
       <PaymentElement />
       {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
-      <Button type="submit" variant="primary" className="w-full text-lg py-3" disabled={loading}>
-        {loading ? "Processing..." : "Pay with Card"}
+      <Button type="submit" variant="primary" className="w-full text-lg py-3" disabled={isSubmittingPayment}>
+        {isSubmittingPayment ? (
+          <div className="flex items-center justify-center">
+            <Loader />
+            <span className="ml-2">Processing...</span>
+          </div>
+        ) : (
+          "Pay with Card"
+        )}
       </Button>
     </form>
   );
@@ -294,8 +305,9 @@ function DirectBookingConfirmation({ booking, amount }: {
       router.push(`/booking/payment/success?${params.toString()}`);
     } catch (err) {
       setError((err as Error).message || "Confirmation failed");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -307,7 +319,14 @@ function DirectBookingConfirmation({ booking, amount }: {
         className="w-full text-lg py-3" 
         disabled={loading}
       >
-        {loading ? "Processing..." : "Confirm Booking (Payment Disabled)"}
+        {loading ? (
+          <div className="flex items-center justify-center">
+            <Loader />
+            <span >Processing...</span>
+          </div>
+        ) : (
+          "Confirm Booking (Payment Disabled)"
+        )}
       </Button>
     </div>
   );
