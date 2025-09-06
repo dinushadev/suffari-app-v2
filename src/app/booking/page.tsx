@@ -179,24 +179,14 @@ function BookingPageContent() {
     };
     try {
       const data = await createBookingMutation.mutateAsync(bookingData);
-      const bookingId = data.bookingId;
-      const params = new URLSearchParams({
-        vehicle,
-        date,
-        timeSlot,
-        fromGate: fromGate ? "true" : "false",
-        pickup: JSON.stringify(pickup),
-        adults: adults.toString(),
-        children: children.toString(),
-        locationId: locationId || "",
-        bookingId
-      });
+      const bookingId = data.id; // Assuming the API returns 'id' as the booking ID
+
       if (session && session.user) {
-        router.push(`/booking/payment?${params.toString()}`);
+        router.push(`/booking/payment?orderId=${bookingId}`);
       } else {
         const pendingData = {
           bookingId,
-          params: Object.fromEntries(params.entries())
+          // Removed other params as they are no longer needed on the payment page
         };
         localStorage.setItem('pendingBookingData', JSON.stringify(pendingData));
         router.push('/auth');

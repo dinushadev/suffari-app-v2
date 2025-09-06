@@ -59,6 +59,12 @@ export default function AuthPage() {
             setError((err as Error).message || 'Failed to associate booking');
           }
         }
+      } else {
+        // If no pending booking and user is logged in, redirect to home
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.id) {
+          router.push('/');
+        }
       }
     };
     associateIfPending();

@@ -12,6 +12,7 @@ import { useCreateBooking } from "../../../data/useCreateBooking";
 import { useConfirmBooking } from "../../../data/useConfirmBooking";
 import { useVehicleTypes } from "../../../data/useVehicleTypes";
 import { useLocationDetails } from "../../../data/useLocationDetails";
+import { useBookingDetails } from "../../../data/useBookingDetails"; // Import new hook
 
 // Validate Stripe publishable key
 if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
@@ -207,45 +208,39 @@ export default function PaymentPageWrapper() {
 
 function PaymentPage() {
   const searchParams = useSearchParams();
-  const vehicle = searchParams.get("vehicle") || "";
-  const date = searchParams.get("date") || "";
-  const timeSlot = searchParams.get("timeSlot") || "";
-  const fromGate = searchParams.get("fromGate") === "true";
-  const pickupRaw = searchParams.get("pickup");
-  const pickup = pickupRaw ? JSON.parse(pickupRaw) : {};
-  const adults = parseInt(searchParams.get("adults") || "1", 10);
-  const children = parseInt(searchParams.get("children") || "0", 10);
-  const totalGuests = adults + children;
-  const groupSizeLabel = `${adults} Adult${adults !== 1 ? 's' : ''}${children > 0 ? `, ${children} Child${children !== 1 ? 'ren' : ''}` : ''}`;
-  const userId = searchParams.get("userId") || ""; // TODO: Implement proper user ID
-  const locationId = searchParams.get("locationId") || "";
-  const resourceId = searchParams.get("resourceId") || ""; // TODO: Implement proper resource ID
+  const orderId = searchParams.get("orderId");
+  const router = useRouter();
 
-  const { data: location, isLoading: locationLoading, error: locationError } = useLocationDetails(locationId);
+  const { data: booking, isLoading: bookingLoading, error: bookingError } = useBookingDetails(orderId || "");
 
-  // Fetch vehicle types
+  useEffect(() => {
+    if (!orderId) {
+      router.push('/'); // Redirect to home if no orderId
+    }
+  }, [orderId, router]);
+
+  const { data: location, isLoading: locationLoading, error: locationError } = useLocationDetails(booking?.locationId || '');
+
   const { data: vehicleTypes, isLoading: vehicleTypesLoading, error: vehicleTypesError } = useVehicleTypes();
 
-  if (locationLoading || vehicleTypesLoading) return <div>Loading...</div>;
-  if (locationError) return <div>Error loading location</div>;
-  if (vehicleTypesError) return <div>Error loading vehicle types</div>;
-  if (!location) return <div>Location not found</div>;
+  if (bookingLoading || locationLoading || vehicleTypesLoading) return <Loader />;
+  if (bookingError || locationError || vehicleTypesError || !booking || !location) return <div className="text-red-500">Error loading booking details.</div>;
 
-  // Find the selected vehicle
-  const selectedVehicle = vehicleTypes?.find(v => v.id === vehicle);
+  const selectedVehicle = vehicleTypes?.find(v => v.id === booking.resourceTypeId);
 
-  // Use its price (convert to cents for Stripe)
   const amount = selectedVehicle?.price ? selectedVehicle.price * 100 : 0;
 
-  if (!selectedVehicle) return <div>Vehicle not found</div>;
+  if (!selectedVehicle) return <div className="text-red-500">Vehicle not found.</div>;
+
+  const groupSizeLabel = `${booking.group.adults} Adult${booking.group.adults !== 1 ? 's' : ''}${booking.group.children > 0 ? `, ${booking.group.children} Child${booking.group.children !== 1 ? 'ren' : ''}` : ''}`;
 
   const summary = {
     location: location.name,
-    date,
-    timeSlot,
-    vehicleType: vehicle,
+    date: booking.schedule.date,
+    timeSlot: booking.schedule.timeSlot,
+    vehicleType: selectedVehicle.name, // Use vehicle name for display
     groupType: groupSizeLabel,
-    pickupLocation: fromGate ? { address: "Pickup from park gate" } : pickup,
+    pickupLocation: booking.pickupLocation.address === "Pickup from park gate" ? { address: "Pickup from park gate" } : booking.pickupLocation,
   };
 
   return (
@@ -269,24 +264,7 @@ function PaymentPage() {
             <StripePaymentWrapper amount={amount} />
           ) : (
             <DirectBookingConfirmation
-              bookingData={{
-                userId,
-                locationId,
-                resourceId,
-                date,
-                timeSlot,
-                adults,
-                children,
-                pickupLocation: fromGate ? {
-                  placeId: "",
-                  coordinate: { lat: 0, lng: 0 },
-                  address: "Pickup from park gate",
-                  country: "",
-                } : pickup,
-              }}
-              vehicle={vehicle}
-              fromGate={fromGate}
-              pickup={pickup}
+              booking={booking}
               amount={amount}
             />
           )}
@@ -296,19 +274,16 @@ function PaymentPage() {
   );
 }
 
-function DirectBookingConfirmation({ bookingData, vehicle, fromGate, pickup, amount }: {
-  bookingData: any;
-  vehicle: string;
-  fromGate: boolean;
-  pickup: any;
+function DirectBookingConfirmation({ booking, amount }: {
+  booking: any;
   amount: number;
 }) {
   const router = useRouter();
   const confirmBooking = useConfirmBooking();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const searchParams = useSearchParams();
-  const bookingId = searchParams.get("bookingId") || "";
+
+  const bookingId = booking.id; // Get bookingId from the booking object
 
   const handleConfirm = async () => {
     setLoading(true);
@@ -316,11 +291,7 @@ function DirectBookingConfirmation({ bookingData, vehicle, fromGate, pickup, amo
     try {
       await confirmBooking.mutateAsync({bookingId});
       const params = new URLSearchParams({
-        vehicle,
-        date: bookingData.date,
-        timeSlot: bookingData.timeSlot,
-        fromGate: fromGate ? "true" : "false",
-        pickup: JSON.stringify(pickup),
+        bookingId,
         amount: amount.toString(),
       });
       router.push(`/booking/payment/success?${params.toString()}`);
