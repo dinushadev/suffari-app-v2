@@ -91,7 +91,7 @@ export default function LocationDetailsPage() {
             className="w-full text-lg py-4 rounded-2xl shadow-lg "
             onClick={() => router.push(`/booking?location=${location.id}`)}
           >
-            Reserve Now 15 USD
+            Select Your Ride
           </Button>
         </div>
       </div>

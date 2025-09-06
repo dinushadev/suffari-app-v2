@@ -3,8 +3,29 @@
 ## Component Structure
 - Use functional components with hooks instead of class components
 - Keep components small and focused on a single responsibility
-- Follow atomic design principles (atoms, molecules, organisms, templates)
 - Export components as named exports, not default exports
+
+## Atomic Design Principles
+- Atoms: Basic building blocks (buttons, inputs, labels)
+  - Should be highly reusable and have minimal dependencies
+  - Focus on a single UI element with appropriate props for customization
+  - Example: Button.tsx, Input.tsx, Label.tsx
+- Molecules: Groups of atoms that work together
+  - Combine multiple atoms to create more complex components
+  - Should still be relatively simple and reusable
+  - Example: SearchBar.tsx (combines Input and Button atoms)
+- Organisms: Complex UI components composed of molecules and atoms
+  - Represent distinct sections of the interface
+  - May contain business logic and state management
+  - Example: NavigationBar.tsx, BookingForm.tsx
+- Templates: Page layouts that arrange organisms
+  - Define the structure of a page without specific content
+  - Handle responsive layout and positioning
+  - Example: DashboardTemplate.tsx, CheckoutTemplate.tsx
+- Pages: Specific instances of templates with real content
+  - Connect to data sources and handle routing
+  - Assemble the required organisms within templates
+  - Example: HomePage.tsx, BookingPage.tsx
 
 ## State Management
 - Use React hooks (useState, useReducer) for local component state
@@ -59,3 +80,43 @@
 - Group related files in feature-based directories
 - Use barrel files (index.ts) for clean imports
 - Keep configuration files at the root level
+
+## UI/UX Principles
+- Visual Hierarchy
+  - Establish clear visual hierarchy with size, color, and spacing
+  - Highlight the most important elements and actions
+  - Use consistent heading levels (h1, h2, h3) for proper content structure
+  - Maintain proper spacing between related and unrelated elements
+
+- User Flow
+  - Design intuitive navigation paths with clear progression
+  - Minimize the number of steps to complete common tasks
+  - Provide clear visual cues for the current step in multi-step processes
+  - Use breadcrumbs for complex navigation structures
+  - Implement predictable back/forward navigation
+
+- Feedback & Affordance
+  - Provide immediate feedback for user actions (button states, loading indicators)
+  - Use appropriate hover and focus states for interactive elements
+  - Display clear success/error messages after form submissions
+  - Implement skeleton loaders for content that takes time to load
+  - Use tooltips for explaining complex features
+
+- Consistency
+  - Maintain consistent component styling across the application
+  - Use the same interaction patterns for similar actions
+  - Apply consistent spacing, typography, and color schemes
+  - Follow established UI patterns that users are familiar with
+
+- Mobile Responsiveness
+  - Design for mobile-first, then adapt to larger screens
+  - Ensure touch targets are at least 44x44px on mobile devices
+  - Adapt layouts appropriately for different screen sizes
+  - Test on various devices and screen resolutions
+
+- Error Prevention & Recovery
+  - Validate inputs in real-time with helpful error messages
+  - Provide clear recovery paths when errors occur
+  - Confirm destructive actions before execution
+  - Implement auto-save where appropriate
+  - Allow users to undo recent actions when possible
