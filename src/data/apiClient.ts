@@ -1,11 +1,31 @@
 import { API_BASE_URL } from "./apiConfig";
 
-export async function apiClient(endpoint: string, { method = "GET", body }: { method?: string; body?: unknown } = {}) {
-  const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+/**
+ * Generic API client for making requests to the backend
+ * @param endpoint API endpoint path (with or without leading slash)
+ * @param options Request options including method and body
+ * @returns Promise with the parsed JSON response
+ */
+export async function apiClient(endpoint: string, { method = "GET", body, baseUrl }: { method?: string; body?: unknown; baseUrl?: string } = {}) {
+  // Normalize endpoint to ensure it starts with a slash if using API_BASE_URL
+  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  
+  // Use provided baseUrl or default to API_BASE_URL
+  const url = baseUrl ? `${baseUrl}${normalizedEndpoint}` : `${API_BASE_URL}${normalizedEndpoint}`;
+  
+  const res = await fetch(url, {
     method,
     headers: { "Content-Type": "application/json" },
     ...(body ? { body: JSON.stringify(body) } : {}),
   });
-  if (!res.ok) throw new Error("API request failed");
-  return res.json();
+  
+  // Parse the response
+  const data = await res.json();
+  
+  // Handle error responses
+  if (!res.ok) {
+    throw new Error(data.error || "API request failed");
+  }
+  
+  return data;
 }

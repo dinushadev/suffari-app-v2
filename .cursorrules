@@ -1,0 +1,61 @@
+# React & Next.js Best Practices for Saffari-Raahi Project
+
+## Component Structure
+- Use functional components with hooks instead of class components
+- Keep components small and focused on a single responsibility
+- Follow atomic design principles (atoms, molecules, organisms, templates)
+- Export components as named exports, not default exports
+
+## State Management
+- Use React hooks (useState, useReducer) for local component state
+- Prefer React Query for server state management
+- Avoid prop drilling by using context or state management libraries
+- Keep state as close as possible to where it's used
+
+## Performance
+- Use React.memo for expensive components that render often
+- Implement useMemo and useCallback for optimizing renders
+- Avoid unnecessary re-renders by proper dependency arrays in useEffect
+- Use Next.js Image component for optimized images
+
+## Routing
+- Use Next.js App Router conventions
+- Implement proper loading and error states for routes
+- Use dynamic imports for code splitting
+- Keep page components clean by moving logic to custom hooks
+
+## Styling
+- Use Tailwind CSS for styling
+- Follow mobile-first responsive design
+- Maintain consistent spacing and color schemes
+- Use CSS variables for theming
+
+## Data Fetching
+- Use React Query for data fetching and caching
+- Implement proper loading and error states
+- Use Next.js API routes for backend functionality
+- Handle API errors gracefully
+
+## Forms
+- Validate user input both client and server side
+- Provide clear feedback for form errors
+- Use controlled components for form inputs
+- Implement proper form submission handling
+
+## Accessibility
+- Use semantic HTML elements
+- Ensure proper keyboard navigation
+- Include proper ARIA attributes
+- Maintain sufficient color contrast
+
+## Code Quality
+- Follow consistent naming conventions
+- Write unit tests for critical components
+- Use TypeScript for type safety
+- Document complex logic with comments
+
+## Project Structure
+- Follow Next.js App Router directory structure
+- Group related files in feature-based directories
+- Use barrel files (index.ts) for clean imports
+- Keep configuration files at the root level

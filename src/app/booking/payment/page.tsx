@@ -9,7 +9,9 @@ import { Suspense } from "react";
 import Loader from '../../../components/atoms/Loader';
 import type { PaymentRequest as StripePaymentRequest } from "@stripe/stripe-js";
 import { useCreateBooking } from "../../../data/useCreateBooking";
+import { useConfirmBooking } from "../../../data/useConfirmBooking";
 import { useVehicleTypes } from "../../../data/useVehicleTypes";
+import { useLocationDetails } from "../../../data/useLocationDetails";
 
 // Validate Stripe publishable key
 if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
@@ -35,11 +37,9 @@ function StripePaymentForm({ loading, setLoading, error, setError, amount }: {
   const fromGate = searchParams.get("fromGate") === "true";
   const pickupRaw = searchParams.get("pickup");
   const pickup = pickupRaw ? JSON.parse(pickupRaw) : {};
-  const userId = searchParams.get("userId") || ""; // Adjust as needed
-  const locationId = searchParams.get("locationId") || ""; // Adjust as needed
-  const resourceId = searchParams.get("resourceId") || ""; // Adjust as needed
   const adults = parseInt(searchParams.get("adults") || "1", 10);
   const children = parseInt(searchParams.get("children") || "0", 10);
+  const bookingId = searchParams.get("bookingId") || "";
 
   const [paymentRequest, setPaymentRequest] = useState<StripePaymentRequest | null>(null);
   //const [prButtonReady, setPrButtonReady] = useState(false);
@@ -64,7 +64,7 @@ function StripePaymentForm({ loading, setLoading, error, setError, amount }: {
     }
   }, [stripe, amount]);
 
-  const createBookingMutation = useCreateBooking();
+  const confirmBooking = useConfirmBooking();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,23 +92,8 @@ function StripePaymentForm({ loading, setLoading, error, setError, amount }: {
       paymentSucceeded = true;
     }
     if (paymentSucceeded) {
-      const bookingData = {
-        userId,
-        locationId,
-        resourceId,
-        date,
-        timeSlot,
-        adults,
-        children,
-        pickupLocation: fromGate ? {
-          placeId: "",
-          coordinate: { lat: 0, lng: 0 },
-          address: "Pickup from park gate",
-          country: "",
-        } : pickup,
-      };
       try {
-        await createBookingMutation.mutateAsync(bookingData);
+        await confirmBooking.mutateAsync({bookingId});
         const params = new URLSearchParams({
           vehicle,
           date,
@@ -119,7 +104,7 @@ function StripePaymentForm({ loading, setLoading, error, setError, amount }: {
         });
         router.push(`/booking/payment/success?${params.toString()}`);
       } catch (err) {
-        setError((err as Error).message || "Booking failed");
+        setError((err as Error).message || "Confirmation failed");
       }
     }
     setLoading(false);
@@ -236,8 +221,15 @@ function PaymentPage() {
   const locationId = searchParams.get("locationId") || "";
   const resourceId = searchParams.get("resourceId") || ""; // TODO: Implement proper resource ID
 
+  const { data: location, isLoading: locationLoading, error: locationError } = useLocationDetails(locationId);
+
   // Fetch vehicle types
   const { data: vehicleTypes, isLoading: vehicleTypesLoading, error: vehicleTypesError } = useVehicleTypes();
+
+  if (locationLoading || vehicleTypesLoading) return <div>Loading...</div>;
+  if (locationError) return <div>Error loading location</div>;
+  if (vehicleTypesError) return <div>Error loading vehicle types</div>;
+  if (!location) return <div>Location not found</div>;
 
   // Find the selected vehicle
   const selectedVehicle = vehicleTypes?.find(v => v.id === vehicle);
@@ -245,18 +237,16 @@ function PaymentPage() {
   // Use its price (convert to cents for Stripe)
   const amount = selectedVehicle?.price ? selectedVehicle.price * 100 : 0;
 
+  if (!selectedVehicle) return <div>Vehicle not found</div>;
+
   const summary = {
-    location: "Selected Location",
+    location: location.name,
     date,
     timeSlot,
     vehicleType: vehicle,
     groupType: groupSizeLabel,
     pickupLocation: fromGate ? { address: "Pickup from park gate" } : pickup,
   };
-
-  if (vehicleTypesLoading) return <div>Loading vehicle types...</div>;
-  if (vehicleTypesError) return <div>Error loading vehicle types</div>;
-  if (!selectedVehicle) return <div>Vehicle not found</div>;
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-background p-4">
@@ -310,15 +300,17 @@ function DirectBookingConfirmation({ bookingData, vehicle, fromGate, pickup, amo
   amount: number;
 }) {
   const router = useRouter();
-  const createBookingMutation = useCreateBooking();
+  const confirmBooking = useConfirmBooking();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const bookingId = searchParams.get("bookingId") || "";
 
   const handleConfirm = async () => {
     setLoading(true);
     setError(null);
     try {
-      await createBookingMutation.mutateAsync(bookingData);
+      await confirmBooking.mutateAsync({bookingId});
       const params = new URLSearchParams({
         vehicle,
         date: bookingData.date,
@@ -329,7 +321,7 @@ function DirectBookingConfirmation({ bookingData, vehicle, fromGate, pickup, amo
       });
       router.push(`/booking/payment/success?${params.toString()}`);
     } catch (err) {
-      setError((err as Error).message || "Booking failed");
+      setError((err as Error).message || "Confirmation failed");
     }
     setLoading(false);
   };

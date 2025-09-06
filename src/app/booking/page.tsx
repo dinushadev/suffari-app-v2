@@ -8,6 +8,7 @@ import { useVehicleTypes } from '../../data/useVehicleTypes';
 import type { PickupLocation } from '../../components/molecules/PickupLocationInput';
 import { supabase } from "../../data/apiConfig";
 import { useCreateBooking } from "../../data/useCreateBooking";
+import { useLocationDetails } from '../../data/useLocationDetails';
 
 const timeSlotOptions = [
   {
@@ -34,7 +35,36 @@ function generateSessionId() {
 function BookingPageContent() {
   const searchParams = useSearchParams();
   const locationId = searchParams.get('location');
-  const location: LocationDetails = resourceLocations.find((l: LocationDetails) => l.id === locationId) || resourceLocations[0];
+  const router = useRouter();
+
+  const { data: location, isLoading: locationLoading, error: locationError } = useLocationDetails(locationId || '');
+
+  // Redirect if no locationId
+  React.useEffect(() => {
+    if (!locationId) {
+      router.push('/');
+    }
+  }, [locationId, router]);
+
+  if (!locationId) {
+    return <Loader />;
+  }
+
+  if (locationLoading) {
+    return <Loader />;
+  }
+
+  if (locationError || !location) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="bg-ivory border border-ash rounded-2xl shadow p-8 text-center">
+          <h1 className="text-2xl font-bold text-orange mb-2">Location Not Found</h1>
+          <p className="mb-4 text-foreground">Sorry, we couldn&apos;t find the selected location.</p>
+          <Button onClick={() => router.push('/')}>Go Home</Button>
+        </div>
+      </div>
+    );
+  }
 
   const [vehicle, setVehicle] = useState('private');
   const [date, setDate] = useState('');
@@ -83,8 +113,6 @@ function BookingPageContent() {
       } catch {}
     }
   }, []);
-
-  const router = useRouter();
 
   if (confirmed) {
     return (
@@ -151,8 +179,8 @@ function BookingPageContent() {
           },
     };
     try {
-      await createBookingMutation.mutateAsync(bookingData);
-      // Pass sessionId or user info to payment page
+      const data = await createBookingMutation.mutateAsync(bookingData);
+      const bookingId = data.bookingId;
       const params = new URLSearchParams({
         vehicle,
         date,
@@ -162,11 +190,18 @@ function BookingPageContent() {
         adults: adults.toString(),
         children: children.toString(),
         locationId: locationId || "",
-        sessionId: customer.sessionId || "",
-        email: customer.email || "",
-        phone: customer.phone || "",
+        bookingId
       });
-      router.push(`/booking/payment?${params.toString()}`);
+      if (session && session.user) {
+        router.push(`/booking/payment?${params.toString()}`);
+      } else {
+        const pendingData = {
+          bookingId,
+          params: Object.fromEntries(params.entries())
+        };
+        localStorage.setItem('pendingBookingData', JSON.stringify(pendingData));
+        router.push('/auth');
+      }
     } catch (err) {
       alert((err as Error).message || "Booking failed");
     }
@@ -177,11 +212,11 @@ function BookingPageContent() {
       <div className="w-full max-w-lg bg-ivory rounded-3xl shadow-xl overflow-hidden mt-0 sm:mt-8 p-0">
         {/* Header with location image and name */}
         <div className="relative h-48 w-full rounded-t-3xl overflow-hidden">
-          <CustomImage src={location.hero} alt={location.name} className="w-full h-full object-cover" fill priority />
+          <CustomImage src={location.thumbnail} alt={location.name} className="w-full h-full object-cover" fill priority />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="absolute bottom-4 left-6">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground drop-shadow mb-1">{location.name}</h1>
-            <div className="text-foreground/90 text-base font-medium">{location.subtitle}</div>
+            <div className="text-foreground/90 text-base font-medium">{location.address}</div>
           </div>
         </div>
         {/* UX Note: Booking Recommendation */}
