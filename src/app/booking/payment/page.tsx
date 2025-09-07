@@ -12,6 +12,7 @@ import { useConfirmBooking } from "../../../data/useConfirmBooking";
 import { useVehicleTypes } from "../../../data/useVehicleTypes";
 import { useLocationDetails } from "../../../data/useLocationDetails";
 import { useBookingDetails } from "../../../data/useBookingDetails"; // Import new hook
+import { supabase } from "../../../data/apiConfig"; // Re-add supabase import
 
 // Validate Stripe publishable key
 if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
@@ -226,6 +227,19 @@ function PaymentPage() {
       router.push('/'); // Redirect to home if no orderId
     }
   }, [orderId, router]);
+
+  // Re-add Session check
+  useEffect(() => {
+    async function checkSession() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        // If no session, redirect to auth page with returnUrl
+        const currentPath = window.location.pathname + window.location.search;
+        router.push(`/auth?returnUrl=${encodeURIComponent(currentPath)}`);
+      }
+    }
+    checkSession();
+  }, [router]);
 
   const { data: location, isLoading: locationLoading, error: locationError } = useLocationDetails(booking?.locationId || '');
 

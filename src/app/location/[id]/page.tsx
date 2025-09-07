@@ -66,7 +66,7 @@ export default function LocationDetailsPage() {
           </div>
         </div>
         {/* Details Card */}
-        <div className="bg-ivory border-t border-ash rounded-t-3xl -mt-8 pt-8 px-6 pb-6">
+        <div className=" rounded-t-3xl -mt-8 pt-8 px-6 pb-6">
           <h2 className="font-bold text-lg mb-2 text-orange">About</h2>
           <p className="text-foreground mb-4">{location.about}</p>
           {/* Image Carousel */}

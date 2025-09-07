@@ -5,9 +5,9 @@ import { Button, CustomImage, Loader } from '../../components/atoms';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useVehicleTypes } from '../../data/useVehicleTypes';
 import type { PickupLocation } from '../../components/molecules/PickupLocationInput';
-import { supabase } from "../../data/apiConfig";
 import { useCreateBooking } from "../../data/useCreateBooking";
 import { useLocationDetails } from '../../data/useLocationDetails';
+import { supabase } from "../../data/apiConfig";
 
 const timeSlotOptions = [
   {
@@ -128,7 +128,8 @@ function BookingPageContent() {
   const handleConfirm = async () => {
     setIsButtonLoading(true); // Start loading
     await new Promise(resolve => setTimeout(resolve, 2000)); // Add a 2-second delay for debugging
-    // Check if user is logged in
+
+    // Re-add session check and customer object creation
     const { data: { session } } = await supabase.auth.getSession();
     const customer = {
       email: null as string | null,
@@ -151,6 +152,7 @@ function BookingPageContent() {
       customer.phone = phone || null;
       customer.sessionId = null;
     }
+
     // Prepare booking data in required structure, using null for missing values
     const bookingData = {
       customer,
@@ -183,20 +185,10 @@ function BookingPageContent() {
       const data = await createBookingMutation.mutateAsync(bookingData);
       const bookingId = data.id; // Assuming the API returns 'id' as the booking ID
 
-      if (session && session.user) {
-        router.push(`/booking/payment?orderId=${bookingId}`);
-      } else {
-        const pendingData = {
-          bookingId,
-          // Removed other params as they are no longer needed on the payment page
-        };
-        localStorage.setItem('pendingBookingData', JSON.stringify(pendingData));
-        router.push(`/auth?returnUrl=/booking/payment?orderId=${bookingId}`);
-      }
+      router.push(`/booking/payment?orderId=${bookingId}`);
     } catch (err) {
-      alert((err as Error).message || "Booking failed");
-    } finally {
       setIsButtonLoading(false); // End loading
+      alert((err as Error).message || "Booking failed");
     }
   };
 
