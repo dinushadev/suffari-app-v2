@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/data/apiConfig";
 import { useAssociateBooking } from "@/data/useAssociateBooking";
 import { useOtpSend } from "@/data/useOtpSend";
-import { useOtpVerify } from "@/data/useOtpVerify";
 import { useSearchParams } from 'next/navigation';
 // Client-side component for checking pending booking
 function PendingBookingNotice() {
@@ -31,16 +30,13 @@ function PendingBookingNotice() {
 
 function AuthPageContent() {
   const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [oauthLoading, setOauthLoading] = useState({ google: false, facebook: false });
-  const [showOtp, setShowOtp] = useState(false);
   const router = useRouter();
   const associateBooking = useAssociateBooking();
   
   // React Query hooks for OTP operations
   const otpSendMutation = useOtpSend();
-  const otpVerifyMutation = useOtpVerify();
   const searchParams = useSearchParams();
   const returnUrl = searchParams.get('returnUrl') || '/';
 
@@ -53,7 +49,7 @@ function AuthPageContent() {
           const pendingData = JSON.parse(pendingDataStr);
           const bookingId = pendingData.bookingId;
           try {
-           // await associateBooking.mutateAsync({ bookingId, userId: session.user.id });
+           await associateBooking.mutateAsync({ bookingId, userId: session.user.id });
             localStorage.removeItem('pendingBookingData');
             router.push(returnUrl);
           } catch (err) {
@@ -88,41 +84,8 @@ function AuthPageContent() {
     
     try {
       await otpSendMutation.mutateAsync({ email });
-      setShowOtp(true);
-    } catch (err) {
-      setError((err as Error).message);
-    }
-  };
-
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    
-    try {
-      // Verify OTP and set session in one operation
-      const { user } = await otpVerifyMutation.mutateAsync({ email, otp });
-      
-      // Check for pending booking data
-      const pendingDataStr = localStorage.getItem('pendingBookingData');
-      if (pendingDataStr && user?.id) {
-        const pendingData = JSON.parse(pendingDataStr);
-        const bookingId = pendingData.bookingId;
-        
-        // Associate booking with user
-        await associateBooking.mutateAsync({ bookingId, userId: user.id });
-        localStorage.removeItem('pendingBookingData');
-        
-        // Redirect to payment page
-        router.push(returnUrl);
-        return;
-      }
-      
-      // Handle other redirects
-      if (typeof window !== 'undefined' && localStorage.getItem('pendingBooking')) {
-        router.push('/booking');
-      } else {
-        router.push(returnUrl);
-      }
+      // After sending magic link, user will receive an email and then be redirected back to /auth
+      // No need for OTP input on this page anymore.
     } catch (err) {
       setError((err as Error).message);
     }
@@ -170,8 +133,13 @@ function AuthPageContent() {
           </svg>
           {oauthLoading.facebook ? "Redirecting..." : "Continue with Facebook"}
         </button>
-        {!showOtp ? (
-          <form onSubmit={handleSendOtp} className="flex flex-col gap-4 w-full">
+        <div className="relative flex py-5 items-center w-full">
+          <div className="flex-grow border-t border-gray-300"></div>
+          <span className="flex-shrink mx-4 text-gray-400">OR</span>
+          <div className="flex-grow border-t border-gray-300"></div>
+        </div>
+        <p className="text-center text-lg font-semibold text-gray-700 ">Email Magic Link</p>
+        <form onSubmit={handleSendOtp} className="flex flex-col gap-4 w-full">
             <input
               type="email"
               placeholder="Email"
@@ -185,30 +153,10 @@ function AuthPageContent() {
               className="bg-orange text-white py-2 rounded font-semibold disabled:opacity-50"
               disabled={otpSendMutation.isPending}
             >
-              {otpSendMutation.isPending ? "Sending OTP..." : "Continue with Email"}
+              {otpSendMutation.isPending ? "Sending Magic Link..." : "Continue with Email"}
             </button>
             {error && <div className="text-red-500 text-sm">{error}</div>}
           </form>
-        ) : (
-          <form onSubmit={handleVerifyOtp} className="flex flex-col gap-4 w-full">
-            <input
-              type="text"
-              placeholder="Enter OTP"
-              value={otp}
-              onChange={e => setOtp(e.target.value)}
-              className="border p-2 rounded"
-              required
-            />
-            <button
-              type="submit"
-              className="bg-orange text-white py-2 rounded font-semibold disabled:opacity-50"
-              disabled={otpVerifyMutation.isPending}
-            >
-              {otpVerifyMutation.isPending ? "Verifying..." : "Verify OTP"}
-            </button>
-            {error && <div className="text-red-500 text-sm">{error}</div>}
-          </form>
-        )}
       </div>
     </main>
   );
