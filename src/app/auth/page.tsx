@@ -23,7 +23,7 @@ function PendingBookingNotice() {
   
   return (
     <p className="text-center text-orange font-medium mb-6">
-      Please sign in or sign up to complete your booking.
+      Please sign in to complete your booking.
     </p>
   );
 }
@@ -34,9 +34,10 @@ function AuthPageContent() {
   const [oauthLoading, setOauthLoading] = useState({ google: false, facebook: false });
   const router = useRouter();
   const associateBooking = useAssociateBooking();
+  const [otpSendLoading, setOtpSendLoading] = useState(false);
   
   // React Query hooks for OTP operations
-  const otpSendMutation = useOtpSend();
+  // const otpSendMutation = useOtpSend();
   const searchParams = useSearchParams();
   const returnUrl = searchParams.get('returnUrl') || '/';
 
@@ -49,7 +50,7 @@ function AuthPageContent() {
           const pendingData = JSON.parse(pendingDataStr);
           const bookingId = pendingData.bookingId;
           try {
-           await associateBooking.mutateAsync({ bookingId, userId: session.user.id });
+        //   await associateBooking.mutateAsync({ bookingId, userId: session.user.id });
             localStorage.removeItem('pendingBookingData');
             router.push(returnUrl);
           } catch (err) {
@@ -83,11 +84,23 @@ function AuthPageContent() {
     setError("");
     
     try {
-      await otpSendMutation.mutateAsync({ email });
+           // await otpSendMutation.mutateAsync({ email });
+           setOtpSendLoading(true);
+    //  await otpSendMutation.mutateAsync({ email });
+    const { data, error } = await supabase.auth.signInWithOtp({
+      email: email,
+      options: {
+        // set this to false if you do not want the user to be automatically signed up
+        shouldCreateUser: true ,
+        emailRedirectTo: `${window.location.origin}${returnUrl}`,
+      },
+    })
       // After sending magic link, user will receive an email and then be redirected back to /auth
       // No need for OTP input on this page anymore.
     } catch (err) {
       setError((err as Error).message);
+    } finally {
+      setOtpSendLoading(false);
     }
   };
 
@@ -151,9 +164,9 @@ function AuthPageContent() {
             <button
               type="submit"
               className="bg-orange text-white py-2 rounded font-semibold disabled:opacity-50"
-              disabled={otpSendMutation.isPending}
+              disabled={otpSendLoading}
             >
-              {otpSendMutation.isPending ? "Sending Magic Link..." : "Continue with Email"}
+              {otpSendLoading ? "Sending Magic Link..." : "Continue with Email"}
             </button>
             {error && <div className="text-red-500 text-sm">{error}</div>}
           </form>
