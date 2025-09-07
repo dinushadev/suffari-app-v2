@@ -254,7 +254,7 @@ function BookingPageContent() {
           >
             {isButtonLoading ? (
               <div className="flex items-center justify-center">
-                <Loader />
+                {/* <Loader /> */}
                 <span>Confirming...</span>
               </div>
             ) : (

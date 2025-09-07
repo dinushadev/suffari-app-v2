@@ -42,6 +42,7 @@ function StripePaymentForm({ loading, setLoading, error, setError, amount }: {
 
   const [paymentRequest, setPaymentRequest] = useState<StripePaymentRequest | null>(null);
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false); // New state for button loading
+  const [hasConfirmedPaymentIntent, setHasConfirmedPaymentIntent] = useState(false); // New state variable
   //const [prButtonReady, setPrButtonReady] = useState(false);
 
   useEffect(() => {
@@ -77,20 +78,28 @@ function StripePaymentForm({ loading, setLoading, error, setError, amount }: {
     }
     let paymentSucceeded = false;
     if (process.env.NEXT_PUBLIC_ENABLE_PAYMENTS === 'true') {
-      const { error, paymentIntent } = await stripe.confirmPayment({
-        elements,
-        confirmParams: {},
-        redirect: "if_required",
-      });
-      if (error) {
-        setError(error.message || "Payment failed");
-        setIsSubmittingPayment(false); // Stop loading on payment error
-        return;
+      if (hasConfirmedPaymentIntent) { // Prevent re-confirming if already confirmed
+        paymentSucceeded = true; // Assume succeeded if already confirmed
+      } else {
+        const { error, paymentIntent } = await stripe.confirmPayment({
+          elements,
+          confirmParams: {},
+          redirect: "if_required",
+        });
+        if (error) {
+          setError(error.message || "Payment failed");
+          setIsSubmittingPayment(false); // Stop loading on payment error
+          return;
+        }
+        if (paymentIntent && paymentIntent.status === "succeeded") {
+          paymentSucceeded = true;
+          setHasConfirmedPaymentIntent(true); // Mark as confirmed
+        }
       }
-      paymentSucceeded = !!(paymentIntent && paymentIntent.status === "succeeded");
     } else {
       paymentSucceeded = true;
     }
+
     if (paymentSucceeded) {
       try {
         await confirmBooking.mutateAsync({bookingId});
@@ -335,7 +344,7 @@ function DirectBookingConfirmation({ booking, amount }: {
       >
         {loading ? (
           <div className="flex items-center justify-center">
-            <Loader />
+            {/* <Loader /> */}
             <span >Processing...</span>
           </div>
         ) : (
