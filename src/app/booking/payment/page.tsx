@@ -82,15 +82,7 @@ function StripePaymentForm({
   useEffect(() => {
     if (bookingStatus && bookingStatus.status === "initiated") {
       const params = new URLSearchParams({
-        vehicle,
-        date,
-        timeSlot,
-        fromGate: fromGate ? "true" : "false",
-        pickup: JSON.stringify(pickup),
-        amount: amount.toString(),
-        bookingId,
-        location: locationName,
-        email: userEmail,
+        bookingId
       });
       router.push(`/booking/payment/success?${params.toString()}`);
     }
