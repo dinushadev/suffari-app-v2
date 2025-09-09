@@ -8,11 +8,13 @@ import { Elements, PaymentElement, PaymentRequestButtonElement, useStripe, useEl
 import { Suspense } from "react";
 import Loader from '../../../components/atoms/Loader';
 import type { PaymentRequest as StripePaymentRequest } from "@stripe/stripe-js";
-import { useConfirmBooking } from "../../../data/useConfirmBooking";
-import { useVehicleTypes } from "../../../data/useVehicleTypes";
-import { useLocationDetails } from "../../../data/useLocationDetails";
-import { useBookingDetails } from "../../../data/useBookingDetails"; // Import new hook
+import { usePaymentIntent } from "../../../data/usePaymentIntent"; // Import the new hook
+import { Session } from "@supabase/supabase-js"; // Import Session type
+import { useBookingStatus } from "../../../data/useBookingStatus"; // Import the new hook
+import { useVehicleTypes } from "../../../data/useVehicleTypes"; // Re-add useVehicleTypes
 import { supabase } from "../../../data/apiConfig"; // Re-add supabase import
+import { useLocationDetails } from "@/data/useLocationDetails";
+import { useBookingDetails } from "@/data/useBookingDetails";
 
 // Validate Stripe publishable key
 if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
@@ -21,12 +23,18 @@ if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
-function StripePaymentForm({ loading, setLoading, error, setError, amount }: {
-  loading: boolean,
-  setLoading: React.Dispatch<React.SetStateAction<boolean>>,
-  error: string | null,
-  setError: React.Dispatch<React.SetStateAction<string | null>>,
-  amount: number,
+function StripePaymentForm({
+  amount,
+  error,
+  setError,
+  locationName,
+  userEmail,
+}: {
+  amount: number;
+  error: string | null;
+  setError: React.Dispatch<React.SetStateAction<string | null>>;
+  locationName: string;
+  userEmail: string;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -38,7 +46,7 @@ function StripePaymentForm({ loading, setLoading, error, setError, amount }: {
   const fromGate = searchParams.get("fromGate") === "true";
   const pickupRaw = searchParams.get("pickup");
   const pickup = pickupRaw ? JSON.parse(pickupRaw) : {};
-  const bookingId = searchParams.get("bookingId") || "";
+  const bookingId = searchParams.get("orderId") || "";
 
   const [paymentRequest, setPaymentRequest] = useState<StripePaymentRequest | null>(null);
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false); // New state for button loading
@@ -65,7 +73,28 @@ function StripePaymentForm({ loading, setLoading, error, setError, amount }: {
     }
   }, [stripe, amount]);
 
-  const confirmBooking = useConfirmBooking();
+  // Remove useConfirmBooking as it's no longer called from frontend
+  // const confirmBooking = useConfirmBooking();
+
+  const [isPolling, setIsPolling] = useState(false);
+  const { data: bookingStatus, isLoading: isBookingStatusLoading } = useBookingStatus(bookingId, isPolling);
+
+  useEffect(() => {
+    if (bookingStatus && bookingStatus.status === "initiated") {
+      const params = new URLSearchParams({
+        vehicle,
+        date,
+        timeSlot,
+        fromGate: fromGate ? "true" : "false",
+        pickup: JSON.stringify(pickup),
+        amount: amount.toString(),
+        bookingId,
+        location: locationName,
+        email: userEmail,
+      });
+      router.push(`/booking/payment/success?${params.toString()}`);
+    }
+  }, [bookingStatus, router, vehicle, date, timeSlot, fromGate, pickup, amount, bookingId, locationName, userEmail]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,20 +131,13 @@ function StripePaymentForm({ loading, setLoading, error, setError, amount }: {
 
     if (paymentSucceeded) {
       try {
-        await confirmBooking.mutateAsync({bookingId});
-        const params = new URLSearchParams({
-          vehicle,
-          date,
-          timeSlot,
-          fromGate: fromGate ? "true" : "false",
-          pickup: JSON.stringify(pickup),
-          amount: amount.toString(),
-        });
-        router.push(`/booking/payment/success?${params.toString()}`);
+        // await confirmBooking.mutateAsync({bookingId}); // Removed direct call
+        setIsPolling(true); // Start polling after successful payment
+        // The navigation to success page will now happen in the useEffect triggered by bookingStatus change
       } catch (err) {
         setError((err as Error).message || "Confirmation failed");
       } finally {
-        setIsSubmittingPayment(false); // Stop loading after booking confirmation attempt
+        setIsSubmittingPayment(false); // Stop loading after payment processing
       }
     } else {
       setIsSubmittingPayment(false); // Stop loading if payment didn't succeed for other reasons
@@ -154,52 +176,14 @@ function StripePaymentForm({ loading, setLoading, error, setError, amount }: {
   );
 }
 
-function StripePaymentWrapper({ amount }: { amount: number }) {
-  const [clientSecret, setClientSecret] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchPaymentIntent = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/payment-intent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount, currency: 'usd' }),
-      });
-      
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || `HTTP error! status: ${res.status}`);
-      }
-      
-      const data = await res.json();
-      
-      if (!data.clientSecret) {
-        throw new Error("Invalid response from payment service");
-      }
-      
-      setClientSecret(data.clientSecret);
-    } catch (err) {
-      console.error("Payment intent creation failed:", err);
-      const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
-      setError(`Failed to create payment intent: ${errorMessage}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchPaymentIntent();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [amount]);
+function StripePaymentWrapper({ amount, locationName, userEmail }: { amount: number; locationName: string; userEmail: string }) {
+  const { clientSecret, loading, error, setError, fetchPaymentIntent } = usePaymentIntent(amount);
 
   const handleTryAgain = () => {
     fetchPaymentIntent();
   };
 
-  if (!clientSecret) return <Loader />;
+  if (loading || !clientSecret) return <Loader />;
 
   return (
     <>
@@ -210,7 +194,7 @@ function StripePaymentWrapper({ amount }: { amount: number }) {
         </div>
       )}
       <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "stripe" } }}>
-        <StripePaymentForm loading={loading} setLoading={setLoading} error={error} setError={setError} amount={amount} />
+        <StripePaymentForm amount={amount} error={error} setError={setError} locationName={locationName} userEmail={userEmail} />
       </Elements>
     </>
   );
@@ -229,6 +213,9 @@ function PaymentPage() {
   const orderId = searchParams.get("orderId");
   const router = useRouter();
 
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [currentSession, setCurrentSession] = useState<Session | null>(null); // State to hold session
+
   const { data: booking, isLoading: bookingLoading, error: bookingError } = useBookingDetails(orderId || "");
 
   useEffect(() => {
@@ -237,7 +224,7 @@ function PaymentPage() {
     }
   }, [orderId, router]);
 
-  // Re-add Session check
+  // Fetch session and user email
   useEffect(() => {
     async function checkSession() {
       const { data: { session } } = await supabase.auth.getSession();
@@ -245,6 +232,9 @@ function PaymentPage() {
         // If no session, redirect to auth page with returnUrl
         const currentPath = window.location.pathname + window.location.search;
         router.push(`/auth?returnUrl=${encodeURIComponent(currentPath)}`);
+      } else {
+        setUserEmail(session.user?.email || null);
+        setCurrentSession(session);
       }
     }
     checkSession();
@@ -252,9 +242,9 @@ function PaymentPage() {
 
   const { data: location, isLoading: locationLoading, error: locationError } = useLocationDetails(booking?.locationId || '');
 
-  const { data: vehicleTypes, isLoading: vehicleTypesLoading, error: vehicleTypesError } = useVehicleTypes();
+  const { data: vehicleTypes, isLoading: vehicleTypesLoading, error: vehicleTypesError } = useVehicleTypes(); // Re-add useVehicleTypes hook
 
-  if (bookingLoading || locationLoading || vehicleTypesLoading) return <Loader />;
+  if (bookingLoading || locationLoading || vehicleTypesLoading || userEmail === null) return <Loader />;
   if (bookingError || locationError || vehicleTypesError || !booking || !location) return <div className="text-red-500">Error loading booking details.</div>;
 
   const selectedVehicle = vehicleTypes?.find(v => v.id === booking.resourceTypeId);
@@ -292,11 +282,13 @@ function PaymentPage() {
             paymentAmount={amount}
           />
           {process.env.NEXT_PUBLIC_ENABLE_PAYMENTS === 'true' ? (
-            <StripePaymentWrapper amount={amount} />
+            <StripePaymentWrapper amount={amount} locationName={location.name} userEmail={userEmail || ""} />
           ) : (
             <DirectBookingConfirmation
               booking={booking}
               amount={amount}
+              currentSession={currentSession}
+              locationName={location.name}
             />
           )}
         </div>
@@ -305,27 +297,40 @@ function PaymentPage() {
   );
 }
 
-function DirectBookingConfirmation({ booking, amount }: {
-  booking: { id: string };
+function DirectBookingConfirmation({ booking, amount, currentSession, locationName }: {
+  booking: { id: string; locationId: string }; // Add locationId to the booking type
   amount: number;
+  currentSession: Session | null;
+  locationName: string;
 }) {
   const router = useRouter();
-  const confirmBooking = useConfirmBooking();
+  // const confirmBooking = useConfirmBooking(); // Removed direct call
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  const [isPolling, setIsPolling] = useState(false);
   const bookingId = booking.id; // Get bookingId from the booking object
+
+  const { data: bookingStatus, isLoading: isBookingStatusLoading } = useBookingStatus(bookingId, isPolling);
+
+  useEffect(() => {
+    if (bookingStatus && bookingStatus.status === "COMPLETED") {
+      const params = new URLSearchParams({
+        bookingId,
+        amount: amount.toString(),
+        location: locationName,
+        email: currentSession?.user?.email || "",
+      });
+      router.push(`/booking/payment/success?${params.toString()}`);
+    }
+  }, [bookingStatus, router, bookingId, amount, locationName, currentSession]);
 
   const handleConfirm = async () => {
     setLoading(true);
     setError(null);
     try {
-      await confirmBooking.mutateAsync({bookingId});
-      const params = new URLSearchParams({
-        bookingId,
-        amount: amount.toString(),
-      });
-      router.push(`/booking/payment/success?${params.toString()}`);
+      // await confirmBooking.mutateAsync({bookingId}); // Removed direct call
+      // Instead of confirming directly, we simulate a backend update and poll
+      setIsPolling(true); // Start polling for status
     } catch (err) {
       setError((err as Error).message || "Confirmation failed");
     } finally {
@@ -344,7 +349,7 @@ function DirectBookingConfirmation({ booking, amount }: {
       >
         {loading ? (
           <div className="flex items-center justify-center">
-            {/* <Loader /> */}
+            <Loader />
             <span >Processing...</span>
           </div>
         ) : (

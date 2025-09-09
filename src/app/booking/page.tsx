@@ -8,6 +8,7 @@ import type { PickupLocation } from '../../components/molecules/PickupLocationIn
 import { useCreateBooking } from "../../data/useCreateBooking";
 import { useLocationDetails } from '../../data/useLocationDetails';
 import { supabase } from "../../data/apiConfig";
+import type { BookingResponse } from "../../data/useCreateBooking"; // Import BookingResponse type
 
 const timeSlotOptions = [
   {
@@ -150,8 +151,9 @@ function BookingPageContent() {
       const { email = null, phone = null } = session.user;
       customer.email = email || null;
       customer.phone = phone || null;
-      customer.sessionId = null;
+      customer.sessionId  = generateSessionId();
     }
+    console.log('customer',customer);
 
     // Prepare booking data in required structure, using null for missing values
     const bookingData = {
@@ -181,8 +183,9 @@ function BookingPageContent() {
             country: pickup.country || null,
           },
     };
+    console.log('bookingData',bookingData);
     try {
-      const data = await createBookingMutation.mutateAsync(bookingData);
+      const data: BookingResponse = await createBookingMutation.mutateAsync(bookingData);
       const bookingId = data.id; // Assuming the API returns 'id' as the booking ID
 
       router.push(`/booking/payment?orderId=${bookingId}`);

@@ -6,7 +6,7 @@ import { API_BASE_URL } from "./apiConfig";
  * @param options Request options including method and body
  * @returns Promise with the parsed JSON response
  */
-export async function apiClient(endpoint: string, { method = "GET", body, baseUrl }: { method?: string; body?: unknown; baseUrl?: string } = {}) {
+export async function apiClient<T>(endpoint: string, { method = "GET", body, baseUrl }: { method?: string; body?: unknown; baseUrl?: string } = {}): Promise<T> {
   // Normalize endpoint to ensure it starts with a slash if using API_BASE_URL
   const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   
@@ -27,5 +27,5 @@ export async function apiClient(endpoint: string, { method = "GET", body, baseUr
     throw new Error(data.error || "API request failed");
   }
   
-  return data;
+  return data as T;
 }

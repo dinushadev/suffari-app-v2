@@ -4,24 +4,37 @@ import { Button } from "../../../../components/atoms";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircleIcon, ShieldCheckIcon, PhoneIcon, CalendarIcon, MapPinIcon, EnvelopeIcon } from "@heroicons/react/24/outline";
 import { Suspense } from "react";
+import { useBookingDetails } from "../../../../data/useBookingDetails";
 
 function PaymentSuccessPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const bookingId = searchParams.get("bookingId") || "";
-  const vehicle = searchParams.get("vehicle") || "";
-  const date = searchParams.get("date") || "";
-  const timeSlot = searchParams.get("timeSlot") || "";
-  const fromGate = searchParams.get("fromGate") === "true";
-  const pickupRaw = searchParams.get("pickup");
-  const pickup = pickupRaw ? JSON.parse(pickupRaw) : {};
-  const amount = parseFloat(searchParams.get("amount") || "0");
+  const { data: bookingDetails, isLoading, isError } = useBookingDetails(bookingId);
+
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading booking details...</div>;
+  }
+
+  if (isError || !bookingDetails) {
+    return <div className="min-h-screen flex items-center justify-center text-red-600">Error loading booking details or booking not found.</div>;
+  }
+
+  const { schedule, pickupLocation, resourceTypeId, group } = bookingDetails;
+
+  // Directly use data from bookingDetails
+  const vehicle = resourceTypeId; // Assuming resourceTypeId is the vehicle type
+  const date = schedule.date;
+  const timeSlot = schedule.timeSlot;
+  const fromGate = pickupLocation && pickupLocation.address === "Park Gate"; // Adjust based on actual pickupLocation structure
+  const pickup = pickupLocation || {};
+  const amount = parseFloat(searchParams.get("amount") || "0"); // Amount still from search params or fetched from backend if available
 
   // Dummy data for contact info (these are not passed via URL)
-  const contactWithin = "24 minutes"; // This will eventually come from the backend
-  const email = "customer@example.com"; // This will eventually come from the user's session
-  const location = "Bandhavgarh National Park, Madhya Pradesh"; // This will eventually come from a lookup based on bookingId
+  const contactWithin = "24 minutes"; // Placeholder - will come from backend later
+  const email = searchParams.get("email") || "customer@example.com"; // Email still from search params or fetched from backend if available
+  const location = searchParams.get("location") || "Bandhavgarh National Park, Madhya Pradesh"; // Location still from search params or fetched from backend if available
 
   // Helper to format date and time slot
   const formatDateTime = (dateStr: string, timeSlotStr: string) => {
@@ -58,7 +71,7 @@ function PaymentSuccessPageContent() {
           <div className="flex flex-col items-center gap-2">
             <CheckCircleIcon className="h-12 w-12 text-green-600" />
             <div className="text-2xl font-bold text-green-700">Booking Confirmed!</div>
-            <div className="text-base text-orange font-medium">Booking ID: <span className="font-mono">{bookingId}</span></div>
+            <div className="text-base text-orange font-medium">Booking ID: <span className="font-mono">{bookingDetails.id}</span></div>
             <div className="text-center mt-2">Your booking is confirmed &amp; locked in our system<br/>We&apos;ve successfully reserved your safari experience. Our local partner will contact you shortly to finalize the details and confirm your adventure.</div>
           </div>
 
@@ -102,6 +115,14 @@ function PaymentSuccessPageContent() {
               </span>
               <span className="font-medium">Vehicle:</span> {vehicle}
             </div>
+            <div className="flex items-center gap-2 text-gray-700">
+              <span className="inline-block">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 17.25V19a2.25 2.25 0 002.25 2.25h10.5A2.25 2.25 0 0019.5 19v-1.75M6.75 17.25v-2.625c0-.621.504-1.125 1.125-1.125h7.25c.621 0 1.125.504 1.125 1.125v2.625M6.75 17.25h10.5M9 10.5V7.875A3.375 3.375 0 0112.375 4.5h.25A3.375 3.375 0 0116 7.875V10.5" />
+                </svg>
+              </span>
+              <span className="font-medium">Total Passengers:</span> {group.adults + group.children}
+            </div>
           </div>
 
           {/* Payment Details */}
@@ -109,7 +130,11 @@ function PaymentSuccessPageContent() {
             <div className="text-lg font-semibold text-gray-800 mb-1">Payment Details</div>
             <div className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
               <span className="text-foreground/80">Total Amount Paid:</span>
-              <span className="font-bold text-lg text-green-600">Rs. {amount.toLocaleString()}</span>
+              <span className="font-bold text-lg text-green-600">USD {amount.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+              <span className="text-foreground/80">Payment Status:</span>
+              <span className="font-bold text-lg text-green-600">Paid</span>
             </div>
           </div>
 
