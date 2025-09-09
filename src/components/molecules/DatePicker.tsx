@@ -9,17 +9,16 @@ interface DatePickerProps {
 
 const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, min, max }) => {
   return (
-  <>
-  <label htmlFor="date" className="font-bold text-lg mb-2 text-orange">Date .</label>
-    <input
-      type="date"
-      className="border-2 border-ash rounded-lg p-3 w-full max-w-md mx-auto focus:outline-none focus:ring-2 focus:ring-orange text-lg text-foreground placeholder-ash bg-ivory shadow-sm"
-      value={value}
-      onChange={e => onChange(e.target.value)}
-      min={min}
-      max={max}
-    />
-  </>
+    <div className="w-full max-w-md mx-auto">
+      <input
+        type="date"
+        className="border-2 border-ash rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-orange text-lg text-foreground placeholder-ash bg-ivory shadow-sm"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        min={min}
+        max={max}
+      />
+    </div>
   );
 };
 
