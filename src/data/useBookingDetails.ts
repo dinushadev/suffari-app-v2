@@ -17,6 +17,7 @@ interface BookingDetails {
     address: string;
     // Add other properties if available in pickupLocation
   };
+  paymentAmount: string;
   // Add any other properties that your UI relies on from the booking object
 }
 

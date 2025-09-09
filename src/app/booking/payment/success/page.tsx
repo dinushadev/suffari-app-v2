@@ -21,7 +21,7 @@ function PaymentSuccessPageContent() {
     return <div className="min-h-screen flex items-center justify-center text-red-600">Error loading booking details or booking not found.</div>;
   }
 
-  const { schedule, pickupLocation, resourceTypeId, group } = bookingDetails;
+  const { schedule, pickupLocation, resourceTypeId, group, paymentAmount } = bookingDetails;
 
   // Directly use data from bookingDetails
   const vehicle = resourceTypeId; // Assuming resourceTypeId is the vehicle type
@@ -29,12 +29,12 @@ function PaymentSuccessPageContent() {
   const timeSlot = schedule.timeSlot;
   const fromGate = pickupLocation && pickupLocation.address === "Park Gate"; // Adjust based on actual pickupLocation structure
   const pickup = pickupLocation || {};
-  const amount = parseFloat(searchParams.get("amount") || "0"); // Amount still from search params or fetched from backend if available
+  const amount = paymentAmount; // Amount still from search params or fetched from backend if available
 
   // Dummy data for contact info (these are not passed via URL)
   const contactWithin = "24 minutes"; // Placeholder - will come from backend later
-  const email = searchParams.get("email") || "customer@example.com"; // Email still from search params or fetched from backend if available
-  const location = searchParams.get("location") || "Bandhavgarh National Park, Madhya Pradesh"; // Location still from search params or fetched from backend if available
+  const email = searchParams.get("email") || ""; // Email still from search params or fetched from backend if available
+  const location = searchParams.get("location") || ""; // Location still from search params or fetched from backend if available
 
   // Helper to format date and time slot
   const formatDateTime = (dateStr: string, timeSlotStr: string) => {
@@ -130,7 +130,7 @@ function PaymentSuccessPageContent() {
             <div className="text-lg font-semibold text-gray-800 mb-1">Payment Details</div>
             <div className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
               <span className="text-foreground/80">Total Amount Paid:</span>
-              <span className="font-bold text-lg text-green-600">USD {amount.toLocaleString()}</span>
+              <span className="font-bold text-lg text-green-600">USD {paymentAmount}</span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
               <span className="text-foreground/80">Payment Status:</span>

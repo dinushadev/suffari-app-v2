@@ -5,7 +5,7 @@ import { Button, CustomImage, Loader } from '../../components/atoms';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useVehicleTypes } from '../../data/useVehicleTypes';
 import type { PickupLocation } from '../../components/molecules/PickupLocationInput';
-import { useCreateBooking } from "../../data/useCreateBooking";
+import { useCreateBooking, type BookingPayload } from "../../data/useCreateBooking";
 import { useLocationDetails } from '../../data/useLocationDetails';
 import { supabase } from "../../data/apiConfig";
 import type { BookingResponse } from "../../data/useCreateBooking"; // Import BookingResponse type
@@ -155,33 +155,36 @@ function BookingPageContent() {
     }
     console.log('customer',customer);
 
+    const selectedVehicle = vehicleOptions.find((v) => v.value === vehicle);
+    const paymentAmount = selectedVehicle ? (selectedVehicle.price || 0) * (adults + children) : 0;
+
     // Prepare booking data in required structure, using null for missing values
-    const bookingData = {
-      customer,
-      locationId: locationId || null,
-      resourceTypeId: vehicle || null,
+    const bookingData: BookingPayload = {
+      customer: {
+        email: customer.email || null,
+        phone: customer.phone || null,
+        sessionId: customer.sessionId || generateSessionId(),
+      },
+      resourceTypeId: vehicle || '',
+      resourceId: null, // Optional field, not currently used
+      resourceOwnerId: null, // Optional field, not currently used
+      locationId: locationId || '',
       schedule: {
-        date: date || null,
-        timeSlot: timeSlot || null,
+        date: date || '',
+        timeSlot: timeSlot || '',
       },
       group: {
-        adults: adults ?? null,
-        children: children ?? null,
-        size: (adults != null && children != null) ? adults + children : null,
+        adults: adults,
+        children: children,
+        size: adults + children,
       },
-      pickupLocation: fromGate
-        ? {
-            placeId: null,
-            coordinate: { lat: 0, lng: 0 },
-            address: 'Pickup from park gate',
-            country: null,
-          }
-        : {
-            placeId: pickup.placeId || null,
-            coordinate: pickup.coordinate || { lat: 0, lng: 0 },
-            address: pickup.address || null,
-            country: pickup.country || null,
-          },
+      pickupLocation: {
+        placeId: fromGate ? location.pickupLocations?.[0]?.placeId || null : pickup.placeId || null,
+        coordinate: fromGate ? location.pickupLocations?.[0]?.coordinate || { lat: 0, lng: 0 } : pickup.coordinate || { lat: 0, lng: 0 },
+        address: fromGate ? location.pickupLocations?.[0]?.address || 'Pickup from park gate' : pickup.address || '',
+        country: fromGate ? location.pickupLocations?.[0]?.country || null : pickup.country || null,
+      },
+      paymentAmount,
     };
     console.log('bookingData',bookingData);
     try {

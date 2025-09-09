@@ -7,7 +7,35 @@ export interface BookingResponse {
 }
 
 export function useCreateBooking() {
-  return useMutation<BookingResponse, Error, unknown>({
-    mutationFn: (bookingData: unknown) => apiClient<BookingResponse>("/bookings", { method: "POST", body: bookingData }),
+  return useMutation<BookingResponse, Error, BookingPayload>({
+    mutationFn: (bookingData) => apiClient<BookingResponse>("/bookings", { method: "POST", body: bookingData }),
   });
+}
+
+export interface BookingPayload {
+  customer: {
+    email?: string | null;
+    phone?: string | null;
+    sessionId: string;
+  };
+  resourceTypeId: string;
+  resourceId?: string | null;
+  resourceOwnerId?: string | null;
+  locationId: string;
+  schedule: {
+    date: string;
+    timeSlot: string;
+  };
+  group: {
+    adults: number;
+    children: number;
+    size: number;
+  };
+  pickupLocation: {
+    placeId: string | null;
+    coordinate: { lat: number; lng: number };
+    address: string;
+    country: string | null;
+  };
+  paymentAmount: number;
 }

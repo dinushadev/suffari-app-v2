@@ -12,6 +12,12 @@ export interface Location {
   about: string;
   images: string[];
   facilities: string[];
+  pickupLocations?: {
+    address: string;
+    country: string;
+    placeId: string;
+    coordinate: { lat: number; lng: number };
+  }[];
 }
 
 const fetchLocations = async (): Promise<Location[]> => {
