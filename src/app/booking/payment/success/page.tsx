@@ -129,11 +129,11 @@ function PaymentSuccessPageContent() {
           <div className="w-full bg-white rounded-xl p-4 flex flex-col gap-3 border border-gray-100">
             <div className="text-lg font-semibold text-gray-800 mb-1">Payment Details</div>
             <div className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
-              <span className="text-foreground/80">Total Amount Paid:</span>
+              <span className="text-gray-700">Total Amount Paid:</span>
               <span className="font-bold text-lg text-green-600">USD {paymentAmount}</span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
-              <span className="text-foreground/80">Payment Status:</span>
+              <span className="text-gray-700">Payment Status:</span>
               <span className="font-bold text-lg text-green-600">Paid</span>
             </div>
           </div>
