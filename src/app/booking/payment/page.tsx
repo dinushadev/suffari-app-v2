@@ -80,7 +80,7 @@ function StripePaymentForm({
   const { data: bookingStatus, isLoading: isBookingStatusLoading } = useBookingStatus(bookingId, isPolling);
 
   useEffect(() => {
-    if (bookingStatus && bookingStatus.status === "initiated") {
+    if (bookingStatus && bookingStatus.status === "confirmed") {
       const params = new URLSearchParams({
         bookingId
       });
