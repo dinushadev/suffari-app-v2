@@ -168,8 +168,8 @@ function StripePaymentForm({
   );
 }
 
-function StripePaymentWrapper({ amount, locationName, userEmail }: { amount: number; locationName: string; userEmail: string }) {
-  const { clientSecret, loading, error, setError, fetchPaymentIntent } = usePaymentIntent(amount);
+function StripePaymentWrapper({ amount, locationName, userEmail, bookingId }: { amount: number; locationName: string; userEmail: string; bookingId: string }) {
+  const { clientSecret, loading, error, setError, fetchPaymentIntent } = usePaymentIntent(amount, bookingId);
 
   const handleTryAgain = () => {
     fetchPaymentIntent();
@@ -274,7 +274,7 @@ function PaymentPage() {
             paymentAmount={amount}
           />
           {process.env.NEXT_PUBLIC_ENABLE_PAYMENTS === 'true' ? (
-            <StripePaymentWrapper amount={amount} locationName={location.name} userEmail={userEmail || ""} />
+            <StripePaymentWrapper amount={amount} locationName={location.name} bookingId={booking.id} userEmail={userEmail || ""} />
           ) : (
             <DirectBookingConfirmation
               booking={booking}

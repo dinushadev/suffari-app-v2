@@ -13,7 +13,7 @@ interface UsePaymentIntentResult {
   fetchPaymentIntent: () => Promise<void>;
 }
 
-export function usePaymentIntent(amount: number): UsePaymentIntentResult {
+export function usePaymentIntent(amount: number, bookingId?: string): UsePaymentIntentResult {
   const [clientSecret, setClientSecret] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +24,7 @@ export function usePaymentIntent(amount: number): UsePaymentIntentResult {
     try {
       const data = await apiClient("/payments/intent", {
         method: "POST",
-        body: { amount, currency: 'usd' },
+        body: { amount, currency: 'usd', bookingId },
       }) as PaymentIntentResponse;
       
       if (!data.clientSecret) {
@@ -39,13 +39,13 @@ export function usePaymentIntent(amount: number): UsePaymentIntentResult {
     } finally {
       setLoading(false);
     }
-  }, [amount]);
+  }, [amount, bookingId]);
 
   useEffect(() => {
     if (amount > 0) {
       fetchPaymentIntent();
     }
-  }, [amount, fetchPaymentIntent]); // Add fetchPaymentIntent to the dependency array
+  }, [amount, fetchPaymentIntent]);
 
-  return { clientSecret, loading, error, setError, fetchPaymentIntent }; // Return setError
+  return { clientSecret, loading, error, setError, fetchPaymentIntent };
 } 
