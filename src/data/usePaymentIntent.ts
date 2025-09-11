@@ -43,11 +43,7 @@ export function usePaymentIntent(amount: number, bookingId?: string, resourceTyp
   }, [amount, bookingId, resourceTypeId]);
 
   useEffect(() => {
-    if (amount >= 100 && bookingId && resourceTypeId && 
-        (fetchedIntentRef.current?.amount !== amount || 
-         fetchedIntentRef.current?.bookingId !== bookingId ||
-         fetchedIntentRef.current?.resourceTypeId !== resourceTypeId)
-    ) {
+    if (amount >= 100 && bookingId && resourceTypeId ) {
       fetchPaymentIntent();
       fetchedIntentRef.current = { amount, bookingId, resourceTypeId };
     }
