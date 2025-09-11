@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { apiClient } from "./apiClient";
 
 interface PaymentIntentResponse {
@@ -13,10 +13,11 @@ interface UsePaymentIntentResult {
   fetchPaymentIntent: () => Promise<void>;
 }
 
-export function usePaymentIntent(amount: number, bookingId?: string): UsePaymentIntentResult {
+export function usePaymentIntent(amount: number, bookingId?: string, resourceTypeId?: string): UsePaymentIntentResult {
   const [clientSecret, setClientSecret] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fetchedIntentRef = useRef<{ amount: number; bookingId?: string; resourceTypeId?: string } | null>(null);
 
   const fetchPaymentIntent = useCallback(async () => {
     setLoading(true);
@@ -39,13 +40,18 @@ export function usePaymentIntent(amount: number, bookingId?: string): UsePayment
     } finally {
       setLoading(false);
     }
-  }, [amount, bookingId]);
+  }, [amount, bookingId, resourceTypeId]);
 
   useEffect(() => {
-    if (amount > 0) {
+    if (amount >= 100 && bookingId && resourceTypeId && 
+        (fetchedIntentRef.current?.amount !== amount || 
+         fetchedIntentRef.current?.bookingId !== bookingId ||
+         fetchedIntentRef.current?.resourceTypeId !== resourceTypeId)
+    ) {
       fetchPaymentIntent();
+      fetchedIntentRef.current = { amount, bookingId, resourceTypeId };
     }
-  }, [amount, fetchPaymentIntent]);
+  }, [amount, bookingId, resourceTypeId, fetchPaymentIntent]);
 
   return { clientSecret, loading, error, setError, fetchPaymentIntent };
 } 

@@ -154,7 +154,7 @@ function StripePaymentForm({
       )}
       <PaymentElement />
       {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
-      <Button type="submit" variant="primary" className="w-full text-lg py-3" disabled={isSubmittingPayment}>
+      <Button type="submit" variant="primary" className="w-full text-lg py-3" disabled={isSubmittingPayment || hasConfirmedPaymentIntent}>
         {isSubmittingPayment ? (
           <div className="flex items-center justify-center">
             <Loader />
@@ -168,8 +168,8 @@ function StripePaymentForm({
   );
 }
 
-function StripePaymentWrapper({ amount, locationName, userEmail, bookingId }: { amount: number; locationName: string; userEmail: string; bookingId: string }) {
-  const { clientSecret, loading, error, setError, fetchPaymentIntent } = usePaymentIntent(amount, bookingId);
+function StripePaymentWrapper({ amount, locationName, userEmail, bookingId, resourceTypeId }: { amount: number; locationName: string; userEmail: string; bookingId: string; resourceTypeId: string }) {
+  const { clientSecret, loading, error, setError, fetchPaymentIntent } = usePaymentIntent(amount, bookingId, resourceTypeId);
 
   const handleTryAgain = () => {
     fetchPaymentIntent();
@@ -274,7 +274,7 @@ function PaymentPage() {
             paymentAmount={amount}
           />
           {process.env.NEXT_PUBLIC_ENABLE_PAYMENTS === 'true' ? (
-            <StripePaymentWrapper amount={amount} locationName={location.name} bookingId={booking.id} userEmail={userEmail || ""} />
+            <StripePaymentWrapper amount={amount} locationName={location.name} bookingId={booking.id} userEmail={userEmail || ""} resourceTypeId={booking.resourceTypeId} />
           ) : (
             <DirectBookingConfirmation
               booking={booking}
@@ -305,7 +305,7 @@ function DirectBookingConfirmation({ booking, amount, currentSession, locationNa
   const { data: bookingStatus, isLoading: isBookingStatusLoading } = useBookingStatus(bookingId, isPolling);
 
   useEffect(() => {
-    if (bookingStatus && bookingStatus.status === "COMPLETED") {
+    if (bookingStatus && bookingStatus.status === "confirmed") {
       const params = new URLSearchParams({
         bookingId,
         amount: amount.toString(),
@@ -341,7 +341,6 @@ function DirectBookingConfirmation({ booking, amount, currentSession, locationNa
       >
         {loading ? (
           <div className="flex items-center justify-center">
-            <Loader />
             <span >Processing...</span>
           </div>
         ) : (

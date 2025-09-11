@@ -12,43 +12,45 @@ interface TimeSlotPickerProps {
   onSelect: (value: string) => void;
 }
 
-const slotIcons: Record<string, JSX.Element> = {
-  morning: (
-    <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="2" fill="#FDE68A"/><path strokeLinecap="round" strokeLinejoin="round" d="M12 1v2m0 18v2m11-11h-2M3 12H1m16.95 6.95l-1.414-1.414M6.464 6.464L5.05 5.05m12.02 0l-1.414 1.414M6.464 17.536l-1.414 1.414"/></svg>
-  ),
-  afternoonEvening: (
-    <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="16" r="5" stroke="currentColor" strokeWidth="2" fill="#FDBA74"/><path strokeLinecap="round" strokeLinejoin="round" d="M12 1v2m0 18v2m11-11h-2M3 16H1m16.95 6.95l-1.414-1.414M6.464 10.464L5.05 9.05m12.02 0l-1.414 1.414M6.464 21.536l-1.414 1.414"/></svg>
-  ),
-  night: (
-    <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
-  ),
-  fullday: (
-    <svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" stroke="currentColor" strokeWidth="2" fill="#FACC15"/><path strokeLinecap="round" strokeLinejoin="round" d="M12 1v2m0 18v2m11-11h-2M3 12H1m16.95 6.95l-1.414-1.414M6.464 6.464L5.05 5.05m12.02 0l-1.414 1.414M6.464 17.536l-1.414 1.414"/></svg>
-  ),
-};
-
 const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({ options, selected, onSelect }) => {
+  const slotIcons: Record<string, JSX.Element> = {
+    morning: (
+      <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+    ),
+    afternoonEvening: (
+      <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707.707M12 21a9 9 0 01-9-9h0c.489 0 .973-.082 1.432-.246A10.02 10.02 0 0012 3c4.97 0 9 4.03 9 9s-4.03 9-9 9z"/></svg>
+    ),
+    night: (
+      <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+    ),
+    fullday: (
+      <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    ),
+  };
+
   const selectedOption = options.find(option => option.value === selected);
   return (
     <div className="w-full">
-      <div className="flex flex-row justify-center w-full gap-2 sm:gap-4 mt-2 mb-2 select-none">
+      <div className="flex flex-wrap justify-center w-full gap-2 mt-2 mb-2 select-none">
         {options.map((option) => {
           const isSelected = selected === option.value;
           return (
             <button
               key={option.value}
               type="button"
-              className={`flex flex-col items-center justify-center px-3 sm:px-5 py-2 sm:py-3 rounded-t-xl transition-all duration-200 focus:outline-none min-w-[90px] sm:min-w-[120px] max-w-xs
+              className={`flex flex-col items-center justify-center p-2 sm:px-4 sm:py-3 rounded-xl transition-all duration-200 focus:outline-none flex-1 min-w-[calc(50%-8px)] sm:min-w-[120px] max-w-[180px]
                 ${isSelected
-                  ? 'border border-orange ring-2 ring-orange/30 scale-[1.03]' : 'hover:border border-orange hover:scale-[1.01]'}
+                  ? 'bg-black border-2 border-orange-500 shadow-md scale-[1.03]' : 'bg-neutral-800 border border-neutral-700 hover:bg-neutral-700 hover:border-orange-400 hover:scale-[1.01]'}
               `}
               onClick={() => onSelect(option.value)}
               tabIndex={0}
               style={{ userSelect: 'none' }}
             >
-              <div className="flex items-center gap-1 mb-1">
+              <div className="flex flex-col items-center justify-center gap-1 mb-1 text-center">
                 {slotIcons[option.value]}
-                <span className="font-semibold text-sm sm:text-base">{option.label}</span>
+                <span className={`font-semibold text-xs sm:text-sm md:text-base leading-tight ${isSelected ? 'text-white' : 'text-gray-300'}`}>
+                  {option.label}
+                </span>
               </div>
             </button>
           );
@@ -56,7 +58,7 @@ const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({ options, selected, onSe
       </div>
       {selectedOption && (
         <div className="w-full text-center mt-2 select-text">
-          <span className="text-sm sm:text-base text-foreground/80">{selectedOption.description}</span>
+          <span className="text-sm sm:text-base text-gray-400 font-normal mt-1">{selectedOption.description}</span>
         </div>
       )}
     </div>
