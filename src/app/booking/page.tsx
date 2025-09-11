@@ -9,22 +9,28 @@ import { useCreateBooking, type BookingPayload } from "../../data/useCreateBooki
 import { useLocationDetails } from '../../data/useLocationDetails';
 import { supabase } from "../../data/apiConfig";
 import type { BookingResponse } from "../../data/useCreateBooking"; // Import BookingResponse type
+import { usePaymentIntent } from "../../data/usePaymentIntent";
 
 const timeSlotOptions = [
   {
-    label: 'Full Day',
+    label: 'Full-day',
     value: 'fullday',
-    description: '6:00 AM - 6:00 PM • Complete wilderness experience with lunch break',
+    description: 'All-day adventure with lunch. Plenty of time to explore.',
   },
   {
     label: 'Morning',
     value: 'morning',
-    description: '6:00 AM - 10:00 AM • Best for wildlife activity and cooler temperatures',
+    description: 'Cool, early start as the nature awakens.',
   },
   {
-    label: 'Evening',
-    value: 'evening',
-    description: '3:30 PM - 7:00 PM • Perfect for spotting predators and golden hour photography',
+    label: 'Afternoon/Evening',
+    value: 'afternoonEvening',
+    description: 'Relaxed late-day drive in shifting light',
+  },
+  {
+    label: 'Night',
+    value: 'night',
+    description: 'Explore after dark. Night gears are recommended.',
   },
 ];
 
@@ -46,10 +52,13 @@ function BookingPageContent() {
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
   const [isButtonLoading, setIsButtonLoading] = useState(false);
+  const [currentBookingId, setCurrentBookingId] = useState<string | undefined>(undefined);
+  const [currentPaymentAmount, setCurrentPaymentAmount] = useState<number>(0);
 
   const { data: location, isLoading: locationLoading, error: locationError } = useLocationDetails(locationId || '');
   const { data: vehicleTypes, isLoading: vehicleTypesLoading, error: vehicleTypesError } = useVehicleTypes();
   const createBookingMutation = useCreateBooking();
+  const { fetchPaymentIntent, error: paymentIntentError } = usePaymentIntent(currentPaymentAmount, currentBookingId);
 
   // Prefill from localStorage if available
   React.useEffect(() => {
@@ -190,6 +199,13 @@ function BookingPageContent() {
     try {
       const data: BookingResponse = await createBookingMutation.mutateAsync(bookingData);
       const bookingId = data.id; // Assuming the API returns 'id' as the booking ID
+      setCurrentBookingId(bookingId);
+      setCurrentPaymentAmount(paymentAmount);
+
+      await fetchPaymentIntent();
+      if (paymentIntentError) {
+        throw new Error(paymentIntentError);
+      }
 
       router.push(`/booking/payment?orderId=${bookingId}`);
     } catch (err) {
@@ -214,7 +230,7 @@ function BookingPageContent() {
         <div className="mx-6 mt-4 mb-6 flex items-start gap-2 bg-orange/10 border-l-4 border-orange rounded-xl p-4">
           <svg className="w-6 h-6 text-orange flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01"/></svg>
           <div className="text-sm text-foreground/80">
-            <span className="font-semibold text-orange">Note:</span> We recommend booking at least <span className="font-semibold">24 hours in advance</span> for the best safari experience. Our expert guides will ensure you have an unforgettable wildlife adventure while practicing responsible tourism.
+            <span className="font-semibold text-orange">Note:</span> For a seamless journey, please reserve at least <span className="font-semibold">24 hours ahead</span>
           </div>
         </div>
         <div className="p-6">
@@ -227,7 +243,7 @@ function BookingPageContent() {
             <DatePicker value={date} onChange={setDate} min={new Date().toISOString().split('T')[0]} />
           </div>
           <div className="mb-6">
-            <h2 className="font-bold text-lg mb-2 text-orange">Time Slot</h2>
+            <h2 className="font-bold text-lg mb-2 text-orange">Game Drive Option</h2>
             <TimeSlotPicker options={timeSlotOptions} selected={timeSlot} onSelect={setTimeSlot} />
           </div>
           <div className="mb-6">

@@ -155,12 +155,13 @@ const GroupSizeSelector: React.FC<GroupSizeSelectorProps> = ({
             Total guests: <span className="font-semibold">{totalGuests}</span>
             {totalGuests > 6 && (
               <span className="block text-xs text-foreground/60 mt-1">
-                Large groups may require multiple vehicles
+                For your group&apos;s comfort, {Math.ceil(totalGuests / 6)} vehicles will be booked. 
               </span>
             )}
           </p>
         </div>
       )}
+      
     </div>
   );
 };
