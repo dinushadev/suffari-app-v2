@@ -164,7 +164,7 @@ function StripePaymentWrapper({ amount, locationName, userEmail, bookingId, reso
       }
     };
     createIntent();
-  }, [amount, bookingId, resourceTypeId, mutateAsync, clientSecret, isCreatingPaymentIntent, reset]);
+  }, [amount, bookingId, resourceTypeId, clientSecret, isCreatingPaymentIntent]);
 
   const handleTryAgain = () => {
     reset(); // Reset the mutation state, clearing any errors
