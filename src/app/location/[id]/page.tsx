@@ -35,6 +35,29 @@ export default function LocationDetailsPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center p-0 sm:p-4">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "LocalBusiness",
+            "name": location.name,
+            "address": {
+              "@type": "PostalAddress",
+              "streetAddress": location.address,
+              // Add more address details if available
+            },
+            "image": location.thumbnail,
+            "description": location.about,
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": location.rating, // Assuming 'rating' is a numeric value
+              "reviewCount": 10, // Placeholder: Replace with actual review count if available
+            },
+            "url": `https://raahi.io/location/${location.id}` // Replace with your actual domain
+          })
+        }}
+      />
       <div className="w-full max-w-lg bg-ivory border border-ash rounded-3xl shadow-xl overflow-hidden mt-0 sm:mt-8 relative">
         {/* Hero Image & Overlay */}
         <div className="relative h-64 sm:h-80 w-full">

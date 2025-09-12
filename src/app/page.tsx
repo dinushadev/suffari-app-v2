@@ -6,11 +6,11 @@ import { useRouter } from 'next/navigation';
 import { Loader } from '../components/atoms';
 
 export default function Home() {
-  const router = useRouter();
+  // const router = useRouter(); // router is no longer directly used here, but keeping it for now in case other logic depends on it.
   const { data: locations, isLoading, error } = useLocations();
-  const handleSelect = (id: string) => {
-    router.push(`/location/${id}`);
-  };
+  // const handleSelect = (id: string) => {
+  //   router.push(`/location/${id}`);
+  // };
 
   return (
     <main className="min-h-screen flex flex-col items-center bg-background p-4">
@@ -19,7 +19,7 @@ export default function Home() {
       {isLoading && <Loader />}
       {error && <div className="text-orange">Error loading locations</div>}
       {locations && (
-        <ResourceLocationList locations={locations} onSelect={handleSelect} />
+        <ResourceLocationList locations={locations} />
       )}
     </main>
   );
