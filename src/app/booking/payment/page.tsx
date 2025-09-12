@@ -26,13 +26,11 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
 function StripePaymentForm({
   amount,
   error,
-  setError,
   locationName,
   userEmail,
 }: {
   amount: number;
-  error: string | null;
-  setError: React.Dispatch<React.SetStateAction<string | null>>;
+  error: Error | null;
   locationName: string;
   userEmail: string;
 }) {
@@ -40,18 +38,11 @@ function StripePaymentForm({
   const elements = useElements();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const vehicle = searchParams.get("vehicle") || "";
-  const date = searchParams.get("date") || "";
-  const timeSlot = searchParams.get("timeSlot") || "";
-  const fromGate = searchParams.get("fromGate") === "true";
-  const pickupRaw = searchParams.get("pickup");
-  const pickup = pickupRaw ? JSON.parse(pickupRaw) : {};
   const bookingId = searchParams.get("orderId") || "";
 
   const [paymentRequest, setPaymentRequest] = useState<StripePaymentRequest | null>(null);
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false); // New state for button loading
   const [hasConfirmedPaymentIntent, setHasConfirmedPaymentIntent] = useState(false); // New state variable
-  //const [prButtonReady, setPrButtonReady] = useState(false);
 
   useEffect(() => {
     if (stripe) {
@@ -73,9 +64,6 @@ function StripePaymentForm({
     }
   }, [stripe, amount]);
 
-  // Remove useConfirmBooking as it's no longer called from frontend
-  // const confirmBooking = useConfirmBooking();
-
   const [isPolling, setIsPolling] = useState(false);
   const { data: bookingStatus, isLoading: isBookingStatusLoading } = useBookingStatus(bookingId, isPolling);
 
@@ -86,14 +74,12 @@ function StripePaymentForm({
       });
       router.push(`/booking/payment/success?${params.toString()}`);
     }
-  }, [bookingStatus, router, vehicle, date, timeSlot, fromGate, pickup, amount, bookingId, locationName, userEmail]);
+  }, [bookingStatus, router, bookingId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmittingPayment(true); // Start loading immediately on click
-    setError(null);
     if (!stripe || !elements) {
-      setError("Stripe has not loaded yet.");
       setIsSubmittingPayment(false); // Stop loading if Stripe not loaded
       return;
     }
@@ -102,13 +88,12 @@ function StripePaymentForm({
       if (hasConfirmedPaymentIntent) { // Prevent re-confirming if already confirmed
         paymentSucceeded = true; // Assume succeeded if already confirmed
       } else {
-        const { error, paymentIntent } = await stripe.confirmPayment({
+        const { error: stripeError, paymentIntent } = await stripe.confirmPayment({
           elements,
           confirmParams: {},
           redirect: "if_required",
         });
-        if (error) {
-          setError(error.message || "Payment failed");
+        if (stripeError) {
           setIsSubmittingPayment(false); // Stop loading on payment error
           return;
         }
@@ -123,11 +108,9 @@ function StripePaymentForm({
 
     if (paymentSucceeded) {
       try {
-        // await confirmBooking.mutateAsync({bookingId}); // Removed direct call
         setIsPolling(true); // Start polling after successful payment
-        // The navigation to success page will now happen in the useEffect triggered by bookingStatus change
       } catch (err) {
-        setError((err as Error).message || "Confirmation failed");
+        // Error handling for polling initiation if needed
       } finally {
         setIsSubmittingPayment(false); // Stop loading after payment processing
       }
@@ -145,15 +128,11 @@ function StripePaymentForm({
               paymentRequest: paymentRequest,
               style: { paymentRequestButton:  { type: 'default', theme: 'dark', height: '44px' } },
             }}
-          //  onReady={() => setPrButtonReady(true)}
-            // onClick={event => {
-            //   // Optionally handle click events
-            // }}
           />
         </div>
       )}
       <PaymentElement />
-      {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
+      {error && <div className="text-red-500 text-sm mt-2">{error.message}</div>}
       <Button type="submit" variant="primary" className="w-full text-lg py-3" disabled={isSubmittingPayment || hasConfirmedPaymentIntent}>
         {isSubmittingPayment ? (
           <div className="flex items-center justify-center">
@@ -169,24 +148,41 @@ function StripePaymentForm({
 }
 
 function StripePaymentWrapper({ amount, locationName, userEmail, bookingId, resourceTypeId }: { amount: number; locationName: string; userEmail: string; bookingId: string; resourceTypeId: string }) {
-  const { clientSecret, loading, error, setError, fetchPaymentIntent } = usePaymentIntent(amount, bookingId, resourceTypeId);
+  const { mutateAsync, isPending: isCreatingPaymentIntent, data, error, reset } = usePaymentIntent();
+  const clientSecret = data?.clientSecret;
+
+  useEffect(() => {
+    const createIntent = async () => {
+      if (amount >= 1 && bookingId && resourceTypeId && !clientSecret && !isCreatingPaymentIntent) {
+        try {
+          await mutateAsync({ amount, bookingId, resourceTypeId });
+          // setPaymentIntentError(null); // Clear error on success - REMOVED
+        } catch (err) {
+          console.error("Failed to create payment intent", err);
+          // setPaymentIntentError("Failed to set up payment. Please try again or contact support."); // REMOVED
+        }
+      }
+    };
+    createIntent();
+  }, [amount, bookingId, resourceTypeId, mutateAsync, clientSecret, isCreatingPaymentIntent, reset]);
 
   const handleTryAgain = () => {
-    fetchPaymentIntent();
+    reset(); // Reset the mutation state, clearing any errors
+    mutateAsync({ amount, bookingId, resourceTypeId });
   };
 
-  if (loading || !clientSecret) return <Loader />;
+  if (isCreatingPaymentIntent || !clientSecret) return <Loader />;
 
   return (
     <>
       {error && (
         <div className="mb-4">
-          <div className="text-red-500 text-sm mb-2">{error}</div>
+          <div className="text-red-500 text-sm mb-2">Failed to set up payment. Please try again or contact support.</div>
           <Button onClick={handleTryAgain} variant="secondary" className="w-full mb-4">Try Again</Button>
         </div>
       )}
       <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "stripe" } }}>
-        <StripePaymentForm amount={amount} error={error} setError={setError} locationName={locationName} userEmail={userEmail} />
+        <StripePaymentForm amount={amount} error={error} locationName={locationName} userEmail={userEmail} />
       </Elements>
     </>
   );
@@ -241,7 +237,6 @@ function PaymentPage() {
 
   const selectedVehicle = vehicleTypes?.find(v => v.id === booking.resourceTypeId);
 
-  const amount = selectedVehicle?.price ? selectedVehicle.price * 100 : 0;
 
   if (!selectedVehicle) return <div className="text-red-500">Vehicle not found.</div>;
 
@@ -271,14 +266,14 @@ function PaymentPage() {
             vehicleType={summary.vehicleType}
             groupType={summary.groupType}
             pickupLocation={summary.pickupLocation}
-            paymentAmount={amount}
+            paymentAmount={ parseFloat(booking.paymentAmount) }
           />
           {process.env.NEXT_PUBLIC_ENABLE_PAYMENTS === 'true' ? (
-            <StripePaymentWrapper amount={amount} locationName={location.name} bookingId={booking.id} userEmail={userEmail || ""} resourceTypeId={booking.resourceTypeId} />
+            <StripePaymentWrapper amount={parseFloat(booking.paymentAmount)} locationName={location.name} bookingId={booking.id} userEmail={userEmail || ""} resourceTypeId={booking.resourceTypeId} />
           ) : (
             <DirectBookingConfirmation
               booking={booking}
-              amount={amount}
+              amount={parseFloat(booking.paymentAmount)}
               currentSession={currentSession}
               locationName={location.name}
             />

@@ -9,12 +9,12 @@ import { useCreateBooking, type BookingPayload } from "../../data/useCreateBooki
 import { useLocationDetails } from '../../data/useLocationDetails';
 import { supabase } from "../../data/apiConfig";
 import type { BookingResponse } from "../../data/useCreateBooking"; // Import BookingResponse type
-import { usePaymentIntent } from "../../data/usePaymentIntent";
+import { useBookingDetails } from "../../data/useBookingDetails";
 
 const timeSlotOptions = [
   {
     label: 'Full-day',
-    value: 'fullday',
+    value: 'full-day',
     description: 'All-day adventure with lunch. Plenty of time to explore.',
   },
   {
@@ -58,7 +58,7 @@ function BookingPageContent() {
   const { data: location, isLoading: locationLoading, error: locationError } = useLocationDetails(locationId || '');
   const { data: vehicleTypes, isLoading: vehicleTypesLoading, error: vehicleTypesError } = useVehicleTypes();
   const createBookingMutation = useCreateBooking();
-  const { fetchPaymentIntent, error: paymentIntentError } = usePaymentIntent(currentPaymentAmount, currentBookingId);
+  const { data: bookingDetails, isLoading: bookingDetailsLoading, error: bookingDetailsError } = useBookingDetails(currentBookingId || '');
 
   // Prefill from localStorage if available
   React.useEffect(() => {
@@ -201,11 +201,6 @@ function BookingPageContent() {
       const bookingId = data.id; // Assuming the API returns 'id' as the booking ID
       setCurrentBookingId(bookingId);
       setCurrentPaymentAmount(paymentAmount);
-
-      await fetchPaymentIntent();
-      if (paymentIntentError) {
-        throw new Error(paymentIntentError);
-      }
 
       router.push(`/booking/payment?orderId=${bookingId}`);
     } catch (err) {

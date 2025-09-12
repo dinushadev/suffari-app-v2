@@ -55,7 +55,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({ location, date, timeSlo
         {typeof paymentAmount === 'number' && (
           <li className="py-2 flex items-center justify-between">
             <span className="text-gray-500 font-medium">Payment Amount</span>
-            <span className="text-gray-900 font-semibold">${(paymentAmount / 100).toFixed(2)} USD</span>
+            <span className="text-gray-900 font-semibold">${(paymentAmount ).toFixed(2)} USD</span>
           </li>
         )}
       </ul>
