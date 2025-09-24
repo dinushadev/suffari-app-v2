@@ -13,7 +13,7 @@ export interface ResourceLocationCardProps {
 const ResourceLocationCard: React.FC<ResourceLocationCardProps> = ({ name, thumbnail, description, onClick }) => {
   return (
     <div
-      className="bg-white rounded shadow p-4 flex flex-col cursor-pointer hover:shadow-lg transition"
+      className="bg-card text-card-foreground rounded-lg shadow-md p-4 flex flex-col cursor-pointer hover:shadow-lg transition border border-border"
       onClick={onClick}
     >
       <CustomImage
@@ -24,7 +24,7 @@ const ResourceLocationCard: React.FC<ResourceLocationCardProps> = ({ name, thumb
         className="w-full h-40 object-cover rounded mb-2"
       />
       <h2 className="text-lg font-semibold mb-1">{name}</h2>
-      <p className="text-gray-600 text-sm">{description}</p>
+      <p className="text-muted-foreground text-sm">{description}</p>
     </div>
   );
 };

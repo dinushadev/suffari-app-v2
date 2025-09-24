@@ -23,10 +23,10 @@ const ResourceLocationList: React.FC<ResourceLocationListProps> = ({ locations }
       {locations.map((location) => (
         <div
           key={location.id}
-          className="flex items-center bg-ivory border border-ash rounded-3xl shadow-lg p-6 gap-6 hover:shadow-2xl transition flex-col sm:flex-row"
+          className="flex items-center bg-card border border-border rounded-3xl shadow-lg p-6 gap-6 hover:shadow-2xl transition flex-col sm:flex-row"
           // onClick={() => onSelect(location.id)} // Removed onClick from div
         >
-          <Link href={`/location/${location.id}`} className="flex items-center bg-ivory  hover:shadow-2xl transition cursor-pointer flex-col sm:flex-row w-full">
+          <Link href={`/location/${location.id}`} className="flex items-center bg-card hover:shadow-2xl transition cursor-pointer flex-col sm:flex-row w-full">
           <CustomImage
             src={location.thumbnail}
             alt={location.name}
@@ -37,16 +37,16 @@ const ResourceLocationList: React.FC<ResourceLocationListProps> = ({ locations }
           <div className="flex-1 min-w-0">
             <h2 className="font-extrabold text-2xl text-foreground mb-2 drop-shadow-sm">{location.name}</h2>
             {location.subtitle && (
-              <div className="text-orange text-base mb-2 font-medium">{location.subtitle}</div>
+              <div className="text-primary text-base mb-2 font-medium">{location.subtitle}</div>
             )}
-            <div className="text-ash text-base whitespace-pre-line leading-relaxed">{location.description}</div>
+            <div className="text-muted-foreground text-base whitespace-pre-line leading-relaxed">{location.description}</div>
           </div>
           <button
-            className="ml-0 sm:ml-4 bg-background hover:bg-orange rounded-full p-3 focus:outline-none self-start sm:self-center shadow border border-ash"
+            className="ml-0 sm:ml-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full p-3 focus:outline-none self-start sm:self-center shadow border border-primary/20"
             aria-label={`View details for ${location.name}`}
             // onClick={e => { e.stopPropagation(); onSelect(location.id); }} // Removed onClick from button as Link handles navigation
           >
-            <ArrowRightIcon className="w-7 h-7 text-orange" />
+            <ArrowRightIcon className="w-7 h-7" />
           </button>
           </Link>
         </div>

@@ -42,15 +42,15 @@ const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-ivory shadow-md p-4">
+    <header className="sticky top-0 z-50 w-full bg-background text-foreground shadow-md p-4 border-b border-border">
       <nav className="container mx-auto flex justify-between items-center">
-        <h1 className="text-lg font-semibold text-foreground">RAAHI</h1>
+        <h1 className="text-lg font-semibold">RAAHI</h1>
         <div className="relative" ref={dropdownRef}>
           {user ? (
             <>
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="text-foreground hover:text-orange transition-colors duration-300 focus:outline-none"
+                className="text-foreground hover:text-primary transition-colors duration-300 focus:outline-none"
               >
                 {/* Profile Icon */}
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -58,16 +58,16 @@ const Header = () => {
                 </svg>
               </button>
               {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-ivory rounded-md shadow-lg py-1 z-20">
-                  <Link href="/profile" className="block px-4 py-2 text-sm text-foreground hover:bg-ash">
+                <div className="absolute right-0 mt-2 w-48 bg-popover rounded-md shadow-lg py-1 z-20 border border-border">
+                  <Link href="/profile" className="block px-4 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground">
                     Profile
                   </Link>
-                  <Link href="/booking/history" className="block px-4 py-2 text-sm text-foreground hover:bg-ash">
+                  <Link href="/booking/history" className="block px-4 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground">
                     Bookings
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="block w-full text-left px-4 py-2 text-sm text-foreground hover:bg-ash"
+                    className="block w-full text-left px-4 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground"
                   >
                     Logout
                   </button>
@@ -75,7 +75,7 @@ const Header = () => {
               )}
             </>
           ) : (
-            <Link href="/auth" className="bg-orange text-white py-2 px-4 rounded-full font-semibold hover:bg-orange-dark transition-colors duration-300">
+            <Link href="/auth" className="bg-primary text-primary-foreground py-2 px-4 rounded-full font-semibold hover:bg-primary/90 transition-colors duration-300">
               Sign In
             </Link>
           )}

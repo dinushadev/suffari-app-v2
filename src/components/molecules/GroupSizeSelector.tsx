@@ -49,14 +49,14 @@ const GroupSizeSelector: React.FC<GroupSizeSelectorProps> = ({
     max: number;
     icon: React.ReactNode;
   }) => (
-    <div className="flex items-center justify-between p-4 bg-ivory rounded-2xl border-2 border-ash hover:border-orange/50 transition-all duration-200">
+    <div className="flex items-center justify-between p-4 bg-card rounded-2xl border-2 border-border hover:border-accent transition-all duration-200">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 flex items-center justify-center bg-orange/10 rounded-full">
+        <div className="w-10 h-10 flex items-center justify-center bg-primary/10 rounded-full">
           {icon}
         </div>
         <div>
           <p className="font-semibold text-foreground">{label}</p>
-          <p className="text-xs text-foreground/70">
+          <p className="text-xs text-muted-foreground">
             {label === 'Adults' ? 'Ages 13+' : 'Ages 2-12'}
           </p>
         </div>
@@ -66,11 +66,11 @@ const GroupSizeSelector: React.FC<GroupSizeSelectorProps> = ({
           type="button"
           onClick={() => handleDecrement(value, onChange)}
           disabled={value === 0}
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-ash hover:bg-ash/80 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-95"
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-secondary hover:bg-secondary/80 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-95"
           aria-label={`Decrease ${label.toLowerCase()} count`}
         >
           <svg
-            className="w-5 h-5 text-foreground/70"
+            className="w-5 h-5 text-secondary-foreground/70"
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
@@ -86,11 +86,11 @@ const GroupSizeSelector: React.FC<GroupSizeSelectorProps> = ({
           type="button"
           onClick={() => handleIncrement(value, onChange, max)}
           disabled={value === max}
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-orange hover:bg-orange/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-95"
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-95"
           aria-label={`Increase ${label.toLowerCase()} count`}
         >
           <svg
-            className="w-5 h-5 text-white"
+            className="w-5 h-5 text-primary-foreground"
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
@@ -114,7 +114,7 @@ const GroupSizeSelector: React.FC<GroupSizeSelectorProps> = ({
         max={maxAdults}
         icon={
           <svg
-            className="w-5 h-5 text-orange"
+            className="w-5 h-5 text-primary"
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
@@ -135,7 +135,7 @@ const GroupSizeSelector: React.FC<GroupSizeSelectorProps> = ({
         max={maxChildren}
         icon={
           <svg
-            className="w-5 h-5 text-orange"
+            className="w-5 h-5 text-primary"
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
@@ -150,11 +150,11 @@ const GroupSizeSelector: React.FC<GroupSizeSelectorProps> = ({
         }
       />
       {totalGuests > 0 && (
-        <div className="mt-4 p-3 bg-orange/10 rounded-lg text-center">
-          <p className="text-sm text-foreground/80">
+        <div className="mt-4 p-3 bg-accent/10 rounded-lg text-center">
+          <p className="text-sm text-foreground">
             Total guests: <span className="font-semibold">{totalGuests}</span>
             {totalGuests > 6 && (
-              <span className="block text-xs text-foreground/60 mt-1">
+              <span className="block text-muted-foreground text-xs mt-1">
                 For your group&apos;s comfort, {Math.ceil(totalGuests / 6)} vehicles will be booked. 
               </span>
             )}

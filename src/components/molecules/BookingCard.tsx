@@ -21,16 +21,16 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
 
   switch (booking.status) {
     case "upcoming":
-      cardClasses += " border-l-4 border-blue-500";
-      statusColorClass = "text-blue-600 font-semibold";
+      cardClasses += " border-l-4 border-primary";
+      statusColorClass = "text-primary font-semibold";
       break;
     case "past":
-      cardClasses += " border-l-4 border-gray-400 opacity-75";
-      statusColorClass = "text-gray-500";
+      cardClasses += " border-l-4 border-muted-foreground opacity-75";
+      statusColorClass = "text-muted-foreground";
       break;
     case "canceled":
-      cardClasses += " border-l-4 border-red-500";
-      statusColorClass = "text-red-600 font-semibold";
+      cardClasses += " border-l-4 border-destructive";
+      statusColorClass = "text-destructive font-semibold";
       break;
     default:
       break;
