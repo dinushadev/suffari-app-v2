@@ -217,15 +217,15 @@ function BookingPageContent() {
           <CustomImage src={location.thumbnail} alt={location.name} className="w-full h-full object-cover" fill priority />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="absolute bottom-4 left-6">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground drop-shadow mb-1">{location.name}</h1>
-            <div className="text-foreground/90 text-base font-medium">{location.address}</div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-white drop-shadow mb-1">{location.name}</h1>
+            <div className="text-white/90 text-base font-medium">{location.address}</div>
           </div>
         </div>
         {/* UX Note: Booking Recommendation */}
-        <div className="mx-6 mt-4 mb-6 flex items-start gap-2 bg-orange/10 border-l-4 border-orange rounded-xl p-4">
+        <div className="mx-6 mt-4 mb-6 flex items-start gap-2 bg-accent/10 border-l-4 border-orange rounded-xl p-4">
           <svg className="w-6 h-6 text-orange flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01"/></svg>
-          <div className="text-sm text-foreground/80">
-            <span className="font-semibold text-orange">Note:</span> For a seamless journey, please reserve at least <span className="font-semibold">24 hours ahead</span>
+          <div className="text-sm text-foreground">
+            <span className="font-semibold text-orange">Note:</span> For a seamless journey, please reserve at least <span className="font-semibold text-orange">24 hours ahead</span>
           </div>
         </div>
         <div className="p-6">
@@ -265,7 +265,7 @@ function BookingPageContent() {
           </div>
           <Button
             variant="primary"
-            className="w-full text-lg py-3 transition-transform duration-150 hover:scale-105"
+            className="w-full transition-transform duration-150 hover:scale-105"
             onClick={handleConfirm}
             disabled={!isFormValid || isButtonLoading}
           >

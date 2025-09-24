@@ -24,30 +24,28 @@ const ResourceLocationList: React.FC<ResourceLocationListProps> = ({ locations }
         <div
           key={location.id}
           className="flex items-center bg-card border border-border rounded-3xl shadow-lg p-6 gap-6 hover:shadow-2xl transition flex-col sm:flex-row"
-          // onClick={() => onSelect(location.id)} // Removed onClick from div
         >
-          <Link href={`/location/${location.id}`} className="flex items-center bg-card hover:shadow-2xl transition cursor-pointer flex-col sm:flex-row w-full">
-          <CustomImage
-            src={location.thumbnail}
-            alt={location.name}
-            width={192}
-            height={192}
-            className="w-full sm:w-48 h-48 object-cover rounded-2xl flex-shrink-0 mb-4 sm:mb-0 border-4 border-background shadow"
-          />
-          <div className="flex-1 min-w-0">
-            <h2 className="font-extrabold text-2xl text-foreground mb-2 drop-shadow-sm">{location.name}</h2>
-            {location.subtitle && (
-              <div className="text-primary text-base mb-2 font-medium">{location.subtitle}</div>
-            )}
-            <div className="text-muted-foreground text-base whitespace-pre-line leading-relaxed">{location.description}</div>
-          </div>
-          <button
-            className="ml-0 sm:ml-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full p-3 focus:outline-none self-start sm:self-center shadow border border-primary/20"
-            aria-label={`View details for ${location.name}`}
-            // onClick={e => { e.stopPropagation(); onSelect(location.id); }} // Removed onClick from button as Link handles navigation
-          >
-            <ArrowRightIcon className="w-7 h-7" />
-          </button>
+          <Link href={`/location/${location.id}`} className="flex items-center w-full gap-4">
+            <CustomImage
+              src={location.thumbnail}
+              alt={location.name}
+              width={128}
+              height={128}
+              className="w-32 h-32 object-cover rounded-xl flex-shrink-0 border-4 border-background shadow"
+            />
+            <div className="flex-1 min-w-0 py-2">
+              <h2 className="font-extrabold text-xl text-foreground mb-1 drop-shadow-sm">{location.name}</h2>
+              {location.subtitle && (
+                <div className="text-primary text-sm mb-1 font-medium">{location.subtitle}</div>
+              )}
+              <div className="text-muted-foreground text-sm whitespace-pre-line leading-relaxed">{location.description}</div>
+            </div>
+            <button
+              className="ml-auto bg-primary hover:bg-primary/90 text-primary-foreground rounded-full p-2 focus:outline-none self-center shadow border border-primary/20"
+              aria-label={`View details for ${location.name}`}
+            >
+              <ArrowRightIcon className="w-6 h-6" />
+            </button>
           </Link>
         </div>
       ))}

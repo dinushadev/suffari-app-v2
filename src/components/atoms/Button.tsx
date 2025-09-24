@@ -7,17 +7,17 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const Button: React.FC<ButtonProps> = ({ children, variant = 'primary', size, className = '', ...props }) => {
-  const base = 'px-4 py-2 rounded font-semibold focus:outline-none transition';
+  const base = 'flex items-center justify-center px-4 py-2 font-semibold focus:outline-none transition';
   const variants = {
     primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
     secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
     ghost: 'hover:bg-accent hover:text-accent-foreground',
   };
   const sizes = {
-    default: 'h-10 px-4 py-2',
-    sm: 'h-9 rounded-md px-3',
-    lg: 'h-11 rounded-md px-8',
-    icon: 'h-10 w-10',
+    default: 'h-10 px-4 py-2 rounded-full text-base',
+    sm: 'h-9 px-3 rounded-full text-sm',
+    lg: 'h-11 px-8 rounded-full text-lg',
+    icon: 'h-10 w-10 rounded-full',
   };
   const disabledStyles = 'opacity-50 cursor-not-allowed bg-muted text-muted-foreground hover:bg-muted';
   const isDisabled = props.disabled;
