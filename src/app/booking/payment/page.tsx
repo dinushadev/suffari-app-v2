@@ -50,7 +50,7 @@ function StripePaymentForm({
         country: 'US',
         currency: 'usd',
         total: {
-          label: 'Safari Booking',
+          label: 'RAAHI Booking',
           amount: amount,
         },
         requestPayerName: true,
@@ -216,6 +216,7 @@ function PaymentPage() {
   useEffect(() => {
     async function checkSession() {
       const { data: { session } } = await supabase.auth.getSession();
+      console.log('router', router);
       if (!session) {
         // If no session, redirect to auth page with returnUrl
         const currentPath = window.location.pathname + window.location.search;

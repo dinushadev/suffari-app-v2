@@ -6,6 +6,8 @@ import { supabase } from "@/data/apiConfig";
 import { useAssociateBooking } from "@/data/useAssociateBooking";
 import { useOtpSend } from "@/data/useOtpSend";
 import { useSearchParams } from 'next/navigation';
+import { generateSessionId } from "@/lib/utils";
+import { useMergeGuestSession } from "@/data/useMergeGuestSession";
 // Client-side component for checking pending booking
 function PendingBookingNotice() {
   const [hasPendingBooking, setHasPendingBooking] = useState(false);
@@ -33,8 +35,9 @@ function AuthPageContent() {
   const [error, setError] = useState("");
   const [oauthLoading, setOauthLoading] = useState({ google: false, facebook: false });
   const router = useRouter();
-  const associateBooking = useAssociateBooking();
+  //const associateBooking = useAssociateBooking();
   const [otpSendLoading, setOtpSendLoading] = useState(false);
+  const mergeGuestSessionMutation = useMergeGuestSession();
   
   // React Query hooks for OTP operations
   // const otpSendMutation = useOtpSend();
@@ -42,31 +45,54 @@ function AuthPageContent() {
   const returnUrl = searchParams.get('returnUrl') || '/';
 
   useEffect(() => {
-    const associateIfPending = async () => {
-      const pendingDataStr = localStorage.getItem('pendingBookingData');
-      if (pendingDataStr) {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user?.id) {
+    const handleSessionAndMerge = async () => {
+      console.log('handleSessionAndMerge ... called');
+      const { data: { session } } = await supabase.auth.getSession();
+      const guestSessionId = typeof window !== 'undefined' ? localStorage.getItem('raahi_session_id') : null;
+
+      if (session?.user?.id) {
+        // User is logged in
+        if (guestSessionId) {
+          // Attempt to merge guest data if a guest session exists
+          try {
+            await mergeGuestSessionMutation.mutateAsync({
+              userId: session.user.id,
+              email: session.user.email,
+              fullName: session.user.user_metadata?.full_name,
+              sessionId: guestSessionId,
+              accessToken: session.access_token,
+            });
+
+            localStorage.removeItem('raahi_session_id');
+            console.log('Guest session merged successfully!');
+          } catch (err) {
+            console.error('Error merging guest session:', err);
+            setError((err as Error).message || 'Failed to merge guest session');
+          }
+        }
+
+        // Handle pending booking association
+        const pendingDataStr = localStorage.getItem('pendingBookingData');
+        if (pendingDataStr) {
           const pendingData = JSON.parse(pendingDataStr);
           const bookingId = pendingData.bookingId;
           try {
-        //   await associateBooking.mutateAsync({ bookingId, userId: session.user.id });
+            //   await associateBooking.mutateAsync({ bookingId, userId: session.user.id });
             localStorage.removeItem('pendingBookingData');
             router.push(returnUrl);
           } catch (err) {
             setError((err as Error).message || 'Failed to associate booking');
           }
-        }
-      } else {
-        // If no pending booking and user is logged in, redirect to home
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user?.id) {
+        } else {
           router.push(returnUrl);
         }
       }
     };
-    associateIfPending();
-  }, [router, associateBooking, returnUrl]);
+
+
+    handleSessionAndMerge();
+
+  }, [ returnUrl]);
 
   const handleOAuth = async (provider: 'google' | 'facebook') => {
     setOauthLoading(prev => ({ ...prev, [provider]: true }));

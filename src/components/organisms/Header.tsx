@@ -2,11 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from "@/data/apiConfig";
 import Link from 'next/link';
 import { User } from '@supabase/supabase-js'; // Import User type
+import { useRouter } from 'next/navigation';
 
 const Header = () => {
   const [user, setUser] = useState<User | null>(null); // Use User type
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const getSession = async () => {
@@ -36,6 +38,7 @@ const Header = () => {
     await supabase.auth.signOut();
     setUser(null);
     setIsDropdownOpen(false);
+    router.push('/'); // Redirect to root page after logout
   };
 
   return (
@@ -58,6 +61,9 @@ const Header = () => {
                 <div className="absolute right-0 mt-2 w-48 bg-ivory rounded-md shadow-lg py-1 z-20">
                   <Link href="/profile" className="block px-4 py-2 text-sm text-foreground hover:bg-ash">
                     Profile
+                  </Link>
+                  <Link href="/booking/history" className="block px-4 py-2 text-sm text-foreground hover:bg-ash">
+                    Bookings
                   </Link>
                   <button
                     onClick={handleLogout}

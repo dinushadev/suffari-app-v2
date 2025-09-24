@@ -24,7 +24,7 @@ const timeSlotOptions = [
   },
   {
     label: 'Afternoon/Evening',
-    value: 'afternoonEvening',
+    value: 'afternoon',
     description: 'Relaxed late-day drive in shifting light',
   },
   {
@@ -201,8 +201,8 @@ function BookingPageContent() {
       const bookingId = data.id; // Assuming the API returns 'id' as the booking ID
       setCurrentBookingId(bookingId);
       setCurrentPaymentAmount(paymentAmount);
-
-      router.push(`/booking/payment?orderId=${bookingId}`);
+      console.log('redirctiong to booking payment page with bookingId',bookingId);
+      window.location.href = `/booking/payment?orderId=${bookingId}`;
     } catch (err) {
       setIsButtonLoading(false); // End loading
       alert((err as Error).message || "Booking failed");

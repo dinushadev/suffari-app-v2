@@ -4,4 +4,5 @@ export { default as DatePicker } from './DatePicker';
 export { default as TimeSlotPicker } from './TimeSlotPicker';
 export { default as PickupLocationInput } from './PickupLocationInput';
 export { default as BookingSummary } from './BookingSummary';
-export { default as GroupSizeSelector } from './GroupSizeSelector'; 
+export { default as GroupSizeSelector } from './GroupSizeSelector';
+export { BookingCard } from './BookingCard'; 

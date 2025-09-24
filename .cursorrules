@@ -52,7 +52,8 @@
 - Use CSS variables for theming
 
 ## Data Fetching
-- Use React Query for data fetching and caching
+- All API calls should be made using the `apiClient` utility.
+- Utilize React Query's `useQuery` for fetching data and `useMutation` for data modifications.
 - Implement proper loading and error states
 - Use Next.js API routes for backend functionality
 - Handle API errors gracefully

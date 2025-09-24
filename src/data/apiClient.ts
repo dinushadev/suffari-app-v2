@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "./apiConfig";
+import { API_BASE_URL, supabase } from "./apiConfig";
 
 /**
  * Generic API client for making requests to the backend
@@ -12,10 +12,17 @@ export async function apiClient<T>(endpoint: string, { method = "GET", body, bas
   
   // Use provided baseUrl or default to API_BASE_URL
   const url = baseUrl ? `${baseUrl}${normalizedEndpoint}` : `${API_BASE_URL}${normalizedEndpoint}`;
+
+  const { data: { session } } = await supabase.auth.getSession();
+  const headers: HeadersInit = { "Content-Type": "application/json" };
+
+  if (session) {
+    headers["Authorization"] = `Bearer ${session.access_token}`;
+  }
   
   const res = await fetch(url, {
     method,
-    headers: { "Content-Type": "application/json" },
+    headers,
     ...(body ? { body: JSON.stringify(body) } : {}),
   });
   
