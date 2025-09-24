@@ -6,6 +6,7 @@ import { useBookings } from "@/data/useBookings";
 import { supabase } from "@/data/apiConfig"; // Import supabase
 import Loader from "@/components/atoms/Loader";
 import { BookingCard } from "@/components/molecules";
+import { Booking } from '@/types/booking';
 
 const BookingHistoryPage = () => {
   const [userId, setUserId] = useState<string | null>(null);
@@ -38,7 +39,12 @@ const BookingHistoryPage = () => {
     return <div className="container mx-auto py-8 text-center">Please log in to view your bookings.</div>;
   }
 
-  const bookingsToDisplay = (allBookingsData?.bookings || []).sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()); // Sort by date, newest first
+  const bookingsToDisplay = (allBookingsData?.data || []).map(booking => ({
+    ...booking,
+    status: booking.status === 'upcoming' ? 'initiated' : booking.status === 'past' ? 'confirmed' : booking.status,
+    startTime: `${booking.schedule.date}T${booking.schedule.timeSlot === 'morning' ? '06:00:00' : booking.schedule.timeSlot === 'night' ? '18:00:00' : '12:00:00'}`,
+    endTime: `${booking.schedule.date}T${booking.schedule.timeSlot === 'morning' ? '12:00:00' : booking.schedule.timeSlot === 'night' ? '23:59:59' : '12:00:00'}`
+  })).sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()); // Sort by date, newest first
 
   return (
     <div className="container mx-auto py-8">

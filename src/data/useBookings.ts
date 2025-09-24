@@ -1,18 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from './apiClient';
-
-interface Booking {
-  id: string;
-  resourceName: string;
-  locationName: string;
-  startTime: string;
-  endTime: string;
-  status: 'upcoming' | 'past' | 'canceled';
-  // Add other relevant booking fields
-}
+import { Booking } from '@/types/booking';
 
 interface GetBookingsResponse {
-  bookings: Booking[];
+  data: Booking[];
+  total: number;
+  page: number;
+  limit: number;
 }
 
 const fetchBookings = async (userId: string): Promise<GetBookingsResponse> => {
