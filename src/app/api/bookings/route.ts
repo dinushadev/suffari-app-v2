@@ -9,7 +9,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'userId is required' }, { status: 400 });
   }
 
-  let query = supabase
+  const query = supabase
     .from('bookings') // Assuming you have a 'bookings' table in Supabase
     .select('id, resourceName, locationName, startTime, endTime, status') // Select relevant fields
     .eq('userId', userId);

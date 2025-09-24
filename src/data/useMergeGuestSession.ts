@@ -6,14 +6,18 @@ interface MergeGuestSessionPayload {
   email: string | null | undefined;
   fullName: string | null | undefined;
   sessionId: string;
-  accessToken: string; 
+}
+
+interface MergeGuestSessionResponse {
+  success: boolean;
+  message?: string; // Optional message from the API
 }
 
 const mergeGuestSession = async (payload: MergeGuestSessionPayload) => {
-  const { userId, email, fullName, sessionId, accessToken } = payload;
+  const { userId, email, fullName, sessionId } = payload;
   
   // Use apiClient instead of fetch
-  const response = await apiClient('/superbase/customer-signup', {
+  const response = await apiClient<MergeGuestSessionResponse>('/superbase/customer-signup', {
     method: 'POST',
     body: {
       userId,
@@ -33,7 +37,7 @@ const mergeGuestSession = async (payload: MergeGuestSessionPayload) => {
 
 export const useMergeGuestSession = () => {
   const queryClient = useQueryClient();
-  return useMutation<any, Error, MergeGuestSessionPayload>({
+  return useMutation<MergeGuestSessionResponse, Error, MergeGuestSessionPayload>({
     mutationFn: mergeGuestSession,
     onSuccess: () => {
       // Optionally invalidate queries or perform other actions on success

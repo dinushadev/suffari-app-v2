@@ -60,7 +60,6 @@ function AuthPageContent() {
               email: session.user.email,
               fullName: session.user.user_metadata?.full_name,
               sessionId: guestSessionId,
-              accessToken: session.access_token,
             });
 
             localStorage.removeItem('raahi_session_id');
