@@ -6,6 +6,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, PaymentRequestButtonElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { Suspense } from "react";
 import Loader from '../../../components/atoms/Loader';
+import { FullScreenLoader } from "../../../components/atoms";
 import type { PaymentRequest as StripePaymentRequest } from "@stripe/stripe-js";
 import { usePaymentIntent } from "../../../data/usePaymentIntent"; // Import the new hook
 import { Session } from "@supabase/supabase-js"; // Import Session type
@@ -164,7 +165,15 @@ function StripePaymentWrapper({ amount, locationName, userEmail, bookingId, reso
     mutateAsync({ amount, bookingId, resourceTypeId });
   };
 
-  if (isCreatingPaymentIntent || !clientSecret) return <Loader />;
+  if (isCreatingPaymentIntent || !clientSecret) {
+    return (
+      <main className="min-h-screen flex flex-col items-center bg-background p-4">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-orange mb-2 drop-shadow-sm text-center">RAAHI</h1>
+        <p className="mb-8 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">Setting up payment...</p>
+        <FullScreenLoader />
+      </main>
+    );
+  }
 
   return (
     <>
@@ -183,9 +192,15 @@ function StripePaymentWrapper({ amount, locationName, userEmail, bookingId, reso
 
 export default function PaymentPageWrapper() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <PaymentPage />
-    </Suspense>
+    <main className="min-h-screen flex flex-col items-center bg-background p-4">
+      <h1 className="text-3xl sm:text-4xl font-extrabold text-orange mb-2 drop-shadow-sm text-center">RAAHI</h1>
+      <p className="mb-8 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">Loading payment page...</p>
+      <div className="flex flex-grow w-full items-center justify-center">
+        <Suspense fallback={<FullScreenLoader />}>
+          <PaymentPage />
+        </Suspense>
+      </div>
+    </main>
   );
 }
 
@@ -226,7 +241,15 @@ function PaymentPage() {
 
   const { data: vehicleTypes, isLoading: vehicleTypesLoading, error: vehicleTypesError } = useVehicleTypes(); // Re-add useVehicleTypes hook
 
-  if (bookingLoading || locationLoading || vehicleTypesLoading || userEmail === null) return <Loader />;
+  if (bookingLoading || locationLoading || vehicleTypesLoading || userEmail === null) {
+    return (
+      <main className="min-h-screen flex flex-col items-center bg-background p-4">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-orange mb-2 drop-shadow-sm text-center">RAAHI</h1>
+        <p className="mb-8 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">Loading Booking Details...</p>
+        <FullScreenLoader />
+      </main>
+    );
+  }
   if (bookingError || locationError || vehicleTypesError || !booking || !location) return <div className="text-red-500">Error loading booking details.</div>;
 
   const selectedVehicle = vehicleTypes?.find(v => v.id === booking.resourceTypeId);

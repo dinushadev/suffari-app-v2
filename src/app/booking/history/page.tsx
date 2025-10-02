@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useBookings } from "@/data/useBookings";
 import { supabase } from "@/data/apiConfig"; // Import supabase
 import Loader from "@/components/atoms/Loader";
+import { FullScreenLoader } from "@/components/atoms";
 import { BookingCard } from "@/components/molecules";
 import { Booking } from '@/types/booking';
 
@@ -31,8 +32,14 @@ const BookingHistoryPage = () => {
     };
   }, []);
 
-  if (loadingSession) {
-    return <div className="flex justify-center items-center h-screen"><Loader /></div>;
+  if (loadingSession || isLoading) {
+    return (
+      <main className="min-h-screen flex flex-col items-center bg-background p-4">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-orange mb-2 drop-shadow-sm text-center">RAAHI</h1>
+        <p className="mb-8 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">Loading Booking History...</p>
+        <FullScreenLoader />
+      </main>
+    );
   }
 
   if (!userId) {
@@ -49,7 +56,6 @@ const BookingHistoryPage = () => {
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-3xl font-bold mb-6">My Bookings</h1>
-      {isLoading && <Loader />}
       {isError && <p className="text-red-500">Error loading bookings.</p>}
       {!isLoading && !isError && (bookingsToDisplay.length === 0 ? (
         <p>No bookings found.</p>

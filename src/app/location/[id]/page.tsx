@@ -3,7 +3,7 @@ import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { StarIcon, HeartIcon } from '@heroicons/react/24/solid';
 import { useLocationDetails } from '../../../data/useLocationDetails';
-import { Button, CustomImage, Loader, ButtonV2 } from '../../../components/atoms';
+import { Button, CustomImage, Loader, ButtonV2, FullScreenLoader } from '../../../components/atoms';
 
 export default function LocationDetailsPage() {
   const params = useParams();
@@ -19,11 +19,11 @@ export default function LocationDetailsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="bg-ivory border border-ash rounded-2xl shadow p-8 text-center">
-          <Loader />
-        </div>
-      </div>
+      <main className="min-h-screen flex flex-col items-center bg-background p-4">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-orange mb-2 drop-shadow-sm text-center">RAAHI</h1>
+        <p className="mb-8 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">Loading Safari Location...</p>
+        <FullScreenLoader />
+      </main>
     );
   }
 

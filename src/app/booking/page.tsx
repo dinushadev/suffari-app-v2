@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, Suspense } from 'react';
 import { VehicleTypeSelector, DatePicker, TimeSlotPicker, PickupLocationInput, GroupSizeSelector } from '../../components/molecules';
-import { CustomImage, Loader } from '../../components/atoms';
+import { CustomImage, Loader, FullScreenLoader } from '../../components/atoms';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useVehicleTypes } from '../../data/useVehicleTypes';
 import type { PickupLocation } from '../../components/molecules/PickupLocationInput';
@@ -87,11 +87,23 @@ function BookingPageContent() {
   }, [locationId, router]);
 
   if (!locationId) {
-    return <Loader />;
+    return (
+      <main className="min-h-screen flex flex-col items-center bg-background p-4">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-orange mb-2 drop-shadow-sm text-center">RAAHI</h1>
+        <p className="mb-8 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">Loading Booking Information...</p>
+        <FullScreenLoader />
+      </main>
+    );
   }
 
   if (locationLoading) {
-    return <Loader />;
+    return (
+      <main className="min-h-screen flex flex-col items-center bg-background p-4">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-orange mb-2 drop-shadow-sm text-center">RAAHI</h1>
+        <p className="mb-8 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">Loading Location Details...</p>
+        <FullScreenLoader />
+      </main>
+    );
   }
 
   if (locationError || !location) {
@@ -281,8 +293,14 @@ function BookingPageContent() {
 
 export default function BookingPage() {
   return (
-    <Suspense fallback={<Loader />}>
-      <BookingPageContent />
-    </Suspense>
+    <main className="min-h-screen flex flex-col items-center bg-background p-4">
+      <h1 className="text-3xl sm:text-4xl font-extrabold text-orange mb-2 drop-shadow-sm text-center">RAAHI</h1>
+      <p className="mb-8 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">Preparing Your Booking...</p>
+      <div className="flex flex-grow w-full items-center justify-center">
+        <Suspense fallback={<FullScreenLoader />}>
+          <BookingPageContent />
+        </Suspense>
+      </div>
+    </main>
   );
 } 
