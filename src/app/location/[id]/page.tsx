@@ -3,13 +3,19 @@ import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { StarIcon, HeartIcon } from '@heroicons/react/24/solid';
 import { useLocationDetails } from '../../../data/useLocationDetails';
-import { Button, CustomImage, Loader } from '../../../components/atoms';
+import { Button, CustomImage, Loader, ButtonV2 } from '../../../components/atoms';
 
 export default function LocationDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
   const { data: location, isLoading, error } = useLocationDetails(id);
+  const [isLoadingBooking, setIsLoadingBooking] = React.useState(false);
+
+  const handleSelectRide = () => {
+    setIsLoadingBooking(true);
+    router.push(`/booking?location=${location?.id}`);
+  };
 
   if (isLoading) {
     return (
@@ -110,12 +116,13 @@ export default function LocationDetailsPage() {
         </div>
         {/* Sticky Book Now Button for mobile */}
         <div className="sticky bottom-0 left-0 right-0 bg-ivory border-t border-ash rounded-b-3xl px-6 pb-6 pt-4 z-20">
-          <Button
+          <ButtonV2
             className="w-full text-lg py-4 rounded-2xl shadow-lg "
-            onClick={() => router.push(`/booking?location=${location.id}`)}
+            onClick={handleSelectRide}
+            loading={isLoadingBooking}
           >
             Select Your Ride
-          </Button>
+          </ButtonV2>
         </div>
       </div>
     </div>

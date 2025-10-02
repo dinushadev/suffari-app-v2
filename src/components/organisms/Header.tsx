@@ -3,10 +3,13 @@ import { supabase } from "@/data/apiConfig";
 import Link from 'next/link';
 import { User } from '@supabase/supabase-js'; // Import User type
 import { useRouter } from 'next/navigation';
+import Button from '../atoms/Button';
+import { ButtonV2 } from '../atoms';
 
 const Header = () => {
   const [user, setUser] = useState<User | null>(null); // Use User type
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -39,6 +42,11 @@ const Header = () => {
     setUser(null);
     setIsDropdownOpen(false);
     router.push('/'); // Redirect to root page after logout
+  };
+
+  const handleSignInClick = () => {
+    setIsLoading(true);
+    router.push('/auth');
   };
 
   return (
@@ -75,9 +83,14 @@ const Header = () => {
               )}
             </>
           ) : (
-            <Link href="/auth" className="bg-primary text-primary-foreground py-2 px-4 rounded-full font-semibold hover:bg-primary/90 transition-colors duration-300">
+            <ButtonV2
+              variant="primary"
+              className="bg-primary text-primary-foreground py-2 px-4 rounded-full font-semibold hover:bg-primary/90 transition-colors duration-300"
+              onClick={handleSignInClick}
+              loading={isLoading}
+            >
               Sign In
-            </Link>
+            </ButtonV2>
           )}
         </div>
       </nav>

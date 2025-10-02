@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import BookingSummary from "../../../components/molecules/BookingSummary";
-import { Button } from "../../../components/atoms";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, PaymentRequestButtonElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { Suspense } from "react";
@@ -15,6 +14,7 @@ import { useVehicleTypes } from "../../../data/useVehicleTypes"; // Re-add useVe
 import { supabase } from "../../../data/apiConfig"; // Re-add supabase import
 import { useLocationDetails } from "@/data/useLocationDetails";
 import { useBookingDetails } from "@/data/useBookingDetails";
+import { ButtonV2 } from '../../../components/atoms';
 
 // Validate Stripe publishable key
 if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
@@ -133,16 +133,9 @@ function StripePaymentForm({
       )}
       <PaymentElement />
       {error && <div className="text-red-500 text-sm mt-2">{error.message}</div>}
-      <Button type="submit" variant="primary" className="w-full text-lg py-3" disabled={isSubmittingPayment || hasConfirmedPaymentIntent}>
-        {isSubmittingPayment ? (
-          <div className="flex items-center justify-center">
-            <Loader />
-            <span className="ml-2">Processing...</span>
-          </div>
-        ) : (
-          "Pay with Card"
-        )}
-      </Button>
+      <ButtonV2 type="submit" variant="primary" className="w-full text-lg py-3" disabled={isSubmittingPayment || hasConfirmedPaymentIntent} loading={isSubmittingPayment}>
+        Pay with Card
+      </ButtonV2>
     </form>
   );
 }
@@ -178,7 +171,7 @@ function StripePaymentWrapper({ amount, locationName, userEmail, bookingId, reso
       {error && (
         <div className="mb-4">
           <div className="text-red-500 text-sm mb-2">Failed to set up payment. Please try again or contact support.</div>
-          <Button onClick={handleTryAgain} variant="secondary" className="w-full mb-4">Try Again</Button>
+          <ButtonV2 onClick={handleTryAgain} variant="secondary" className="w-full mb-4" loading={isCreatingPaymentIntent}>Try Again</ButtonV2>
         </div>
       )}
       <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "stripe" } }}>
@@ -329,20 +322,15 @@ function DirectBookingConfirmation({ booking, amount, currentSession, locationNa
   return (
     <div className="mt-8">
       {error && <div className="text-red-500 text-sm mb-4">{error}</div>}
-      <Button 
+      <ButtonV2 
         onClick={handleConfirm} 
         variant="primary" 
         className="w-full text-lg py-3" 
         disabled={loading}
+        loading={loading}
       >
-        {loading ? (
-          <div className="flex items-center justify-center">
-            <span >Processing...</span>
-          </div>
-        ) : (
-          "Confirm Booking (Payment Disabled)"
-        )}
-      </Button>
+        Confirm Booking (Payment Disabled)
+      </ButtonV2>
     </div>
   );
 }

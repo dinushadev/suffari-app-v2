@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, Suspense } from 'react';
 import { VehicleTypeSelector, DatePicker, TimeSlotPicker, PickupLocationInput, GroupSizeSelector } from '../../components/molecules';
-import { Button, CustomImage, Loader } from '../../components/atoms';
+import { CustomImage, Loader } from '../../components/atoms';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useVehicleTypes } from '../../data/useVehicleTypes';
 import type { PickupLocation } from '../../components/molecules/PickupLocationInput';
@@ -10,6 +10,7 @@ import { useLocationDetails } from '../../data/useLocationDetails';
 import { supabase } from "../../data/apiConfig";
 import type { BookingResponse } from "../../data/useCreateBooking"; // Import BookingResponse type
 import { useBookingDetails } from "../../data/useBookingDetails";
+import { ButtonV2 } from '../../components/atoms';
 
 const timeSlotOptions = [
   {
@@ -99,7 +100,7 @@ function BookingPageContent() {
         <div className="bg-ivory border border-ash rounded-2xl shadow p-8 text-center">
           <h1 className="text-2xl font-bold text-orange mb-2">Location Not Found</h1>
           <p className="mb-4 text-foreground">Sorry, we couldn&apos;t find the selected location.</p>
-          <Button onClick={() => router.push('/')}>Go Home</Button>
+          <ButtonV2 onClick={() => router.push('/')}>Go Home</ButtonV2>
         </div>
       </div>
     );
@@ -129,7 +130,7 @@ function BookingPageContent() {
         <div className="bg-ivory rounded-3xl shadow-xl p-8 max-w-md w-full text-center">
           <h1 className="text-2xl font-extrabold text-orange mb-2">Thank you!</h1>
           <p className="text-foreground mb-4">Your booking is confirmed.<br/><span className="font-mono text-orange">#SFR12345</span></p>
-          <Button variant="primary" onClick={() => setConfirmed(false)}>Book Another Safari</Button>
+          <ButtonV2 variant="primary" onClick={() => setConfirmed(false)}>Book Another Safari</ButtonV2>
         </div>
       </div>
     );
@@ -263,21 +264,15 @@ function BookingPageContent() {
           <div className="mb-8">
             {/* BookingSummary will be shown on the payment page instead */}
           </div>
-          <Button
+          <ButtonV2
             variant="primary"
             className="w-full transition-transform duration-150 hover:scale-105"
             onClick={handleConfirm}
             disabled={!isFormValid || isButtonLoading}
+            loading={isButtonLoading}
           >
-            {isButtonLoading ? (
-              <div className="flex items-center justify-center">
-                {/* <Loader /> */}
-                <span>Confirming...</span>
-              </div>
-            ) : (
-              "Confirm & Pay"
-            )}
-          </Button>
+            Confirm & Pay
+          </ButtonV2>
         </div>
       </div>
     </div>
