@@ -17,7 +17,7 @@ import {
 } from "../../data/useCreateBooking";
 import { useLocationDetails } from "../../data/useLocationDetails";
 import { supabase } from "../../data/apiConfig";
-import type { BookingResponse } from "../../data/useCreateBooking"; // Import BookingResponse type
+import type { BookingResponse } from "../../data/useCreateBooking";
 import { useBookingDetails } from "../../data/useBookingDetails";
 
 const timeSlotOptions = [
@@ -65,6 +65,7 @@ function BookingPageContent() {
     undefined
   );
   const [currentPaymentAmount, setCurrentPaymentAmount] = useState<number>(0);
+  const [bookingError, setBookingError] = useState<string | null>(null);
 
   const {
     data: location,
@@ -108,6 +109,16 @@ function BookingPageContent() {
     }
   }, [locationId, router]);
 
+  // Auto-dismiss error after 10 seconds
+  React.useEffect(() => {
+    if (bookingError) {
+      const timer = setTimeout(() => {
+        setBookingError(null);
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [bookingError]);
+
   if (!locationId) {
     return <Loader />;
   }
@@ -137,8 +148,8 @@ function BookingPageContent() {
     vehicleTypes?.map((v) => ({
       label: v.name,
       value: v.id,
-      description: v.discription, // use API field
-      imageUrl: v.imageUrl, // use API field
+      description: v.discription,
+      imageUrl: v.imageUrl,
       price: v.price,
       featureList: v.featureList,
       numberOfGuests: v.numberOfGuests,
@@ -173,95 +184,139 @@ function BookingPageContent() {
   }
 
   const handleConfirm = async () => {
-    setIsButtonLoading(true); // Start loading
-    await new Promise((resolve) => setTimeout(resolve, 2000)); // Add a 2-second delay for debugging
+    // Reset any previous errors
+    setBookingError(null);
+    setIsButtonLoading(true);
 
-    // Re-add session check and customer object creation
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    const customer = {
-      email: null as string | null,
-      phone: null as string | null,
-      sessionId: null as string | null,
-    };
-    if (!session || !session.user) {
-      // Guest user
-      let sessionId = localStorage.getItem("raahi_session_id");
-      if (!sessionId) {
-        sessionId = generateSessionId();
-        localStorage.setItem("raahi_session_id", sessionId);
-      }
-      customer.sessionId = sessionId;
-      // Optionally, collect guest email/phone from form if available
-    } else {
-      // Logged in user
-      const { email = null, phone = null } = session.user;
-      customer.email = email || null;
-      customer.phone = phone || null;
-      customer.sessionId = generateSessionId();
-    }
-    console.log("customer", customer);
-
-    const selectedVehicle = vehicleOptions.find((v) => v.value === vehicle);
-    const paymentAmount = selectedVehicle
-      ? (selectedVehicle.price || 0) * (adults + children)
-      : 0;
-
-    // Prepare booking data in required structure, using null for missing values
-    const bookingData: BookingPayload = {
-      customer: {
-        email: customer.email || null,
-        phone: customer.phone || null,
-        sessionId: customer.sessionId || generateSessionId(),
-      },
-      resourceTypeId: vehicle || "",
-      resourceId: null, // Optional field, not currently used
-      resourceOwnerId: null, // Optional field, not currently used
-      locationId: locationId || "",
-      schedule: {
-        date: date || "",
-        timeSlot: timeSlot || "",
-      },
-      group: {
-        adults: adults,
-        children: children,
-        size: adults + children,
-      },
-      pickupLocation: {
-        placeId: fromGate
-          ? location.pickupLocations?.[0]?.placeId || null
-          : pickup.placeId || null,
-        coordinate: fromGate
-          ? location.pickupLocations?.[0]?.coordinate || { lat: 0, lng: 0 }
-          : pickup.coordinate || { lat: 0, lng: 0 },
-        address: fromGate
-          ? location.pickupLocations?.[0]?.address || "Pickup from park gate"
-          : pickup.address || "",
-        country: fromGate
-          ? location.pickupLocations?.[0]?.country || null
-          : pickup.country || null,
-      },
-      paymentAmount,
-    };
-    console.log("bookingData", bookingData);
     try {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError) {
+        setBookingError(
+          "Unable to verify session. Please refresh the page and try again."
+        );
+        setIsButtonLoading(false);
+        return;
+      }
+
+      const customer = {
+        email: null as string | null,
+        phone: null as string | null,
+        sessionId: null as string | null,
+      };
+
+      if (!session || !session.user) {
+        // Guest user
+        let sessionId = localStorage.getItem("raahi_session_id");
+        if (!sessionId) {
+          sessionId = generateSessionId();
+          localStorage.setItem("raahi_session_id", sessionId);
+        }
+        customer.sessionId = sessionId;
+      } else {
+        // Logged in user
+        const { email = null, phone = null } = session.user;
+        customer.email = email;
+        customer.phone = phone;
+        customer.sessionId = generateSessionId();
+      }
+
+      const selectedVehicle = vehicleOptions.find((v) => v.value === vehicle);
+
+      // Validate vehicle selection
+      if (!selectedVehicle) {
+        setBookingError("Please select a valid vehicle type.");
+        setIsButtonLoading(false);
+        return;
+      }
+
+      const paymentAmount = selectedVehicle
+        ? (selectedVehicle.price || 0) * (adults + children)
+        : 0;
+
+      // Prepare booking data in required structure
+      const bookingData: BookingPayload = {
+        customer: {
+          email: customer.email,
+          phone: customer.phone,
+          sessionId: customer.sessionId || generateSessionId(),
+        },
+        resourceTypeId: vehicle,
+        resourceId: null,
+        resourceOwnerId: null,
+        locationId: locationId || "",
+        schedule: {
+          date: date,
+          timeSlot: timeSlot,
+        },
+        group: {
+          adults: adults,
+          children: children,
+          size: adults + children,
+        },
+        pickupLocation: {
+          placeId: fromGate
+            ? location.pickupLocations?.[0]?.placeId || null
+            : pickup.placeId || null,
+          coordinate: fromGate
+            ? location.pickupLocations?.[0]?.coordinate || { lat: 0, lng: 0 }
+            : pickup.coordinate || { lat: 0, lng: 0 },
+          address: fromGate
+            ? location.pickupLocations?.[0]?.address || "Pickup from park gate"
+            : pickup.address || "",
+          country: fromGate
+            ? location.pickupLocations?.[0]?.country || null
+            : pickup.country || null,
+        },
+        paymentAmount,
+      };
+
+      console.log("Submitting booking data:", bookingData);
+
       const data: BookingResponse = await createBookingMutation.mutateAsync(
         bookingData
       );
-      const bookingId = data.id; // Assuming the API returns 'id' as the booking ID
-      setCurrentBookingId(bookingId);
-      setCurrentPaymentAmount(paymentAmount);
-      console.log(
-        "redirctiong to booking payment page with bookingId",
-        bookingId
-      );
-      window.location.href = `/booking/payment?orderId=${bookingId}`;
-    } catch (err) {
-      setIsButtonLoading(false); // End loading
-      alert((err as Error).message || "Booking failed");
+
+      if (data && data.id) {
+        const bookingId = data.id;
+        setCurrentBookingId(bookingId);
+        setCurrentPaymentAmount(paymentAmount);
+        console.log(
+          "Redirecting to booking payment page with bookingId",
+          bookingId
+        );
+        window.location.href = `/booking/payment?orderId=${bookingId}`;
+      } else {
+        throw new Error("No booking ID received from server");
+      }
+    } catch (err: any) {
+      console.error("Booking error:", err);
+
+      // Handle different types of errors
+      if (err.response?.data?.message) {
+        setBookingError(err.response.data.message);
+      } else if (err.message) {
+        setBookingError(err.message);
+      } else if (err.code) {
+        setBookingError(`Booking failed with error code: ${err.code}`);
+      } else {
+        setBookingError(
+          "Booking failed. Please try again or contact support if the problem persists."
+        );
+      }
+
+      setIsButtonLoading(false);
     }
   };
+
+  // Use the correct mutation status properties
+  const isMutationLoading = createBookingMutation.status === "pending";
+  const isMutationError = createBookingMutation.status === "error";
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-background p-4">
@@ -285,6 +340,7 @@ function BookingPageContent() {
             </div>
           </div>
         </div>
+
         {/* UX Note: Booking Recommendation */}
         <div className="mx-6 mt-4 mb-6 flex items-start gap-2 bg-accent/10 border-l-4 border-foreground rounded-xl p-4">
           <svg
@@ -316,7 +372,55 @@ function BookingPageContent() {
             </span>
           </div>
         </div>
+
         <div className="p-6">
+          {/* Error displays for data loading */}
+          {vehicleTypesError && (
+            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-start gap-2">
+                <svg
+                  className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+                <p className="text-yellow-700 text-sm">
+                  Unable to load vehicle types. Please refresh the page.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {bookingDetailsError && (
+            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-start gap-2">
+                <svg
+                  className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+                <p className="text-yellow-700 text-sm">
+                  Unable to load booking details.
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="mb-6">
             <h2 className="font-bold text-lg mb-2 text-foreground">
               Pickup Location
@@ -328,6 +432,7 @@ function BookingPageContent() {
               onToggleGate={setFromGate}
             />
           </div>
+
           <div className="mb-6">
             <h2 className="font-bold text-lg mb-2 text-foreground">Date</h2>
             <DatePicker
@@ -336,6 +441,7 @@ function BookingPageContent() {
               min={new Date().toISOString().split("T")[0]}
             />
           </div>
+
           <div className="mb-6">
             <h2 className="font-bold text-lg mb-2 text-foreground">
               Game Drive Option
@@ -346,6 +452,7 @@ function BookingPageContent() {
               onSelect={setTimeSlot}
             />
           </div>
+
           <div className="mb-6">
             <h2 className="font-bold text-lg mb-2 text-foreground">
               Group Size
@@ -357,6 +464,7 @@ function BookingPageContent() {
               onChildrenChange={setChildren}
             />
           </div>
+
           <div className="mb-6">
             <h2 className="font-bold text-lg mb-2 text-foreground">
               Vehicle Type
@@ -373,18 +481,79 @@ function BookingPageContent() {
               />
             )}
           </div>
-          <div className="mb-8">
-            {/* BookingSummary will be shown on the payment page instead */}
-          </div>
+
+          {/* Booking Error Display */}
+          {bookingError && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl">
+              <div className="flex items-start gap-3">
+                <svg
+                  className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <div className="flex-1">
+                  <h3 className="text-red-800 font-semibold text-sm mb-1">
+                    Booking Error
+                  </h3>
+                  <p className="text-red-700 text-sm">{bookingError}</p>
+                  <button
+                    onClick={() => setBookingError(null)}
+                    className="mt-2 text-red-600 hover:text-red-800 text-sm font-medium"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Mutation Error Display */}
+          {isMutationError && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl">
+              <div className="flex items-start gap-3">
+                <svg
+                  className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <div className="flex-1">
+                  <h3 className="text-red-800 font-semibold text-sm mb-1">
+                    Network Error
+                  </h3>
+                  <p className="text-red-700 text-sm">
+                    {createBookingMutation.error?.message ||
+                      "Failed to create booking. Please check your connection and try again."}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <Button
             variant="primary"
-            className="w-full transition-transform duration-150 hover:scale-105"
+            className="w-full transition-transform duration-150 hover:scale-105 disabled:hover:scale-100"
             onClick={handleConfirm}
-            disabled={!isFormValid || isButtonLoading}
+            disabled={!isFormValid || isButtonLoading || isMutationLoading}
           >
-            {isButtonLoading ? (
-              <div className="flex items-center justify-center">
-                {/* <Loader /> */}
+            {isButtonLoading || isMutationLoading ? (
+              <div className="flex items-center justify-center gap-2">
+                <Loader />
                 <span>Confirming...</span>
               </div>
             ) : (
