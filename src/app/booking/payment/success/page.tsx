@@ -94,7 +94,7 @@ function PaymentSuccessPageContent() {
             <div className="text-2xl font-bold text-green-700">
               Booking Confirmed!
             </div>
-            <div className="text-base text-orange font-medium">
+            <div className="text-base text-foreground font-medium">
               Booking ID: <span className="font-mono">{bookingDetails.id}</span>
             </div>
             <div className="text-center mt-2">
@@ -257,7 +257,7 @@ function PaymentSuccessPageContent() {
 export default function PaymentSuccessPage() {
   return (
     <main className="min-h-screen flex flex-col items-center bg-background p-4">
-      <h1 className="text-3xl sm:text-4xl font-extrabold text-orange mb-2 drop-shadow-sm text-center">
+      <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground mb-2 drop-shadow-sm text-center">
         RAAHI
       </h1>
       <p className="mb-8 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">

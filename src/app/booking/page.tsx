@@ -124,7 +124,7 @@ function BookingPageContent() {
   if (!locationId) {
     return (
       <main className="min-h-screen flex flex-col items-center bg-background p-4">
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-orange mb-2 drop-shadow-sm text-center">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground mb-2 drop-shadow-sm text-center">
           RAAHI
         </h1>
         <p className="mb-8 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">
@@ -138,7 +138,7 @@ function BookingPageContent() {
   if (locationLoading) {
     return (
       <main className="min-h-screen flex flex-col items-center bg-background p-4">
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-orange mb-2 drop-shadow-sm text-center">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground mb-2 drop-shadow-sm text-center">
           RAAHI
         </h1>
         <p className="mb-8 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">
@@ -153,7 +153,7 @@ function BookingPageContent() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="bg-ivory border border-ash rounded-2xl shadow p-8 text-center">
-          <h1 className="text-2xl font-bold text-orange mb-2">
+          <h1 className="text-2xl font-bold text-foreground mb-2">
             Location Not Found
           </h1>
           <p className="mb-4 text-foreground">
@@ -189,13 +189,13 @@ function BookingPageContent() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
         <div className="bg-ivory rounded-3xl shadow-xl p-8 max-w-md w-full text-center">
-          <h1 className="text-2xl font-extrabold text-orange mb-2">
+          <h1 className="text-2xl font-extrabold text-foreground mb-2">
             Thank you!
           </h1>
           <p className="text-foreground mb-4">
             Your booking is confirmed.
             <br />
-            <span className="font-mono text-orange">#SFR12345</span>
+            <span className="font-mono text-foreground">#SFR12345</span>
           </p>
           <Button variant="primary" onClick={() => setConfirmed(false)}>
             Book Another Safari
@@ -530,7 +530,7 @@ function BookingPageContent() {
 export default function BookingPage() {
   return (
     <main className="min-h-screen flex flex-col items-center bg-background p-4">
-      <h1 className="text-3xl sm:text-4xl font-extrabold text-orange mb-2 drop-shadow-sm text-center">
+      <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground mb-2 drop-shadow-sm text-center">
         RAAHI
       </h1>
       <p className="mb-8 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">
