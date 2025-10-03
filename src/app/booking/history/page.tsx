@@ -11,6 +11,7 @@ import {
 import { useBookings } from "@/data/useBookings";
 import { supabase } from "@/data/apiConfig"; // Import supabase
 import Loader from "@/components/atoms/Loader";
+import { FullScreenLoader } from "@/components/atoms";
 import { BookingCard } from "@/components/molecules";
 import { Booking } from "@/types/booking";
 
@@ -93,7 +94,6 @@ const BookingHistoryPage = () => {
   return (
     <div className="container mx-auto py-8 px-8">
       <h1 className="text-3xl font-bold mb-6">My Bookings</h1>
-      {isLoading && <Loader />}
       {isError && <p className="text-red-500">Error loading bookings.</p>}
       {!isLoading &&
         !isError &&

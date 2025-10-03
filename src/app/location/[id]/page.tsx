@@ -4,20 +4,32 @@ import { useParams, useRouter } from "next/navigation";
 import { StarIcon, HeartIcon } from "@heroicons/react/24/solid";
 import { useLocationDetails } from "../../../data/useLocationDetails";
 import { Button, CustomImage, Loader } from "../../../components/atoms";
+import { FullScreenLoader } from "../../../components/atoms";
+import { ButtonV2 } from "../../../components/atoms";
 
 export default function LocationDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
   const { data: location, isLoading, error } = useLocationDetails(id);
+  const [isLoadingBooking, setIsLoadingBooking] = React.useState(false);
+
+  const handleSelectRide = () => {
+    setIsLoadingBooking(true);
+    router.push(`/booking?location=${location?.id}`);
+  };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="bg-ivory border border-ash rounded-2xl shadow p-8 text-center">
-          <Loader />
-        </div>
-      </div>
+      <main className="min-h-screen flex flex-col items-center bg-background p-4">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-orange mb-2 drop-shadow-sm text-center">
+          RAAHI
+        </h1>
+        <p className="mb-8 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">
+          Loading Safari Location...
+        </p>
+        <FullScreenLoader />
+      </main>
     );
   }
 
@@ -144,12 +156,13 @@ export default function LocationDetailsPage() {
         </div>
         {/* Sticky Book Now Button for mobile */}
         <div className="sticky bottom-0 left-0 right-0 bg-ivory border-t border-ash rounded-b-3xl px-6 pb-6 pt-4 z-20">
-          <Button
+          <ButtonV2
             className="w-full text-lg py-4 rounded-2xl shadow-lg "
-            onClick={() => router.push(`/booking?location=${location.id}`)}
+            onClick={handleSelectRide}
+            loading={isLoadingBooking}
           >
             Select Your Ride
-          </Button>
+          </ButtonV2>
         </div>
       </div>
     </div>

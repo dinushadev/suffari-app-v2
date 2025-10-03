@@ -19,6 +19,8 @@ import { useLocationDetails } from "../../data/useLocationDetails";
 import { supabase } from "../../data/apiConfig";
 import type { BookingResponse } from "../../data/useCreateBooking";
 import { useBookingDetails } from "../../data/useBookingDetails";
+import { ButtonV2 } from "../../components/atoms";
+import { FullScreenLoader } from "../../components/atoms";
 
 const timeSlotOptions = [
   {
@@ -120,18 +122,38 @@ function BookingPageContent() {
   }, [bookingError]);
 
   if (!locationId) {
-    return <Loader />;
+    return (
+      <main className="min-h-screen flex flex-col items-center bg-background p-4">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-orange mb-2 drop-shadow-sm text-center">
+          RAAHI
+        </h1>
+        <p className="mb-8 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">
+          Loading Booking Information...
+        </p>
+        <FullScreenLoader />
+      </main>
+    );
   }
 
   if (locationLoading) {
-    return <Loader />;
+    return (
+      <main className="min-h-screen flex flex-col items-center bg-background p-4">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-orange mb-2 drop-shadow-sm text-center">
+          RAAHI
+        </h1>
+        <p className="mb-8 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">
+          Loading Location Details...
+        </p>
+        <FullScreenLoader />
+      </main>
+    );
   }
 
   if (locationError || !location) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="bg-ivory border border-ash rounded-2xl shadow p-8 text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-2">
+          <h1 className="text-2xl font-bold text-orange mb-2">
             Location Not Found
           </h1>
           <p className="mb-4 text-foreground">
@@ -167,13 +189,13 @@ function BookingPageContent() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
         <div className="bg-ivory rounded-3xl shadow-xl p-8 max-w-md w-full text-center">
-          <h1 className="text-2xl font-extrabold text-foreground mb-2">
+          <h1 className="text-2xl font-extrabold text-orange mb-2">
             Thank you!
           </h1>
           <p className="text-foreground mb-4">
             Your booking is confirmed.
             <br />
-            <span className="font-mono text-foreground">#SFR12345</span>
+            <span className="font-mono text-orange">#SFR12345</span>
           </p>
           <Button variant="primary" onClick={() => setConfirmed(false)}>
             Book Another Safari
@@ -481,79 +503,18 @@ function BookingPageContent() {
               />
             )}
           </div>
-
-          {/* Booking Error Display */}
-          {bookingError && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl">
-              <div className="flex items-start gap-3">
-                <svg
-                  className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <div className="flex-1">
-                  <h3 className="text-red-800 font-semibold text-sm mb-1">
-                    Booking Error
-                  </h3>
-                  <p className="text-red-700 text-sm">{bookingError}</p>
-                  <button
-                    onClick={() => setBookingError(null)}
-                    className="mt-2 text-red-600 hover:text-red-800 text-sm font-medium"
-                  >
-                    Dismiss
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Mutation Error Display */}
-          {isMutationError && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl">
-              <div className="flex items-start gap-3">
-                <svg
-                  className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <div className="flex-1">
-                  <h3 className="text-red-800 font-semibold text-sm mb-1">
-                    Network Error
-                  </h3>
-                  <p className="text-red-700 text-sm">
-                    {createBookingMutation.error?.message ||
-                      "Failed to create booking. Please check your connection and try again."}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
+          <div className="mb-8">
+            {/* BookingSummary will be shown on the payment page instead */}
+          </div>
           <Button
             variant="primary"
             className="w-full transition-transform duration-150 hover:scale-105 disabled:hover:scale-100"
             onClick={handleConfirm}
-            disabled={!isFormValid || isButtonLoading || isMutationLoading}
+            disabled={!isFormValid || isButtonLoading}
           >
-            {isButtonLoading || isMutationLoading ? (
-              <div className="flex items-center justify-center gap-2">
-                <Loader />
+            {isButtonLoading ? (
+              <div className="flex items-center justify-center">
+                {/* <Loader /> */}
                 <span>Confirming...</span>
               </div>
             ) : (
@@ -568,8 +529,18 @@ function BookingPageContent() {
 
 export default function BookingPage() {
   return (
-    <Suspense fallback={<Loader />}>
-      <BookingPageContent />
-    </Suspense>
+    <main className="min-h-screen flex flex-col items-center bg-background p-4">
+      <h1 className="text-3xl sm:text-4xl font-extrabold text-orange mb-2 drop-shadow-sm text-center">
+        RAAHI
+      </h1>
+      <p className="mb-8 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">
+        Preparing Your Booking...
+      </p>
+      <div className="flex flex-grow w-full items-center justify-center">
+        <Suspense fallback={<FullScreenLoader />}>
+          <BookingPageContent />
+        </Suspense>
+      </div>
+    </main>
   );
 }

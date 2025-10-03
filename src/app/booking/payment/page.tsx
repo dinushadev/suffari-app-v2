@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import BookingSummary from "../../../components/molecules/BookingSummary";
-import { Button } from "../../../components/atoms";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -21,6 +20,8 @@ import { useVehicleTypes } from "../../../data/useVehicleTypes"; // Re-add useVe
 import { supabase } from "../../../data/apiConfig"; // Re-add supabase import
 import { useLocationDetails } from "@/data/useLocationDetails";
 import { useBookingDetails } from "@/data/useBookingDetails";
+import { ButtonV2 } from "../../../components/atoms";
+import { FullScreenLoader } from "../../../components/atoms";
 
 // Validate Stripe publishable key
 if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
@@ -156,7 +157,7 @@ function StripePaymentForm({
       {error && (
         <div className="text-red-500 text-sm mt-2">{error.message}</div>
       )}
-      <Button
+      <ButtonV2
         type="submit"
         variant="primary"
         className="w-full text-lg py-3"
@@ -170,7 +171,7 @@ function StripePaymentForm({
         ) : (
           "Pay with Card"
         )}
-      </Button>
+      </ButtonV2>
     </form>
   );
 }
@@ -229,7 +230,19 @@ function StripePaymentWrapper({
     mutateAsync({ amount, bookingId, resourceTypeId });
   };
 
-  if (isCreatingPaymentIntent || !clientSecret) return <Loader />;
+  if (isCreatingPaymentIntent || !clientSecret) {
+    return (
+      <main className="min-h-screen flex flex-col items-center bg-background p-4">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-orange mb-2 drop-shadow-sm text-center">
+          RAAHI
+        </h1>
+        <p className="mb-8 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">
+          Setting up payment...
+        </p>
+        <FullScreenLoader />
+      </main>
+    );
+  }
 
   return (
     <>
@@ -238,13 +251,13 @@ function StripePaymentWrapper({
           <div className="text-red-500 text-sm mb-2">
             Failed to set up payment. Please try again or contact support.
           </div>
-          <Button
+          <ButtonV2
             onClick={handleTryAgain}
             variant="secondary"
             className="w-full mb-4"
           >
             Try Again
-          </Button>
+          </ButtonV2>
         </div>
       )}
       <Elements
@@ -264,9 +277,19 @@ function StripePaymentWrapper({
 
 export default function PaymentPageWrapper() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <PaymentPage />
-    </Suspense>
+    <main className="min-h-screen flex flex-col items-center bg-background p-4">
+      <h1 className="text-3xl sm:text-4xl font-extrabold text-orange mb-2 drop-shadow-sm text-center">
+        RAAHI
+      </h1>
+      <p className="mb-8 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">
+        Loading payment page...
+      </p>
+      <div className="flex flex-grow w-full items-center justify-center">
+        <Suspense fallback={<FullScreenLoader />}>
+          <PaymentPage />
+        </Suspense>
+      </div>
+    </main>
   );
 }
 
@@ -459,7 +482,7 @@ function DirectBookingConfirmation({
   return (
     <div className="mt-8">
       {error && <div className="text-red-500 text-sm mb-4">{error}</div>}
-      <Button
+      <ButtonV2
         onClick={handleConfirm}
         variant="primary"
         className="w-full text-lg py-3"
@@ -472,7 +495,7 @@ function DirectBookingConfirmation({
         ) : (
           "Confirm Booking (Payment Disabled)"
         )}
-      </Button>
+      </ButtonV2>
     </div>
   );
 }

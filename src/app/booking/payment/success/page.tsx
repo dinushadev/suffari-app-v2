@@ -11,6 +11,7 @@ import {
   EnvelopeIcon,
 } from "@heroicons/react/24/outline";
 import { Suspense } from "react";
+import { FullScreenLoader } from "../../../../components/atoms";
 import { useBookingDetails } from "../../../../data/useBookingDetails";
 
 function PaymentSuccessPageContent() {
@@ -91,13 +92,17 @@ function PaymentSuccessPageContent() {
           <div className="flex flex-col items-center gap-2">
             <CheckCircleIcon className="h-12 w-12 text-green-600" />
             <div className="text-2xl font-bold text-green-700">
-              Request submitted — hold tight for confirmation
+              Booking Confirmed!
             </div>
-            <div className="text-base text-foreground font-medium">
+            <div className="text-base text-orange font-medium">
               Booking ID: <span className="font-mono">{bookingDetails.id}</span>
             </div>
             <div className="text-center mt-2">
-              Your booking will be confirmed once your local vendor accepts.
+              Your booking is confirmed &amp; locked in our system
+              <br />
+              We&apos;ve successfully reserved your safari experience. Our local
+              partner will contact you shortly to finalize the details and
+              confirm your adventure.
             </div>
           </div>
 
@@ -251,8 +256,18 @@ function PaymentSuccessPageContent() {
 
 export default function PaymentSuccessPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <PaymentSuccessPageContent />
-    </Suspense>
+    <main className="min-h-screen flex flex-col items-center bg-background p-4">
+      <h1 className="text-3xl sm:text-4xl font-extrabold text-orange mb-2 drop-shadow-sm text-center">
+        RAAHI
+      </h1>
+      <p className="mb-8 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">
+        Confirming Your Payment...
+      </p>
+      <div className="flex flex-grow w-full items-center justify-center">
+        <Suspense fallback={<FullScreenLoader />}>
+          <PaymentSuccessPageContent />
+        </Suspense>
+      </div>
+    </main>
   );
 }
