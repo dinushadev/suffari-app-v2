@@ -4,9 +4,15 @@ import { useSearchParams, useRouter } from "next/navigation";
 import BookingSummary from "../../../components/molecules/BookingSummary";
 import { Button } from "../../../components/atoms";
 import { loadStripe } from "@stripe/stripe-js";
-import { Elements, PaymentElement, PaymentRequestButtonElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import {
+  Elements,
+  PaymentElement,
+  PaymentRequestButtonElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
 import { Suspense } from "react";
-import Loader from '../../../components/atoms/Loader';
+import Loader from "../../../components/atoms/Loader";
 import type { PaymentRequest as StripePaymentRequest } from "@stripe/stripe-js";
 import { usePaymentIntent } from "../../../data/usePaymentIntent"; // Import the new hook
 import { Session } from "@supabase/supabase-js"; // Import Session type
@@ -18,10 +24,14 @@ import { useBookingDetails } from "@/data/useBookingDetails";
 
 // Validate Stripe publishable key
 if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
-  throw new Error("NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is not configured in environment variables");
+  throw new Error(
+    "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is not configured in environment variables"
+  );
 }
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+);
 
 function StripePaymentForm({
   amount,
@@ -40,23 +50,25 @@ function StripePaymentForm({
   const searchParams = useSearchParams();
   const bookingId = searchParams.get("orderId") || "";
 
-  const [paymentRequest, setPaymentRequest] = useState<StripePaymentRequest | null>(null);
+  const [paymentRequest, setPaymentRequest] =
+    useState<StripePaymentRequest | null>(null);
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false); // New state for button loading
-  const [hasConfirmedPaymentIntent, setHasConfirmedPaymentIntent] = useState(false); // New state variable
+  const [hasConfirmedPaymentIntent, setHasConfirmedPaymentIntent] =
+    useState(false); // New state variable
 
   useEffect(() => {
     if (stripe) {
       const pr = stripe.paymentRequest({
-        country: 'US',
-        currency: 'usd',
+        country: "US",
+        currency: "usd",
         total: {
-          label: 'RAAHI Booking',
+          label: "RAAHI Booking",
           amount: amount,
         },
         requestPayerName: true,
         requestPayerEmail: true,
       });
-      pr.canMakePayment().then(result => {
+      pr.canMakePayment().then((result) => {
         if (result) {
           setPaymentRequest(pr);
         }
@@ -65,12 +77,13 @@ function StripePaymentForm({
   }, [stripe, amount]);
 
   const [isPolling, setIsPolling] = useState(false);
-  const { data: bookingStatus, isLoading: isBookingStatusLoading } = useBookingStatus(bookingId, isPolling);
+  const { data: bookingStatus, isLoading: isBookingStatusLoading } =
+    useBookingStatus(bookingId, isPolling);
 
   useEffect(() => {
     if (bookingStatus && bookingStatus.status === "confirmed") {
       const params = new URLSearchParams({
-        bookingId
+        bookingId,
       });
       router.push(`/booking/payment/success?${params.toString()}`);
     }
@@ -84,15 +97,17 @@ function StripePaymentForm({
       return;
     }
     let paymentSucceeded = false;
-    if (process.env.NEXT_PUBLIC_ENABLE_PAYMENTS === 'true') {
-      if (hasConfirmedPaymentIntent) { // Prevent re-confirming if already confirmed
+    if (process.env.NEXT_PUBLIC_ENABLE_PAYMENTS === "true") {
+      if (hasConfirmedPaymentIntent) {
+        // Prevent re-confirming if already confirmed
         paymentSucceeded = true; // Assume succeeded if already confirmed
       } else {
-        const { error: stripeError, paymentIntent } = await stripe.confirmPayment({
-          elements,
-          confirmParams: {},
-          redirect: "if_required",
-        });
+        const { error: stripeError, paymentIntent } =
+          await stripe.confirmPayment({
+            elements,
+            confirmParams: {},
+            redirect: "if_required",
+          });
         if (stripeError) {
           setIsSubmittingPayment(false); // Stop loading on payment error
           return;
@@ -126,14 +141,27 @@ function StripePaymentForm({
           <PaymentRequestButtonElement
             options={{
               paymentRequest: paymentRequest,
-              style: { paymentRequestButton:  { type: 'default', theme: 'dark', height: '44px' } },
+              style: {
+                paymentRequestButton: {
+                  type: "default",
+                  theme: "dark",
+                  height: "44px",
+                },
+              },
             }}
           />
         </div>
       )}
       <PaymentElement />
-      {error && <div className="text-red-500 text-sm mt-2">{error.message}</div>}
-      <Button type="submit" variant="primary" className="w-full text-lg py-3" disabled={isSubmittingPayment || hasConfirmedPaymentIntent}>
+      {error && (
+        <div className="text-red-500 text-sm mt-2">{error.message}</div>
+      )}
+      <Button
+        type="submit"
+        variant="primary"
+        className="w-full text-lg py-3"
+        disabled={isSubmittingPayment || hasConfirmedPaymentIntent}
+      >
         {isSubmittingPayment ? (
           <div className="flex items-center justify-center">
             <Loader />
@@ -147,13 +175,37 @@ function StripePaymentForm({
   );
 }
 
-function StripePaymentWrapper({ amount, locationName, userEmail, bookingId, resourceTypeId }: { amount: number; locationName: string; userEmail: string; bookingId: string; resourceTypeId: string }) {
-  const { mutateAsync, isPending: isCreatingPaymentIntent, data, error, reset } = usePaymentIntent();
+function StripePaymentWrapper({
+  amount,
+  locationName,
+  userEmail,
+  bookingId,
+  resourceTypeId,
+}: {
+  amount: number;
+  locationName: string;
+  userEmail: string;
+  bookingId: string;
+  resourceTypeId: string;
+}) {
+  const {
+    mutateAsync,
+    isPending: isCreatingPaymentIntent,
+    data,
+    error,
+    reset,
+  } = usePaymentIntent();
   const clientSecret = data?.clientSecret;
 
   useEffect(() => {
     const createIntent = async () => {
-      if (amount >= 1 && bookingId && resourceTypeId && !clientSecret && !isCreatingPaymentIntent) {
+      if (
+        amount >= 1 &&
+        bookingId &&
+        resourceTypeId &&
+        !clientSecret &&
+        !isCreatingPaymentIntent
+      ) {
         try {
           await mutateAsync({ amount, bookingId, resourceTypeId });
           // setPaymentIntentError(null); // Clear error on success - REMOVED
@@ -164,7 +216,13 @@ function StripePaymentWrapper({ amount, locationName, userEmail, bookingId, reso
       }
     };
     createIntent();
-  }, [amount, bookingId, resourceTypeId, clientSecret, isCreatingPaymentIntent]);
+  }, [
+    amount,
+    bookingId,
+    resourceTypeId,
+    clientSecret,
+    isCreatingPaymentIntent,
+  ]);
 
   const handleTryAgain = () => {
     reset(); // Reset the mutation state, clearing any errors
@@ -177,12 +235,28 @@ function StripePaymentWrapper({ amount, locationName, userEmail, bookingId, reso
     <>
       {error && (
         <div className="mb-4">
-          <div className="text-red-500 text-sm mb-2">Failed to set up payment. Please try again or contact support.</div>
-          <Button onClick={handleTryAgain} variant="secondary" className="w-full mb-4">Try Again</Button>
+          <div className="text-red-500 text-sm mb-2">
+            Failed to set up payment. Please try again or contact support.
+          </div>
+          <Button
+            onClick={handleTryAgain}
+            variant="secondary"
+            className="w-full mb-4"
+          >
+            Try Again
+          </Button>
         </div>
       )}
-      <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "stripe" } }}>
-        <StripePaymentForm amount={amount} error={error} locationName={locationName} userEmail={userEmail} />
+      <Elements
+        stripe={stripePromise}
+        options={{ clientSecret, appearance: { theme: "stripe" } }}
+      >
+        <StripePaymentForm
+          amount={amount}
+          error={error}
+          locationName={locationName}
+          userEmail={userEmail}
+        />
       </Elements>
     </>
   );
@@ -204,19 +278,25 @@ function PaymentPage() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [currentSession, setCurrentSession] = useState<Session | null>(null); // State to hold session
 
-  const { data: booking, isLoading: bookingLoading, error: bookingError } = useBookingDetails(orderId || "");
+  const {
+    data: booking,
+    isLoading: bookingLoading,
+    error: bookingError,
+  } = useBookingDetails(orderId || "");
 
   useEffect(() => {
     if (!orderId) {
-      router.push('/'); // Redirect to home if no orderId
+      router.push("/"); // Redirect to home if no orderId
     }
   }, [orderId, router]);
 
   // Fetch session and user email
   useEffect(() => {
     async function checkSession() {
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log('router', router);
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      console.log("router", router);
       if (!session) {
         // If no session, redirect to auth page with returnUrl
         const currentPath = window.location.pathname + window.location.search;
@@ -229,19 +309,50 @@ function PaymentPage() {
     checkSession();
   }, [router]);
 
-  const { data: location, isLoading: locationLoading, error: locationError } = useLocationDetails(booking?.locationId || '');
+  const {
+    data: location,
+    isLoading: locationLoading,
+    error: locationError,
+  } = useLocationDetails(booking?.locationId || "");
 
-  const { data: vehicleTypes, isLoading: vehicleTypesLoading, error: vehicleTypesError } = useVehicleTypes(); // Re-add useVehicleTypes hook
+  const {
+    data: vehicleTypes,
+    isLoading: vehicleTypesLoading,
+    error: vehicleTypesError,
+  } = useVehicleTypes(); // Re-add useVehicleTypes hook
 
-  if (bookingLoading || locationLoading || vehicleTypesLoading || userEmail === null) return <Loader />;
-  if (bookingError || locationError || vehicleTypesError || !booking || !location) return <div className="text-red-500">Error loading booking details.</div>;
+  if (
+    bookingLoading ||
+    locationLoading ||
+    vehicleTypesLoading ||
+    userEmail === null
+  )
+    return <Loader />;
+  if (
+    bookingError ||
+    locationError ||
+    vehicleTypesError ||
+    !booking ||
+    !location
+  )
+    return <div className="text-red-500">Error loading booking details.</div>;
 
-  const selectedVehicle = vehicleTypes?.find(v => v.id === booking.resourceTypeId);
+  const selectedVehicle = vehicleTypes?.find(
+    (v) => v.id === booking.resourceTypeId
+  );
 
+  if (!selectedVehicle)
+    return <div className="text-red-500">Vehicle not found.</div>;
 
-  if (!selectedVehicle) return <div className="text-red-500">Vehicle not found.</div>;
-
-  const groupSizeLabel = `${booking.group.adults} Adult${booking.group.adults !== 1 ? 's' : ''}${booking.group.children > 0 ? `, ${booking.group.children} Child${booking.group.children !== 1 ? 'ren' : ''}` : ''}`;
+  const groupSizeLabel = `${booking.group.adults} Adult${
+    booking.group.adults !== 1 ? "s" : ""
+  }${
+    booking.group.children > 0
+      ? `, ${booking.group.children} Child${
+          booking.group.children !== 1 ? "ren" : ""
+        }`
+      : ""
+  }`;
 
   const summary = {
     location: location.name,
@@ -249,7 +360,10 @@ function PaymentPage() {
     timeSlot: booking.schedule.timeSlot,
     vehicleType: selectedVehicle.name, // Use vehicle name for display
     groupType: groupSizeLabel,
-    pickupLocation: booking.pickupLocation.address === "Pickup from park gate" ? { address: "Pickup from park gate" } : booking.pickupLocation,
+    pickupLocation:
+      booking.pickupLocation.address === "Pickup from park gate"
+        ? { address: "Pickup from park gate" }
+        : booking.pickupLocation,
   };
 
   return (
@@ -257,8 +371,12 @@ function PaymentPage() {
       <div className="w-full max-w-lg bg-ivory rounded-3xl shadow-xl overflow-hidden mt-0 sm:mt-8 p-0">
         <div className="p-6">
           <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-primary mb-2">You&apos;re One Click Away!</h1>
-            <p className="text-foreground/70">Confirm your booking details and proceed to payment.</p>
+            <h1 className="text-2xl font-bold text-primary mb-2">
+              Review your details and confirm to continue.
+            </h1>
+            <p className="text-foreground/70">
+              Confirm your booking details and payment secure the payment.
+            </p>
           </div>
           <BookingSummary
             location={summary.location}
@@ -267,10 +385,16 @@ function PaymentPage() {
             vehicleType={summary.vehicleType}
             groupType={summary.groupType}
             pickupLocation={summary.pickupLocation}
-            paymentAmount={ parseFloat(booking.paymentAmount) }
+            paymentAmount={parseFloat(booking.paymentAmount)}
           />
-          {process.env.NEXT_PUBLIC_ENABLE_PAYMENTS === 'true' ? (
-            <StripePaymentWrapper amount={parseFloat(booking.paymentAmount)} locationName={location.name} bookingId={booking.id} userEmail={userEmail || ""} resourceTypeId={booking.resourceTypeId} />
+          {process.env.NEXT_PUBLIC_ENABLE_PAYMENTS === "true" ? (
+            <StripePaymentWrapper
+              amount={parseFloat(booking.paymentAmount)}
+              locationName={location.name}
+              bookingId={booking.id}
+              userEmail={userEmail || ""}
+              resourceTypeId={booking.resourceTypeId}
+            />
           ) : (
             <DirectBookingConfirmation
               booking={booking}
@@ -285,7 +409,12 @@ function PaymentPage() {
   );
 }
 
-function DirectBookingConfirmation({ booking, amount, currentSession, locationName }: {
+function DirectBookingConfirmation({
+  booking,
+  amount,
+  currentSession,
+  locationName,
+}: {
   booking: { id: string; locationId: string }; // Add locationId to the booking type
   amount: number;
   currentSession: Session | null;
@@ -298,7 +427,8 @@ function DirectBookingConfirmation({ booking, amount, currentSession, locationNa
   const [isPolling, setIsPolling] = useState(false);
   const bookingId = booking.id; // Get bookingId from the booking object
 
-  const { data: bookingStatus, isLoading: isBookingStatusLoading } = useBookingStatus(bookingId, isPolling);
+  const { data: bookingStatus, isLoading: isBookingStatusLoading } =
+    useBookingStatus(bookingId, isPolling);
 
   useEffect(() => {
     if (bookingStatus && bookingStatus.status === "confirmed") {
@@ -329,15 +459,15 @@ function DirectBookingConfirmation({ booking, amount, currentSession, locationNa
   return (
     <div className="mt-8">
       {error && <div className="text-red-500 text-sm mb-4">{error}</div>}
-      <Button 
-        onClick={handleConfirm} 
-        variant="primary" 
-        className="w-full text-lg py-3" 
+      <Button
+        onClick={handleConfirm}
+        variant="primary"
+        className="w-full text-lg py-3"
         disabled={loading}
       >
         {loading ? (
           <div className="flex items-center justify-center">
-            <span >Processing...</span>
+            <span>Processing...</span>
           </div>
         ) : (
           "Confirm Booking (Payment Disabled)"
