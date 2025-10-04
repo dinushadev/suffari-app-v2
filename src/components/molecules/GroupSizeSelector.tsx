@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface GroupSizeSelectorProps {
   adults: number;
@@ -27,10 +27,7 @@ const GroupSizeSelector: React.FC<GroupSizeSelectorProps> = ({
     }
   };
 
-  const handleDecrement = (
-    value: number,
-    setter: (value: number) => void
-  ) => {
+  const handleDecrement = (value: number, setter: (value: number) => void) => {
     if (value > 0) {
       setter(value - 1);
     }
@@ -57,7 +54,7 @@ const GroupSizeSelector: React.FC<GroupSizeSelectorProps> = ({
         <div>
           <p className="font-semibold text-foreground">{label}</p>
           <p className="text-xs text-muted-foreground">
-            {label === 'Adults' ? 'Ages 13+' : 'Ages 2-12'}
+            {label === "Adults" ? "Ages 13+" : "Ages 2-12"}
           </p>
         </div>
       </div>
@@ -70,7 +67,7 @@ const GroupSizeSelector: React.FC<GroupSizeSelectorProps> = ({
           aria-label={`Decrease ${label.toLowerCase()} count`}
         >
           <svg
-            className="w-5 h-5 text-secondary-foreground/70"
+            className="w-5 h-5 text-background"
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
@@ -90,13 +87,17 @@ const GroupSizeSelector: React.FC<GroupSizeSelectorProps> = ({
           aria-label={`Increase ${label.toLowerCase()} count`}
         >
           <svg
-            className="w-5 h-5 text-primary-foreground"
+            className="w-5 h-5 text-background"
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
             viewBox="0 0 24 24"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 4v16m8-8H4"
+            />
           </svg>
         </button>
       </div>
@@ -155,13 +156,13 @@ const GroupSizeSelector: React.FC<GroupSizeSelectorProps> = ({
             Total guests: <span className="font-semibold">{totalGuests}</span>
             {totalGuests > 6 && (
               <span className="block text-muted-foreground text-xs mt-1">
-                For your group&apos;s comfort, {Math.ceil(totalGuests / 6)} vehicles will be booked. 
+                For your group&apos;s comfort, {Math.ceil(totalGuests / 6)}{" "}
+                vehicles will be booked.
               </span>
             )}
           </p>
         </div>
       )}
-      
     </div>
   );
 };
