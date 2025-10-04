@@ -17,6 +17,7 @@ export interface BookingPayload {
     email?: string | null;
     phone?: string | null;
     sessionId: string;
+    name?: string | null;
   };
   resourceTypeId: string;
   resourceId?: string | null;

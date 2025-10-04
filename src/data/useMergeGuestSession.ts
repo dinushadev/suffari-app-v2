@@ -22,7 +22,7 @@ const mergeGuestSession = async (payload: MergeGuestSessionPayload) => {
     body: {
       userId,
       email,
-      fullName,
+      name: fullName,
       sessionId
     },
     // apiClient automatically adds Authorization header if session is present.

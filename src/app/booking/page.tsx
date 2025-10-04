@@ -2,6 +2,7 @@
 import React, { useState, Suspense } from 'react';
 import { VehicleTypeSelector, DatePicker, TimeSlotPicker, PickupLocationInput, GroupSizeSelector } from '../../components/molecules';
 import { CustomImage, Loader, FullScreenLoader } from '../../components/atoms';
+import { ContactInfo } from '../../components/molecules';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useVehicleTypes } from '../../data/useVehicleTypes';
 import type { PickupLocation } from '../../components/molecules/PickupLocationInput';
@@ -55,6 +56,8 @@ function BookingPageContent() {
   const [isButtonLoading, setIsButtonLoading] = useState(false);
   const [currentBookingId, setCurrentBookingId] = useState<string | undefined>(undefined);
   const [currentPaymentAmount, setCurrentPaymentAmount] = useState<number>(0);
+  const [name, setName] = useState<string>('');
+  const [phoneNumber, setPhoneNumber] = useState<string>('');
 
   const { data: location, isLoading: locationLoading, error: locationError } = useLocationDetails(locationId || '');
   const { data: vehicleTypes, isLoading: vehicleTypesLoading, error: vehicleTypesError } = useVehicleTypes();
@@ -184,8 +187,9 @@ function BookingPageContent() {
     const bookingData: BookingPayload = {
       customer: {
         email: customer.email || null,
-        phone: customer.phone || null,
+        phone: customer.phone || phoneNumber || null,
         sessionId: customer.sessionId || generateSessionId(),
+        name: name || null,
       },
       resourceTypeId: vehicle || '',
       resourceId: null, // Optional field, not currently used
@@ -272,6 +276,13 @@ function BookingPageContent() {
             ) : (
               <VehicleTypeSelector options={vehicleOptions} selected={vehicle} onSelect={setVehicle} />
             )}
+          </div>
+          <div className="mb-6">
+            <h2 className="font-bold text-lg mb-2 text-orange">Contact Information</h2>
+            <ContactInfo onContactInfoChange={(newName, newPhoneNumber) => {
+              setName(newName);
+              setPhoneNumber(newPhoneNumber);
+            }} />
           </div>
           <div className="mb-8">
             {/* BookingSummary will be shown on the payment page instead */}
