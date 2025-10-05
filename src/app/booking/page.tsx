@@ -372,15 +372,56 @@ function BookingPageContent() {
       } else {
         throw new Error("No booking ID received from server");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Booking error:", err);
 
+      // Define type guards for specific error structures
+      interface ApiResponseError {
+        response?: {
+          data?: {
+            message?: string;
+          };
+        };
+      }
+
+      interface CodeError {
+        code?: string;
+      }
+
+      const isApiResponseError = (e: unknown): e is ApiResponseError => {
+        return (
+          typeof e === "object" &&
+          e !== null &&
+          "response" in e &&
+          typeof (e as { response: unknown }).response === "object" &&
+          (e as { response: unknown }).response !== null &&
+          "data" in (e as { response: { data: unknown } }).response &&
+          typeof (e as { response: { data: unknown } }).response.data ===
+            "object" &&
+          (e as { response: { data: unknown } }).response.data !== null &&
+          "message" in
+            (e as { response: { data: { message: unknown } } }).response.data &&
+          typeof (
+            e as { response: { data: { message: unknown } } }
+          ).response.data.message === "string"
+        );
+      };
+
+      const isCodeError = (e: unknown): e is CodeError => {
+        return (
+          typeof e === "object" &&
+          e !== null &&
+          "code" in e &&
+          typeof (e as { code: unknown }).code === "string"
+        );
+      };
+
       // Handle different types of errors
-      if (err.response?.data?.message) {
+      if (isApiResponseError(err) && err.response?.data?.message) {
         setBookingError(err.response.data.message);
-      } else if (err.message) {
+      } else if (err instanceof Error) {
         setBookingError(err.message);
-      } else if (err.code) {
+      } else if (isCodeError(err) && err.code) {
         setBookingError(`Booking failed with error code: ${err.code}`);
       } else {
         setBookingError(
