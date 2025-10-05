@@ -71,6 +71,8 @@ function BookingPageContent() {
   const [name, setName] = useState<string>('');
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [bookingError, setBookingError] = useState<string | null>(null);
+  const [isNameValid, setIsNameValid] = useState<boolean>(false);
+  const [isPhoneNumberValid, setIsPhoneNumberValid] = useState<boolean>(false);
 
   const {
     data: location,
@@ -127,12 +129,7 @@ function BookingPageContent() {
   if (!locationId) {
     return (
       <main className="min-h-screen flex flex-col items-center bg-background p-4">
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground mb-2 drop-shadow-sm text-center">
-          RAAHI
-        </h1>
-        <p className="mb-8 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">
-          Loading Booking Information...
-        </p>
+      
         <FullScreenLoader />
       </main>
     );
@@ -141,12 +138,7 @@ function BookingPageContent() {
   if (locationLoading) {
     return (
       <main className="min-h-screen flex flex-col items-center bg-background p-4">
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground mb-2 drop-shadow-sm text-center">
-          RAAHI
-        </h1>
-        <p className="mb-8 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">
-          Loading Location Details...
-        </p>
+    
         <FullScreenLoader />
       </main>
     );
@@ -186,7 +178,9 @@ function BookingPageContent() {
     !!date &&
     !!timeSlot &&
     ((pickup && pickup.address && pickup.address.trim().length > 0) ||
-      fromGate);
+      fromGate) &&
+    isNameValid &&
+    isPhoneNumberValid;
 
   if (confirmed) {
     return (
@@ -325,9 +319,10 @@ function BookingPageContent() {
       // Prepare booking data in required structure
       const bookingData: BookingPayload = {
         customer: {
-          email: customer.email,
-          phone: customer.phone,
+          email: customer.email || null,
+          phone: customer.phone || phoneNumber || null,
           sessionId: customer.sessionId || generateSessionId(),
+          name: name || null,
         },
         resourceTypeId: vehicle,
         resourceId: null,
@@ -566,9 +561,11 @@ function BookingPageContent() {
           </div>
           <div className="mb-6">
             <h2 className="font-bold text-lg mb-2 text-orange">Contact Information</h2>
-            <ContactInfo onContactInfoChange={(newName, newPhoneNumber) => {
+            <ContactInfo onContactInfoChange={(newName, newPhoneNumber, nameValid, phoneValid) => {
               setName(newName);
               setPhoneNumber(newPhoneNumber);
+              setIsNameValid(nameValid);
+              setIsPhoneNumberValid(phoneValid);
             }} />
           </div>
           <div className="mb-8">
