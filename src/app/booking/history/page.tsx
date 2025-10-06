@@ -14,10 +14,13 @@ import Loader from "@/components/atoms/Loader";
 import { FullScreenLoader } from "@/components/atoms";
 import { BookingCard } from "@/components/molecules";
 import { Booking } from "@/types/booking";
+import { useQueryClient } from "@tanstack/react-query";
+
 
 const BookingHistoryPage = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [loadingSession, setLoadingSession] = useState(true);
+  const queryClient = useQueryClient();
 
   const {
     data: allBookingsData,
@@ -102,7 +105,10 @@ const BookingHistoryPage = () => {
         ) : (
           <div className="grid gap-4">
             {bookingsToDisplay.map((booking) => (
-              <BookingCard key={booking.id} booking={booking} />
+              <BookingCard
+                key={booking.id}
+                booking={booking}
+              />
             ))}
           </div>
         ))}

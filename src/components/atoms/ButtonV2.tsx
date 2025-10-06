@@ -3,7 +3,7 @@ import ThreeDotLoader from './ThreeDotLoader';
 
 interface ButtonV2Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
-  variant?: 'primary' | 'secondary' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';
   size?: 'default' | 'sm' | 'lg' | 'icon';
   loading?: boolean;
 }
@@ -14,6 +14,7 @@ const ButtonV2: React.FC<ButtonV2Props> = ({ children, variant = 'primary', size
     primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
     secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
     ghost: 'hover:bg-accent hover:text-accent-foreground',
+    destructive: 'bg-red-500 text-white hover:bg-red-600',
   };
   const sizes = {
     default: 'h-10 px-4 py-2 rounded-full text-base',

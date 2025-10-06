@@ -1,14 +1,43 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import React from 'react';
 import { Booking } from '@/types/booking';
+import { ButtonV2 } from "@/components/atoms";
+import { useRouter } from 'next/navigation';
 
 interface BookingCardProps {
   booking: Booking;
 }
 
 export const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
+  const router = useRouter();
   let cardClasses = "mb-4";
   let statusColorClass = "";
+
+  const now = new Date();
+  const bookingTime = new Date(booking.startTime);
+  const bookingCreationTime = new Date(booking.createdAt);
+
+  const timeUntilBooking = (bookingTime.getTime() - now.getTime()) / (1000 * 60 * 60); // in hours
+  const timeSinceBookingCreation = (now.getTime() - bookingCreationTime.getTime()) / (1000 * 60); // in minutes
+
+  const isSameDayTrip = bookingTime.toDateString() === now.toDateString();
+
+  let canCancel = false;
+
+  if (booking.status === "confirmed" || booking.status === "upcoming" || booking.status === "initiated") {
+    // Free changes/cancel: up to [24 hours] before your drive
+    if (timeUntilBooking > 24) {
+      canCancel = true;
+    }
+    // or within 5 minutes of booking for same-day trips.
+    else if (isSameDayTrip && timeSinceBookingCreation <= 5) {
+      canCancel = true;
+    }
+    // Vendor cancels or park closes: Full refund or free rebooking
+    else if (booking.vendorCanceled) {
+      canCancel = true;
+    }
+  }
 
   switch (booking.status) {
     case "initiated":
@@ -52,6 +81,14 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
       <CardContent className="text-base">
         <p className="mt-2"><strong>Group Size:</strong> Adults: {booking.group.adults}, Children: {booking.group.children} (Total: {booking.group.size})</p>
         <p className="mt-1"><strong>Pickup Location:</strong> {booking.pickupLocation.address}</p>
+        <ButtonV2
+          onClick={() => router.push(`/booking/cancel/${booking.id}`)}
+          disabled={!canCancel}
+          variant="destructive"
+          className="mt-4"
+        >
+          Cancel Booking
+        </ButtonV2>
       </CardContent>
     </Card>
   );

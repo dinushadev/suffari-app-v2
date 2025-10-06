@@ -147,7 +147,7 @@ function BookingPageContent() {
   if (locationError || !location) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="bg-ivory border border-ash rounded-2xl shadow p-8 text-center">
+        <div className="bg-ivory border border-ash rounded-2xl shadow text-center">
           <h1 className="text-2xl font-bold text-foreground mb-2">
             Location Not Found
           </h1>

@@ -23,7 +23,7 @@ export async function apiClient<T>(endpoint: string, { method = "GET", body, bas
   const res = await fetch(url, {
     method,
     headers,
-    ...(body ? { body: JSON.stringify(body) } : {}),
+    ...(body ? { body: typeof body === 'string' ? body : JSON.stringify(body) } : {}),
   });
   
   // Parse the response
