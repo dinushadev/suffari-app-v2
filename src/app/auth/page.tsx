@@ -9,6 +9,7 @@ import { useSearchParams } from "next/navigation";
 import { generateSessionId } from "@/lib/utils";
 import { useMergeGuestSession } from "@/data/useMergeGuestSession";
 import { FullScreenLoader } from "@/components/atoms";
+import { Input } from "@/components/ui/input";
 // Client-side component for checking pending booking
 function PendingBookingNotice() {
   const [hasPendingBooking, setHasPendingBooking] = useState(false);
@@ -236,12 +237,13 @@ function AuthPageContent() {
           Email Magic Link
         </p>
         <form onSubmit={handleSendOtp} className="flex flex-col gap-4 w-full">
-          <input
-            type="email"
+          <Input
+
+            type="email" 
+            name="email"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="border p-2 rounded bg-foreground"
             required
           />
           <button
