@@ -10,7 +10,7 @@ const ContactInfo: React.FC<ContactInfoProps> = ({ onContactInfoChange }) => {
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [nameError, setNameError] = useState<string | null>(null);
   const [phoneNumberError, setPhoneNumberError] = useState<string | null>(null);
-  const [countryCode, setCountryCode] = useState<string>('+1'); // Default country code, now editable
+  const [countryCode, setCountryCode] = useState<string>('+94'); // Default country code, now editable
   const [localPhoneNumber, setLocalPhoneNumber] = useState<string>('');
   const [countryCodeError, setCountryCodeError] = useState<string | null>(null);
   const [isNameTouched, setIsNameTouched] = useState<boolean>(false);
