@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -15,13 +15,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { ButtonV2 } from "@/components/atoms";
 import Loader from "@/components/atoms/Loader";
+import { Booking } from "@/types/booking";
 
-interface CancelBookingPageProps {
-  params: { id: string };
-}
-
-const CancelBookingPage = ({ params }: CancelBookingPageProps) => {
+const CancelBookingPage = () => {
   const router = useRouter();
+  const params = useParams();
   const bookingId = params.id;
   const [reason, setReason] = useState("");
   const [showOtherReasonInput, setShowOtherReasonInput] = useState(false);
@@ -35,7 +33,7 @@ const CancelBookingPage = ({ params }: CancelBookingPageProps) => {
     "Emergency",
   ];
 
-  const { data: booking, isLoading, isError } = useBookingDetails(bookingId);
+  const { data: booking, isLoading, isError } = useBookingDetails(bookingId as string);
   const queryClient = useQueryClient();
   const cancelBookingMutation = useCancelBooking();
 
@@ -56,8 +54,10 @@ const CancelBookingPage = ({ params }: CancelBookingPageProps) => {
     );
   }
 
-  const formattedStartTime = new Date(booking.startTime).toLocaleString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-  const formattedEndTime = new Date(booking.endTime).toLocaleString(undefined, { hour: '2-digit', minute: '2-digit' });
+  const typedBooking = booking as Booking;
+
+  const formattedStartTime = new Date(typedBooking.startTime).toLocaleString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const formattedEndTime = new Date(typedBooking.endTime).toLocaleString(undefined, { hour: '2-digit', minute: '2-digit' });
 
   const handleConfirmCancellation = async () => {
     if (!reason.trim()) {
@@ -66,7 +66,7 @@ const CancelBookingPage = ({ params }: CancelBookingPageProps) => {
     }
 
     try {
-      await cancelBookingMutation.mutateAsync({ bookingId, reason });
+      await cancelBookingMutation.mutateAsync({ bookingId: bookingId as string, reason });
       setSuccessMessage(`Booking ${bookingId} cancelled successfully!`);
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
       setTimeout(() => {
@@ -99,15 +99,15 @@ const CancelBookingPage = ({ params }: CancelBookingPageProps) => {
 
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-xl font-bold">{booking.resourceType?.name || 'N/A'} at {booking.location?.name || 'N/A'}</CardTitle>
+            <CardTitle className="text-xl font-bold">{typedBooking.resourceType?.name || 'N/A'} at {typedBooking.location?.name || 'N/A'}</CardTitle>
             <CardDescription className="text-sm text-gray-600">
-              <p className="mt-1"><strong>Status:</strong> <span className="capitalize">{booking.status}</span></p>
+              <p className="mt-1"><strong>Status:</strong> <span className="capitalize">{typedBooking.status}</span></p>
               <p className="mt-1"><strong>Time:</strong> {formattedStartTime} - {formattedEndTime}</p>
             </CardDescription>
           </CardHeader>
           <CardContent className="text-base">
-            <p className="mt-2"><strong>Group Size:</strong> Adults: {booking.group.adults}, Children: {booking.group.children} (Total: {booking.group.size})</p>
-            <p className="mt-1"><strong>Pickup Location:</strong> {booking.pickupLocation.address}</p>
+            <p className="mt-2"><strong>Group Size:</strong> Adults: {typedBooking.group.adults}, Children: {typedBooking.group.children} (Total: {typedBooking.group.size})</p>
+            <p className="mt-1"><strong>Pickup Location:</strong> {typedBooking.pickupLocation.address}</p>
           </CardContent>
         </Card>
 
@@ -117,7 +117,7 @@ const CancelBookingPage = ({ params }: CancelBookingPageProps) => {
             {cancellationReasons.map((r) => (
               <ButtonV2
                 key={r}
-                variant={reason === r ? "default" : "secondary"}
+                variant={reason === r ? "primary" : "secondary"}
                 onClick={() => {
                   setReason(r);
                   setShowOtherReasonInput(false);
@@ -128,7 +128,7 @@ const CancelBookingPage = ({ params }: CancelBookingPageProps) => {
               </ButtonV2>
             ))}
             <ButtonV2
-              variant={showOtherReasonInput ? "default" : "secondary"}
+              variant={showOtherReasonInput ? "primary" : "secondary"}
               onClick={() => {
                 setReason("");
                 setShowOtherReasonInput(true);
