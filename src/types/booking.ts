@@ -18,4 +18,10 @@ export interface Booking {
   endTime: string; // Derived property
   creationTime: string; // Add creationTime
   vendorCanceled: boolean; // Add vendorCanceled
+  customer: {
+    name: string;
+    email: string;
+    phone: string | null;
+    sessionId: string;
+  };
 }

@@ -45,7 +45,7 @@ function PaymentSuccessPageContent() {
     bookingDetails;
 
   // Directly use data from bookingDetails
-  const vehicle = resourceTypeId; // Assuming resourceTypeId is the vehicle type
+  const vehicle = bookingDetails.resourceType.name;
   const date = schedule.date;
   const timeSlot = schedule.timeSlot;
   const fromGate = pickupLocation && pickupLocation.address === "Park Gate"; // Adjust based on actual pickupLocation structure
@@ -54,8 +54,8 @@ function PaymentSuccessPageContent() {
 
   // Dummy data for contact info (these are not passed via URL)
   const contactWithin = "20-30 minutes"; // Placeholder - will come from backend later
-  const email = searchParams.get("email") || ""; // Email still from search params or fetched from backend if available
-  const location = searchParams.get("location") || ""; // Location still from search params or fetched from backend if available
+  const email = bookingDetails.customer.email || "";
+  const location = bookingDetails.location.name || "";
 
   // Helper to format date and time slot
   const formatDateTime = (dateStr: string, timeSlotStr: string) => {
@@ -257,12 +257,10 @@ function PaymentSuccessPageContent() {
 export default function PaymentSuccessPage() {
   return (
     <main className="min-h-screen flex flex-col items-center bg-background p-4">
-      <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground mb-2 drop-shadow-sm text-center">
+      {/* <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground mb-2 drop-shadow-sm text-center">
         RAAHI
-      </h1>
-      <p className="mb-8 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">
-        Confirming Your Payment...
-      </p>
+      </h1> */}
+ 
       <div className="flex flex-grow w-full items-center justify-center">
         <Suspense fallback={<FullScreenLoader />}>
           <PaymentSuccessPageContent />
