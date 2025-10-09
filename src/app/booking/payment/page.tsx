@@ -122,6 +122,11 @@ function StripePaymentForm({
 
   return (
     <form onSubmit={handleSubmit} className="mt-8">
+      {isSubmittingPayment && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <FullScreenLoader />
+        </div>
+      )}
       {paymentRequest && (
         <div className="mb-4">
           <PaymentRequestButtonElement
@@ -346,6 +351,11 @@ function DirectBookingConfirmation({ booking, amount, currentSession, locationNa
 
   return (
     <div className="mt-8">
+      {loading && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <FullScreenLoader />
+        </div>
+      )}
       {error && <div className="text-red-500 text-sm mb-4">{error}</div>}
       <ButtonV2 
         onClick={handleConfirm} 

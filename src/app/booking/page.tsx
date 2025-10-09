@@ -35,7 +35,7 @@ const timeSlotOptions = [
     description: "Cool, early start as the nature awakens.",
   },
   {
-    label: "Afternoon/Evening",
+    label: "Afternoon/ Evening",
     value: "afternoon",
     description: "Relaxed late-day drive in shifting light",
   },
@@ -439,6 +439,11 @@ function BookingPageContent() {
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-background p-4">
+      {isButtonLoading && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <FullScreenLoader />
+        </div>
+      )}
       <div className="w-full max-w-lg bg-ivory rounded-3xl shadow-xl overflow-hidden mt-0 sm:mt-8 p-0">
         {/* Header with location image and name */}
         <div className="relative h-48 w-full rounded-t-3xl overflow-hidden">
