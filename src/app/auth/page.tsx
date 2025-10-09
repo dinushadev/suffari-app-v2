@@ -3,10 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/data/apiConfig";
-import { useAssociateBooking } from "@/data/useAssociateBooking";
-import { useOtpSend } from "@/data/useOtpSend";
 import { useSearchParams } from "next/navigation";
-import { generateSessionId } from "@/lib/utils";
 import { useMergeGuestSession } from "@/data/useMergeGuestSession";
 import { FullScreenLoader } from "@/components/atoms";
 import { Input } from "@/components/ui/input";

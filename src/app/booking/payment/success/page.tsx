@@ -85,9 +85,9 @@ function PaymentSuccessPageContent() {
   const estimatedContact = getEstimatedContactTime();
 
   return (
-    <div className="min-h-screen flex flex-col items-center bg-background p-4">
+    <div className="min-h-screen flex flex-col items-center bg-background">
       <div className="w-full max-w-lg bg-ivory rounded-3xl shadow-xl overflow-hidden mt-0 sm:mt-8 p-0">
-        <div className="p-8 flex flex-col items-center gap-6">
+        <div className="p-4 flex flex-col items-center gap-6">
           {/* Booking Confirmed */}
           <div className="flex flex-col items-center gap-2">
             <CheckCircleIcon className="h-12 w-12 text-green-600" />
@@ -148,27 +148,27 @@ function PaymentSuccessPageContent() {
 
           {/* Safari Details */}
           <div className="w-full bg-white rounded-xl p-4 flex flex-col gap-3 border border-gray-100">
-            <div className="text-lg font-semibold text-gray-800 mb-1">
+            <div className="text-sm font-semibold text-gray-800 mb-1">
               Your Safari Details
             </div>
-            <div className="flex items-center gap-2 text-gray-700">
+            <div className="flex items-center gap-2 text-sm text-gray-700">
               <MapPinIcon className="h-5 w-5" />{" "}
-              <span className="font-medium">Location:</span> {location}
+              <span className="font-medium">Location:</span> <span className="font-light">{location}</span>
             </div>
-            <div className="flex items-center gap-2 text-gray-700">
+            <div className="flex items-center gap-2 text-sm text-gray-700">
               <CalendarIcon className="h-5 w-5" />{" "}
-              <span className="font-medium">Date & Time:</span> {dateTime}
+              <span className="font-medium">Date & Time:</span> <span className="font-light">{dateTime}</span>
             </div>
-            <div className="flex items-center gap-2 text-gray-700">
+            <div className="flex items-center gap-2 text-sm text-gray-700">
               <EnvelopeIcon className="h-5 w-5" />{" "}
-              <span className="font-medium">Email:</span> {email}
+              <span className="font-medium">Email:</span> <span className="font-light">{email}</span>
             </div>
-            <div className="flex items-center gap-2 text-gray-700">
+            <div className="flex items-center gap-2 text-sm text-gray-700">
               <PhoneIcon className="h-5 w-5" />{" "}
               <span className="font-medium">Pickup:</span>{" "}
-              {fromGate ? "Pickup from park gate" : pickup.address}
+              <span className="font-light">{fromGate ? "Pickup from park gate" : pickup.address}</span>
             </div>
-            <div className="flex items-center gap-2 text-gray-700">
+            <div className="flex items-center gap-2 text-sm text-gray-700">
               <span className="inline-block">
                 <svg
                   className="h-5 w-5"
@@ -184,9 +184,9 @@ function PaymentSuccessPageContent() {
                   />
                 </svg>
               </span>
-              <span className="font-medium">Vehicle:</span> {vehicle}
+              <span className="font-medium">Vehicle:</span> <span className="font-light">{vehicle}</span>
             </div>
-            <div className="flex items-center gap-2 text-gray-700">
+            <div className="flex items-center gap-2 text-sm text-gray-700">
               <span className="inline-block">
                 <svg
                   className="h-5 w-5"
@@ -203,7 +203,7 @@ function PaymentSuccessPageContent() {
                 </svg>
               </span>
               <span className="font-medium">Total Passengers:</span>{" "}
-              {group.adults + group.children}
+              <span className="font-light">{group.adults + group.children}</span>
             </div>
           </div>
 

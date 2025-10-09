@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/data/apiConfig";
 import Link from "next/link";
+import Image from "next/image"; // Import Image component
 import { ThemeToggle } from "@/components/ThemeToggler";
 import { User } from "@supabase/supabase-js"; // Import User type
 import { useRouter } from "next/navigation";
@@ -60,7 +61,16 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-50 w-full bg-background text-foreground shadow-md p-4 border-b border-border">
       <nav className="container mx-auto flex justify-between items-center">
-        <h1 className="text-lg font-semibold">RAAHI</h1>
+        <Link href="/" className="flex items-center gap-2">
+          <Image
+            src="/images/logo-raahi.png"
+            alt="RAAHI Logo"
+            width={40}
+            height={40}
+            className="w-10 h-10"
+          />
+          <h1 className="text-lg font-semibold">RAAHI</h1>
+        </Link>
         <div className="flex gap-4" ref={dropdownRef}>
           <ThemeToggle />
           {user ? (
