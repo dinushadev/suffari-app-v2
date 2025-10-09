@@ -78,7 +78,7 @@ export default function LocationDetailsPage() {
           }),
         }}
       />
-      <div className="w-full max-w-md bg-ivory border border-ash rounded-3xl shadow-xl overflow-hidden mt-0 sm:mt-8 relative">
+      <div className="w-full max-w-lg bg-ivory border border-ash rounded-3xl shadow-xl overflow-hidden mt-0 sm:mt-8 relative">
         {/* Hero Image & Overlay */}
         <div className="relative h-64 sm:h-80 w-full">
           <CustomImage
@@ -122,10 +122,8 @@ export default function LocationDetailsPage() {
         </div>
         {/* Details Card */}
         <div className=" rounded-t-3xl -mt-4 pt-8 px-6 pb-6">
-          <h2 className="font-bold text-xl mb-3 text-foreground">About</h2>
-          <p className="text-base text-foreground mb-6 leading-relaxed">
-            {location.about}
-          </p>
+          <h2 className="font-bold text-lg mb-2 text-foreground">About</h2>
+          <p className="text-foreground mb-4">{location.about}</p>
           {/* Image Carousel */}
           <div className="flex gap-3 mb-6 overflow-x-auto">
             {location.images?.map((img: string, i: number) => (
@@ -140,16 +138,16 @@ export default function LocationDetailsPage() {
             ))}
           </div>
           {/* Facilities */}
-          <h3 className="font-bold text-lg mb-3 text-foreground">
+          <h3 className="font-bold text-base mb-2 text-foreground">
             What can do
           </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-8">
+          <div className="flex gap-4 flex-wrap mb-8">
             {location.facilities?.map((f: string, i: number) => (
               <div
                 key={i}
-                className="flex flex-col items-center justify-center bg-foreground/10 border border-ash rounded-xl p-3 text-center h-24"
+                className="flex flex-col items-center bg-foreground/10 border border-ash rounded-xl px-3 py-2 min-w-[64px]"
               >
-                <span className="text-sm text-foreground font-medium leading-tight">{f}</span>
+                <span className="text-xs text-foreground font-medium">{f}</span>
               </div>
             ))}
           </div>
