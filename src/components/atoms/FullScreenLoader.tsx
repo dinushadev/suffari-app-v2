@@ -3,7 +3,7 @@ import Loader from './Loader';
 
 const FullScreenLoader: React.FC = () => {
   return (
-    <div className="flex flex-grow items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
       <Loader />
     </div>
   );

@@ -440,9 +440,9 @@ function BookingPageContent() {
   return (
     <div className="min-h-screen flex flex-col items-center bg-background p-4">
       {isButtonLoading && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+
           <FullScreenLoader />
-        </div>
+       
       )}
       <div className="w-full max-w-lg bg-ivory rounded-3xl shadow-xl overflow-hidden mt-0 sm:mt-8 p-0">
         {/* Header with location image and name */}
@@ -617,21 +617,17 @@ function BookingPageContent() {
           <div className="mb-8">
             {/* BookingSummary will be shown on the payment page instead */}
           </div>
-          <Button
+          <ButtonV2
             variant="primary"
             className="w-full transition-transform duration-150 hover:scale-105 disabled:hover:scale-100"
             onClick={handleConfirm}
-            disabled={!isFormValid || isButtonLoading}
+            disabled={!isFormValid }
+            loading={isButtonLoading}
           >
-            {isButtonLoading ? (
-              <div className="flex items-center justify-center">
-                {/* <Loader /> */}
-                <span>Confirming...</span>
-              </div>
-            ) : (
-              "Confirm & Pay"
-            )}
-          </Button>
+     
+              Confirm & Pay
+         
+          </ButtonV2>
         </div>
       </div>
     </div>

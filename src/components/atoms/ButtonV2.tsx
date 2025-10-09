@@ -11,7 +11,7 @@ interface ButtonV2Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 const ButtonV2: React.FC<ButtonV2Props> = ({ children, variant = 'primary', size, className = '', loading = false, ...props }) => {
   const base = 'flex items-center justify-center px-4 py-2 font-semibold focus:outline-none transition';
   const variants = {
-    primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
+    primary: 'bg-primary text-white hover:bg-primary/90',
     secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
     ghost: 'hover:bg-accent hover:text-accent-foreground',
     destructive: 'bg-red-500 text-white hover:bg-red-600',
