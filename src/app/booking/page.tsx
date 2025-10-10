@@ -68,8 +68,8 @@ function BookingPageContent() {
     undefined
   );
   const [currentPaymentAmount, setCurrentPaymentAmount] = useState<number>(0);
-  const [name, setName] = useState<string>('');
-  const [phoneNumber, setPhoneNumber] = useState<string>('');
+  const [name, setName] = useState<string>("");
+  const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [isNameValid, setIsNameValid] = useState<boolean>(false);
   const [isPhoneNumberValid, setIsPhoneNumberValid] = useState<boolean>(false);
@@ -129,7 +129,6 @@ function BookingPageContent() {
   if (!locationId) {
     return (
       <main className="min-h-screen flex flex-col items-center bg-background p-4">
-      
         <FullScreenLoader />
       </main>
     );
@@ -138,7 +137,6 @@ function BookingPageContent() {
   if (locationLoading) {
     return (
       <main className="min-h-screen flex flex-col items-center bg-background p-4">
-    
         <FullScreenLoader />
       </main>
     );
@@ -208,7 +206,9 @@ function BookingPageContent() {
     setIsButtonLoading(true);
 
     // Re-add session check and customer object creation
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     const customer = {
       email: null as string | null,
       phone: null as string | null,
@@ -216,10 +216,10 @@ function BookingPageContent() {
     };
     if (!session || !session.user) {
       // Guest user
-      let sessionId = localStorage.getItem('raahi_session_id');
+      let sessionId = localStorage.getItem("raahi_session_id");
       if (!sessionId) {
         sessionId = generateSessionId();
-        localStorage.setItem('raahi_session_id', sessionId);
+        localStorage.setItem("raahi_session_id", sessionId);
       }
       customer.sessionId = sessionId;
       // Optionally, collect guest email/phone from form if available
@@ -228,12 +228,14 @@ function BookingPageContent() {
       const { email = null, phone = null } = session.user;
       customer.email = email || null;
       customer.phone = phone || null;
-      customer.sessionId  = generateSessionId();
+      customer.sessionId = generateSessionId();
     }
-    console.log('customer',customer);
+    console.log("customer", customer);
 
     const selectedVehicle = vehicleOptions.find((v) => v.value === vehicle);
-    const paymentAmount = selectedVehicle ? (selectedVehicle.price || 0) * (adults + children) : 0;
+    const paymentAmount = selectedVehicle
+      ? (selectedVehicle.price || 0) * (adults + children)
+      : 0;
 
     // Prepare booking data in required structure, using null for missing values
     const bookingData: BookingPayload = {
@@ -243,13 +245,13 @@ function BookingPageContent() {
         sessionId: customer.sessionId || generateSessionId(),
         name: name || null,
       },
-      resourceTypeId: vehicle || '',
+      resourceTypeId: vehicle || "",
       resourceId: null, // Optional field, not currently used
       resourceOwnerId: null, // Optional field, not currently used
-      locationId: locationId || '',
+      locationId: locationId || "",
       schedule: {
-        date: date || '',
-        timeSlot: timeSlot || '',
+        date: date || "",
+        timeSlot: timeSlot || "",
       },
       group: {
         adults: adults,
@@ -257,14 +259,22 @@ function BookingPageContent() {
         size: adults + children,
       },
       pickupLocation: {
-        placeId: fromGate ? location.pickupLocations?.[0]?.placeId || null : pickup.placeId || null,
-        coordinate: fromGate ? location.pickupLocations?.[0]?.coordinate || { lat: 0, lng: 0 } : pickup.coordinate || { lat: 0, lng: 0 },
-        address: fromGate ? location.pickupLocations?.[0]?.address || 'Pickup from park gate' : pickup.address || '',
-        country: fromGate ? location.pickupLocations?.[0]?.country || null : pickup.country || null,
+        placeId: fromGate
+          ? location.pickupLocations?.[0]?.placeId || null
+          : pickup.placeId || null,
+        coordinate: fromGate
+          ? location.pickupLocations?.[0]?.coordinate || { lat: 0, lng: 0 }
+          : pickup.coordinate || { lat: 0, lng: 0 },
+        address: fromGate
+          ? location.pickupLocations?.[0]?.address || "Pickup from park gate"
+          : pickup.address || "",
+        country: fromGate
+          ? location.pickupLocations?.[0]?.country || null
+          : pickup.country || null,
       },
       paymentAmount,
     };
-    console.log('bookingData',bookingData);
+    console.log("bookingData", bookingData);
     try {
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
@@ -401,9 +411,8 @@ function BookingPageContent() {
           (e as { response: { data: unknown } }).response.data !== null &&
           "message" in
             (e as { response: { data: { message: unknown } } }).response.data &&
-          typeof (
-            e as { response: { data: { message: unknown } } }
-          ).response.data.message === "string"
+          typeof (e as { response: { data: { message: unknown } } }).response
+            .data.message === "string"
         );
       };
 
@@ -439,11 +448,7 @@ function BookingPageContent() {
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-background p-4">
-      {isButtonLoading && (
-
-          <FullScreenLoader />
-       
-      )}
+      {isButtonLoading && <FullScreenLoader />}
       <div className="w-full max-w-lg bg-ivory rounded-3xl shadow-xl overflow-hidden mt-0 sm:mt-8 p-0">
         {/* Header with location image and name */}
         <div className="relative h-48 w-full rounded-t-3xl overflow-hidden">
@@ -606,13 +611,22 @@ function BookingPageContent() {
             )}
           </div>
           <div className="mb-6">
-            <h2 className="font-bold text-lg mb-2 text-orange">Contact Information</h2>
-            <ContactInfo onContactInfoChange={(newName, newPhoneNumber, nameValid, phoneValid) => {
-              setName(newName);
-              setPhoneNumber(newPhoneNumber);
-              setIsNameValid(nameValid);
-              setIsPhoneNumberValid(phoneValid);
-            }} />
+            <h2 className="font-bold text-lg mb-2 text-foreground">
+              Contact Information
+            </h2>
+            <ContactInfo
+              onContactInfoChange={(
+                newName,
+                newPhoneNumber,
+                nameValid,
+                phoneValid
+              ) => {
+                setName(newName);
+                setPhoneNumber(newPhoneNumber);
+                setIsNameValid(nameValid);
+                setIsPhoneNumberValid(phoneValid);
+              }}
+            />
           </div>
           <div className="mb-8">
             {/* BookingSummary will be shown on the payment page instead */}
@@ -621,12 +635,10 @@ function BookingPageContent() {
             variant="primary"
             className="w-full transition-transform duration-150 hover:scale-105 disabled:hover:scale-100"
             onClick={handleConfirm}
-            disabled={!isFormValid }
+            disabled={!isFormValid}
             loading={isButtonLoading}
           >
-     
-              Confirm & Pay
-         
+            Confirm & Pay
           </ButtonV2>
         </div>
       </div>
@@ -637,7 +649,6 @@ function BookingPageContent() {
 export default function BookingPage() {
   return (
     <main className="min-h-screen flex flex-col items-center bg-background p-4">
-   
       <p className="text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">
         Preparing Your Booking...
       </p>

@@ -142,14 +142,16 @@ function AuthPageContent() {
 
   return (
     <main className="min-h-screen flex flex-col items-center bg-background p-4">
-       <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground mb-2 drop-shadow-sm text-center">
+      <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground mb-2 drop-shadow-sm text-center">
         RAAHI
       </h1>
       <p className="mb-8 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">
         Conscious Travel{" "}
-        
-        <img src="/images/logo-raahi.png" alt="RAAHI Logo" className="mb-4 w-10 h-10" />
-        {" "}
+        <img
+          src="/images/logo-raahi.png"
+          alt="RAAHI Logo"
+          className="mb-1 w-10 h-10"
+        />{" "}
         Responsible Tourism
       </p>
       <PendingBookingNotice />
@@ -223,8 +225,7 @@ function AuthPageContent() {
         </p>
         <form onSubmit={handleSendOtp} className="flex flex-col gap-4 w-full">
           <Input
-
-            type="email" 
+            type="email"
             name="email"
             placeholder="Email"
             value={email}
@@ -247,7 +248,7 @@ function AuthPageContent() {
 export default function AuthPage() {
   return (
     <main className="min-h-screen flex flex-col items-center bg-background p-4">
-      {/* <h1 className="text-3xl sm:text-4xl font-extrabold text-orange mb-2 drop-shadow-sm text-center">RAAHI</h1>
+      {/* <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground mb-2 drop-shadow-sm text-center">RAAHI</h1>
       <p className="mb-8 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">
         Conscious Travel
         <svg
