@@ -275,9 +275,9 @@ function PaymentPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center bg-background p-4">
+    <div className="min-h-screen flex flex-col items-center bg-background">
       <div className="w-full max-w-lg bg-ivory rounded-3xl shadow-xl overflow-hidden mt-0 sm:mt-8 p-0">
-        <div>
+        <div >
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold text-primary mb-2">You&apos;re One Click Away!</h1>
             <p className="text-foreground/70">Confirm your booking details and proceed to payment.</p>
