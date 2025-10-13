@@ -7,6 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { useMergeGuestSession } from "@/data/useMergeGuestSession";
 import { FullScreenLoader } from "@/components/atoms";
 import { Input } from "@/components/ui/input";
+import { CheckCircleIcon } from "@heroicons/react/24/solid";
 // Client-side component for checking pending booking
 function PendingBookingNotice() {
   const [hasPendingBooking, setHasPendingBooking] = useState(false);
@@ -33,6 +34,7 @@ function PendingBookingNotice() {
 function AuthPageContent() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
   const [oauthLoading, setOauthLoading] = useState({
     google: false,
     facebook: false,
@@ -118,6 +120,7 @@ function AuthPageContent() {
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setOtpSent(false); // reset previous message
 
     try {
       // await otpSendMutation.mutateAsync({ email });
@@ -131,6 +134,11 @@ function AuthPageContent() {
           emailRedirectTo: `${window.location.origin}${returnUrl}`,
         },
       });
+
+      if (error) throw error;
+
+      // ✅ show message below input
+      setOtpSent(true);
       // After sending magic link, user will receive an email and then be redirected back to /auth
       // No need for OTP input on this page anymore.
     } catch (err) {
@@ -221,7 +229,7 @@ function AuthPageContent() {
           <div className="flex-grow border-t border-muted"></div>
         </div>
         <p className="text-center text-lg font-semibold text-foreground ">
-          Email Magic Link
+          E-mail me a link
         </p>
         <form onSubmit={handleSendOtp} className="flex flex-col gap-4 w-full">
           <Input
@@ -237,8 +245,16 @@ function AuthPageContent() {
             className="bg-background text-foreground py-2 rounded font-semibold disabled:opacity-50"
             disabled={otpSendLoading}
           >
-            {otpSendLoading ? "Sending Magic Link..." : "Continue with Email"}
+            {otpSendLoading ? "Sending..." : "Send me the link"}
           </button>
+
+          {otpSent && (
+            <div className="flex items-center justify-center gap-2 text-green-600 text-sm text-center">
+              <CheckCircleIcon className="w-5 h-5" />
+              <span>Check your e-mail and click the link provided.</span>
+            </div>
+          )}
+
           {error && <div className="text-red-500 text-sm">{error}</div>}
         </form>
       </div>
