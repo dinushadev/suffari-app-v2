@@ -5,7 +5,7 @@ interface MergeGuestSessionPayload {
   userId: string;
   email: string | null | undefined;
   fullName: string | null | undefined;
-  sessionId: string;
+  sessionId: string | null;
 }
 
 interface MergeGuestSessionResponse {
@@ -24,12 +24,9 @@ const mergeGuestSession = async (payload: MergeGuestSessionPayload) => {
       email,
       name: fullName,
       sessionId
-    },
+    }
     // apiClient automatically adds Authorization header if session is present.
-    // However, if we need to explicitly pass it, we can modify apiClient or
-    // ensure that the /api/superbase/customer-signup endpoint handles it.
-    // For now, apiClient should handle it as it fetches the session internally.
-    baseUrl: "" // Use relative path for Next.js API routes
+    // Uses API_BASE_URL from apiConfig to call backend at http://localhost:3003/api/superbase/customer-signup
   });
 
   return response;

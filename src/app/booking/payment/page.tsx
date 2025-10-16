@@ -15,7 +15,7 @@ import { useVehicleTypes } from "../../../data/useVehicleTypes"; // Re-add useVe
 import { supabase } from "../../../data/apiConfig"; // Re-add supabase import
 import { useLocationDetails } from "@/data/useLocationDetails";
 import { useBookingDetails } from "@/data/useBookingDetails";
-import { ButtonV2 } from '../../../components/atoms';
+import { ButtonV2, ErrorDisplay } from '../../../components/atoms';
 
 // Validate Stripe publishable key
 if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
@@ -186,8 +186,14 @@ function StripePaymentWrapper({ amount, locationName, userEmail, bookingId, reso
     <>
       {error && (
         <div className="mb-4">
-          <div className="text-red-500 text-sm mb-2">Failed to set up payment. Please try again or contact support.</div>
-          <ButtonV2 onClick={handleTryAgain} variant="secondary" className="w-full mb-4" loading={isCreatingPaymentIntent}>Try Again</ButtonV2>
+          <ErrorDisplay 
+            error={error}
+            onRetry={handleTryAgain}
+            onSignIn={() => {
+              // Redirect to auth page
+              window.location.href = '/auth';
+            }}
+          />
         </div>
       )}
       <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "stripe" } }}>
@@ -256,12 +262,45 @@ function PaymentPage() {
       </main>
     );
   }
-  if (bookingError || locationError || vehicleTypesError || !booking || !location) return <div className="text-red-500">Error loading booking details.</div>;
+  if (bookingError || locationError || vehicleTypesError || !booking || !location) {
+    const error = bookingError || locationError || vehicleTypesError || new Error('Failed to load booking details');
+    return (
+      <div className="min-h-screen flex flex-col items-center bg-background p-4">
+        <div className="w-full max-w-lg">
+          <ErrorDisplay 
+            error={error}
+            onRetry={() => {
+              window.location.reload();
+            }}
+            onSignIn={() => {
+              window.location.href = '/auth';
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
 
   const selectedVehicle = vehicleTypes?.find(v => v.id === booking.resourceTypeId);
 
 
-  if (!selectedVehicle) return <div className="text-red-500">Vehicle not found.</div>;
+  if (!selectedVehicle) {
+    return (
+      <div className="min-h-screen flex flex-col items-center bg-background p-4">
+        <div className="w-full max-w-lg">
+          <ErrorDisplay 
+            error={new Error('Vehicle not found. Please try again.')}
+            onRetry={() => {
+              window.location.reload();
+            }}
+            onSignIn={() => {
+              window.location.href = '/auth';
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
 
   const groupSizeLabel = `${booking.group.adults} Adult${booking.group.adults !== 1 ? 's' : ''}${booking.group.children > 0 ? `, ${booking.group.children} Child${booking.group.children !== 1 ? 'ren' : ''}` : ''}`;
 
@@ -355,7 +394,20 @@ function DirectBookingConfirmation({ booking, amount, currentSession, locationNa
           <FullScreenLoader />
       
       )}
-      {error && <div className="text-red-500 text-sm mb-4">{error}</div>}
+      {error && (
+        <div className="mb-4">
+          <ErrorDisplay 
+            error={error}
+            onRetry={() => {
+              setError(null);
+              handleConfirm();
+            }}
+            onSignIn={() => {
+              window.location.href = '/auth';
+            }}
+          />
+        </div>
+      )}
       <ButtonV2 
         onClick={handleConfirm} 
         variant="primary" 

@@ -75,7 +75,7 @@ const CancelBookingPage = () => {
     } catch (error) {
       console.error("Error cancelling booking:", error);
       setErrorMessage(`Failed to cancel booking ${bookingId}.`);
-      setTimeout(() => setErrorMessage(null), 5000); // Clear error after 5 seconds
+      // Error will persist until manually dismissed
     }
   };
 

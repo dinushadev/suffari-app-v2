@@ -8,7 +8,7 @@ import {
   GroupSizeSelector,
   ContactInfo,
 } from "../../components/molecules";
-import { Button, CustomImage, Loader } from "../../components/atoms";
+import { Button, CustomImage, Loader, ErrorDisplay } from "../../components/atoms";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useVehicleTypes } from "../../data/useVehicleTypes";
 import type { PickupLocation } from "../../components/molecules/PickupLocationInput";
@@ -70,7 +70,7 @@ function BookingPageContent() {
   const [currentPaymentAmount, setCurrentPaymentAmount] = useState<number>(0);
   const [name, setName] = useState<string>('');
   const [phoneNumber, setPhoneNumber] = useState<string>('');
-  const [bookingError, setBookingError] = useState<string | null>(null);
+  const [bookingError, setBookingError] = useState<unknown>(null);
   const [isNameValid, setIsNameValid] = useState<boolean>(false);
   const [isPhoneNumberValid, setIsPhoneNumberValid] = useState<boolean>(false);
 
@@ -116,15 +116,8 @@ function BookingPageContent() {
     }
   }, [locationId, router]);
 
-  // Auto-dismiss error after 10 seconds
-  React.useEffect(() => {
-    if (bookingError) {
-      const timer = setTimeout(() => {
-        setBookingError(null);
-      }, 10000);
-      return () => clearTimeout(timer);
-    }
-  }, [bookingError]);
+  // Error persistence - errors stay visible until manually dismissed
+  // Removed auto-dismiss functionality to keep errors visible
 
   if (!locationId) {
     return (
@@ -374,61 +367,7 @@ function BookingPageContent() {
       }
     } catch (err: unknown) {
       console.error("Booking error:", err);
-
-      // Define type guards for specific error structures
-      interface ApiResponseError {
-        response?: {
-          data?: {
-            message?: string;
-          };
-        };
-      }
-
-      interface CodeError {
-        code?: string;
-      }
-
-      const isApiResponseError = (e: unknown): e is ApiResponseError => {
-        return (
-          typeof e === "object" &&
-          e !== null &&
-          "response" in e &&
-          typeof (e as { response: unknown }).response === "object" &&
-          (e as { response: unknown }).response !== null &&
-          "data" in (e as { response: { data: unknown } }).response &&
-          typeof (e as { response: { data: unknown } }).response.data ===
-            "object" &&
-          (e as { response: { data: unknown } }).response.data !== null &&
-          "message" in
-            (e as { response: { data: { message: unknown } } }).response.data &&
-          typeof (
-            e as { response: { data: { message: unknown } } }
-          ).response.data.message === "string"
-        );
-      };
-
-      const isCodeError = (e: unknown): e is CodeError => {
-        return (
-          typeof e === "object" &&
-          e !== null &&
-          "code" in e &&
-          typeof (e as { code: unknown }).code === "string"
-        );
-      };
-
-      // Handle different types of errors
-      if (isApiResponseError(err) && err.response?.data?.message) {
-        setBookingError(err.response.data.message);
-      } else if (err instanceof Error) {
-        setBookingError(err.message);
-      } else if (isCodeError(err) && err.code) {
-        setBookingError(`Booking failed with error code: ${err.code}`);
-      } else {
-        setBookingError(
-          "Booking failed. Please try again or contact support if the problem persists."
-        );
-      }
-
+      setBookingError(err);
       setIsButtonLoading(false);
     }
   };
@@ -500,48 +439,30 @@ function BookingPageContent() {
         <div className="p-6">
           {/* Error displays for data loading */}
           {vehicleTypesError && (
-            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <div className="flex items-start gap-2">
-                <svg
-                  className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
-                  />
-                </svg>
-                <p className="text-yellow-700 text-sm">
-                  Unable to load vehicle types. Please refresh the page.
-                </p>
-              </div>
+            <div className="mb-4">
+              <ErrorDisplay 
+                error={vehicleTypesError}
+                onRetry={() => {
+                  window.location.reload();
+                }}
+                onSignIn={() => {
+                  router.push('/auth');
+                }}
+              />
             </div>
           )}
 
           {bookingDetailsError && (
-            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <div className="flex items-start gap-2">
-                <svg
-                  className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
-                  />
-                </svg>
-                <p className="text-yellow-700 text-sm">
-                  Unable to load booking details.
-                </p>
-              </div>
+            <div className="mb-4">
+              <ErrorDisplay 
+                error={bookingDetailsError}
+                onRetry={() => {
+                  window.location.reload();
+                }}
+                onSignIn={() => {
+                  router.push('/auth');
+                }}
+              />
             </div>
           )}
 
@@ -617,6 +538,22 @@ function BookingPageContent() {
           <div className="mb-8">
             {/* BookingSummary will be shown on the payment page instead */}
           </div>
+          
+          {bookingError ? (
+            <div className="mb-6">
+              <ErrorDisplay 
+                error={bookingError}
+                onRetry={() => {
+                  setBookingError(null);
+                  handleConfirm();
+                }}
+                onSignIn={() => {
+                  router.push('/auth');
+                }}
+              />
+            </div>
+          ) : null}
+          
           <ButtonV2
             variant="primary"
             className="w-full transition-transform duration-150 hover:scale-105 disabled:hover:scale-100"

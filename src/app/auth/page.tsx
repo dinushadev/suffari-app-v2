@@ -76,6 +76,20 @@ function AuthPageContent() {
             console.error("Error merging guest session:", err);
             setError((err as Error).message || "Failed to merge guest session");
           }
+        } else {
+          // No guest session - ensure customer creation for new sign-ups
+          try {
+            await mergeGuestSessionMutation.mutateAsync({
+              userId: session.user.id,
+              email: session.user.email,
+              fullName: session.user.user_metadata?.full_name,
+              sessionId: null, // No guest session to merge
+            });
+            console.log("Customer created successfully for new sign-up!");
+          } catch (err) {
+            console.error("Error creating customer:", err);
+            setError((err as Error).message || "Failed to create customer");
+          }
         }
 
         // Handle pending booking association
