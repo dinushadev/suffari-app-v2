@@ -19,9 +19,11 @@ export default function Home() {
       </h1>
       <p className="mb-8 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">
         Conscious Travel{" "}
-        
-        <img src="/images/logo-raahi.png" alt="RAAHI Logo" className="mb-4 w-10 h-10" />
-        {" "}
+        <img
+          src="/images/logo-raahi.png"
+          alt="RAAHI Logo"
+          className="mb-1 w-10 h-10"
+        />{" "}
         Responsible Tourism
       </p>
       {isLoading && <Loader />}

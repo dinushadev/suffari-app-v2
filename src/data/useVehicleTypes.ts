@@ -14,7 +14,7 @@ export interface VehicleType {
 
 const fetchVehicleTypes = async (): Promise<VehicleType[]> => {
   const res = await fetch(
-    `${API_BASE_URL}/resources/resource-types?catogory=safari_vehicles`
+    `${API_BASE_URL}/resources/resource-types?category=safari_vehicles`
   );
   if (!res.ok) throw new Error("Failed to fetch vehicle types");
   return res.json();
