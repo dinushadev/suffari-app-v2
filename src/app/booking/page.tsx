@@ -227,6 +227,24 @@ function BookingPageContent() {
       ? (selectedVehicle.price || 0) * (adults + children)
       : 0;
 
+    // For jeep/safari vehicle bookings: convert date + timeSlot to startDateTime
+    // Map timeSlot to a default time (morning: 09:00, afternoon: 12:00, night: 18:00, full-day: 09:00)
+    const getTimeForSlot = (slot: string): string => {
+      switch (slot) {
+        case "morning":
+          return "09:00:00";
+        case "afternoon":
+          return "12:00:00";
+        case "night":
+          return "18:00:00";
+        case "full-day":
+          return "09:00:00";
+        default:
+          return "09:00:00";
+      }
+    };
+    const startDateTime = date ? `${date}T${getTimeForSlot(timeSlot)}Z` : "";
+
     // Prepare booking data in required structure, using null for missing values
     const bookingData: BookingPayload = {
       customer: {
@@ -240,7 +258,7 @@ function BookingPageContent() {
       resourceOwnerId: null, // Optional field, not currently used
       locationId: locationId || "",
       schedule: {
-        date: date || "",
+        startDateTime,
         timeSlot: timeSlot || "",
       },
       group: {
@@ -316,6 +334,23 @@ function BookingPageContent() {
         ? (selectedVehicle.price || 0) * (adults + children)
         : 0;
 
+      // For jeep/safari vehicle bookings: convert date + timeSlot to startDateTime
+      const getTimeForSlot = (slot: string): string => {
+        switch (slot) {
+          case "morning":
+            return "09:00:00";
+          case "afternoon":
+            return "12:00:00";
+          case "night":
+            return "18:00:00";
+          case "full-day":
+            return "09:00:00";
+          default:
+            return "09:00:00";
+        }
+      };
+      const startDateTime = date ? `${date}T${getTimeForSlot(timeSlot)}Z` : "";
+
       // Prepare booking data in required structure
       const bookingData: BookingPayload = {
         customer: {
@@ -329,7 +364,7 @@ function BookingPageContent() {
         resourceOwnerId: null,
         locationId: locationId || "",
         schedule: {
-          date: date,
+          startDateTime,
           timeSlot: timeSlot,
         },
         group: {

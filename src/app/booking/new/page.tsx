@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useJsApiLoader } from "@react-google-maps/api";
 import {
   ContactInfo,
   CustomPickupLocationInput,
@@ -24,6 +25,8 @@ import {
 import type { PickupLocation } from "@/components/molecules/PickupLocationInput";
 import { supabase } from "@/data/apiConfig";
 
+const libraries: ("places")[] = ["places"];
+
 type AirportOption = {
   id: string;
   label: string;
@@ -31,7 +34,7 @@ type AirportOption = {
   pickupLocation: PickupLocation;
 };
 
-const airportOptions: AirportOption[] = [
+const initialAirportOptions: AirportOption[] = [
   {
     id: "cmb",
     label: "Bandaranaike International Airport (CMB)",
@@ -39,7 +42,7 @@ const airportOptions: AirportOption[] = [
     pickupLocation: {
       address: "Bandaranaike International Airport, Katunayake, Sri Lanka",
       country: "Sri Lanka",
-      placeId: undefined,
+      placeId: "ChIJXS3yNbfv4joRN4uCAyFwvW4",
       coordinate: { lat: 7.1808, lng: 79.8841 },
     },
   },
@@ -50,7 +53,7 @@ const airportOptions: AirportOption[] = [
     pickupLocation: {
       address: "Mattala Rajapaksa International Airport, Mattala, Sri Lanka",
       country: "Sri Lanka",
-      placeId: undefined,
+      placeId: "ChIJw1fz0v-g5joRDHBaRaxNUE8",
       coordinate: { lat: 6.2839, lng: 81.125 },
     },
   },
@@ -61,7 +64,7 @@ const airportOptions: AirportOption[] = [
     pickupLocation: {
       address: "Colombo International Airport, Ratmalana, Sri Lanka",
       country: "Sri Lanka",
-      placeId: undefined,
+      placeId: "ChIJE9dyVs5a4joRSwAn-GRRRRk",
       coordinate: { lat: 6.8219, lng: 79.8854 },
     },
   },
@@ -102,8 +105,9 @@ function NewBookingPageContent() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [pickupMode, setPickupMode] = useState<"airport" | "custom">("airport");
+  const [airportOptions, setAirportOptions] = useState<AirportOption[]>(initialAirportOptions);
   const [selectedAirportId, setSelectedAirportId] = useState<string>(
-    airportOptions[0]?.id || "cmb"
+    initialAirportOptions[0]?.id || "cmb"
   );
   const [customPickup, setCustomPickup] = useState<PickupLocation>({});
   const [adults, setAdults] = useState(2);
@@ -114,6 +118,11 @@ function NewBookingPageContent() {
   const [isPhoneValid, setIsPhoneValid] = useState(false);
   const [bookingError, setBookingError] = useState<unknown>(null);
   const [isButtonLoading, setIsButtonLoading] = useState(false);
+
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
+    libraries,
+  });
 
   const {
     data: vehicleTypes,
@@ -129,6 +138,135 @@ function NewBookingPageContent() {
       );
     }
   }, [guideResourceTypeId]);
+
+  // Fetch place IDs for airports using Google Places API
+  useEffect(() => {
+    if (!isLoaded || typeof window === "undefined" || !window.google) return;
+
+    const fetchPlaceIds = () => {
+      const updatedOptions = initialAirportOptions.map((option) => {
+        // If placeId already exists, skip fetching
+        if (option.pickupLocation.placeId) {
+          return option;
+        }
+
+        const service = new window.google.maps.places.AutocompleteService();
+        const geocoder = new window.google.maps.Geocoder();
+
+        // First, try to find the place using autocomplete
+        service.getPlacePredictions(
+          {
+            input: option.label,
+            types: ["airport"],
+            componentRestrictions: { country: "lk" },
+          },
+          (predictions) => {
+            if (predictions && predictions.length > 0) {
+              // Find the best match
+              const bestMatch = predictions.find(
+                (p) =>
+                  p.description
+                    .toLowerCase()
+                    .includes(option.id.toLowerCase()) ||
+                  p.description
+                    .toLowerCase()
+                    .includes(option.label.toLowerCase().split("(")[0].trim())
+              ) || predictions[0];
+
+              // Get place details using place_id
+              geocoder.geocode(
+                { placeId: bestMatch.place_id },
+                (results, status) => {
+                  if (status === "OK" && results && results[0]) {
+                    const location = results[0].geometry.location;
+                    setAirportOptions((prev) =>
+                      prev.map((opt) =>
+                        opt.id === option.id
+                          ? {
+                              ...opt,
+                              pickupLocation: {
+                                ...opt.pickupLocation,
+                                placeId: results[0].place_id,
+                                coordinate: {
+                                  lat: location.lat(),
+                                  lng: location.lng(),
+                                },
+                                address: results[0].formatted_address,
+                              },
+                            }
+                          : opt
+                      )
+                    );
+                  } else {
+                    // Fallback: use reverse geocoding with existing coordinates
+                    if (option.pickupLocation.coordinate) {
+                      geocoder.geocode(
+                        {
+                          location: new window.google.maps.LatLng(
+                            option.pickupLocation.coordinate.lat,
+                            option.pickupLocation.coordinate.lng
+                          ),
+                        },
+                        (results, status) => {
+                          if (status === "OK" && results && results[0]) {
+                            setAirportOptions((prev) =>
+                              prev.map((opt) =>
+                                opt.id === option.id
+                                  ? {
+                                      ...opt,
+                                      pickupLocation: {
+                                        ...opt.pickupLocation,
+                                        placeId: results[0].place_id,
+                                      },
+                                    }
+                                  : opt
+                              )
+                            );
+                          }
+                        }
+                      );
+                    }
+                  }
+                }
+              );
+            } else {
+              // Fallback: use reverse geocoding with existing coordinates
+              if (option.pickupLocation.coordinate) {
+                geocoder.geocode(
+                  {
+                    location: new window.google.maps.LatLng(
+                      option.pickupLocation.coordinate.lat,
+                      option.pickupLocation.coordinate.lng
+                    ),
+                  },
+                  (results, status) => {
+                    if (status === "OK" && results && results[0]) {
+                      setAirportOptions((prev) =>
+                        prev.map((opt) =>
+                          opt.id === option.id
+                            ? {
+                                ...opt,
+                                pickupLocation: {
+                                  ...opt.pickupLocation,
+                                  placeId: results[0].place_id,
+                                },
+                              }
+                            : opt
+                        )
+                      );
+                    }
+                  }
+                );
+              }
+            }
+          }
+        );
+        return option;
+      });
+    };
+
+    fetchPlaceIds();
+  }, [isLoaded]);
 
   const vehicleOptions =
     vehicleTypes?.map((v) => ({
@@ -224,6 +362,11 @@ function NewBookingPageContent() {
         country: undefined,
       };
 
+      // For guide bookings: convert dates to ISO datetime strings
+      // Default start time: 09:00:00, default end time: 17:00:00
+      const startDateTime = startDate ? `${startDate}T09:00:00Z` : "";
+      const endDateTime = endDate ? `${endDate}T17:00:00Z` : "";
+
       const bookingPayload: BookingPayload = {
         customer: {
           email: customer.email,
@@ -236,9 +379,8 @@ function NewBookingPageContent() {
         resourceOwnerId: null,
         locationId,
         schedule: {
-          date: startDate,
-          // The API expects a single value; encode the end date so operations can retrieve it.
-          timeSlot: endDate ? `multi-day:${endDate}` : "multi-day",
+          startDateTime,
+          endDateTime,
         },
         group: {
           adults,
