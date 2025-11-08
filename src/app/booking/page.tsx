@@ -67,7 +67,6 @@ function BookingPageContent() {
   const [currentBookingId, setCurrentBookingId] = useState<string | undefined>(
     undefined
   );
-  const [currentPaymentAmount, setCurrentPaymentAmount] = useState<number>(0);
   const [name, setName] = useState<string>('');
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [bookingError, setBookingError] = useState<unknown>(null);
@@ -86,8 +85,6 @@ function BookingPageContent() {
   } = useVehicleTypes();
   const createBookingMutation = useCreateBooking();
   const {
-    data: bookingDetails,
-    isLoading: bookingDetailsLoading,
     error: bookingDetailsError,
   } = useBookingDetails(currentBookingId || "");
 
@@ -366,7 +363,6 @@ function BookingPageContent() {
       if (data && data.id) {
         const bookingId = data.id;
         setCurrentBookingId(bookingId);
-        setCurrentPaymentAmount(paymentAmount);
         console.log(
           "Redirecting to booking payment page with bookingId",
           bookingId
@@ -382,9 +378,6 @@ function BookingPageContent() {
     }
   };
 
-  // Use the correct mutation status properties
-  const isMutationLoading = createBookingMutation.status === "pending";
-  const isMutationError = createBookingMutation.status === "error";
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-background p-4">

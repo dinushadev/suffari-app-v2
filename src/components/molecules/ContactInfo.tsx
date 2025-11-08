@@ -7,7 +7,6 @@ interface ContactInfoProps {
 
 const ContactInfo: React.FC<ContactInfoProps> = ({ onContactInfoChange }) => {
   const [name, setName] = useState<string>('');
-  const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [nameError, setNameError] = useState<string | null>(null);
   const [phoneNumberError, setPhoneNumberError] = useState<string | null>(null);
   const [countryCode, setCountryCode] = useState<string>('+94'); // Default country code, now editable
@@ -91,6 +90,7 @@ const ContactInfo: React.FC<ContactInfoProps> = ({ onContactInfoChange }) => {
     const isCountryCodeValid = validateCountryCode(countryCode);
     const isLocalPhoneValid = validateLocalPhoneNumber(localPhoneNumber);
     onContactInfoChange(name, countryCode + localPhoneNumber, isNameValid, isLocalPhoneValid && isCountryCodeValid);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [name, localPhoneNumber, countryCode]);
 
   return (

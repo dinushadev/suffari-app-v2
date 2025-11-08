@@ -1,26 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { useBookings } from "@/data/useBookings";
 import { supabase } from "@/data/apiConfig"; // Import supabase
 import Loader from "@/components/atoms/Loader";
-import { FullScreenLoader } from "@/components/atoms";
 import { BookingCard } from "@/components/molecules";
-import { Booking } from "@/types/booking";
-import { useQueryClient } from "@tanstack/react-query";
 
 
 const BookingHistoryPage = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [loadingSession, setLoadingSession] = useState(true);
-  const queryClient = useQueryClient();
 
   const {
     data: allBookingsData,

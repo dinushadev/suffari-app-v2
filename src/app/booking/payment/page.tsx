@@ -11,7 +11,6 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 import { Suspense } from "react";
-import Loader from "../../../components/atoms/Loader";
 import { FullScreenLoader } from "../../../components/atoms";
 import type { PaymentRequest as StripePaymentRequest } from "@stripe/stripe-js";
 import { usePaymentIntent } from "../../../data/usePaymentIntent"; // Import the new hook
@@ -37,8 +36,6 @@ const stripePromise = loadStripe(
 function StripePaymentForm({
   amount,
   error,
-  locationName,
-  userEmail,
 }: {
   amount: number;
   error: Error | null;
@@ -78,7 +75,7 @@ function StripePaymentForm({
   }, [stripe, amount]);
 
   const [isPolling, setIsPolling] = useState(false);
-  const { data: bookingStatus, isLoading: isBookingStatusLoading } =
+  const { data: bookingStatus } =
     useBookingStatus(bookingId, isPolling);
 
   useEffect(() => {
@@ -125,7 +122,7 @@ function StripePaymentForm({
     if (paymentSucceeded) {
       try {
         setIsPolling(true); // Start polling after successful payment
-      } catch (err) {
+      } catch {
         // Error handling for polling initiation if needed
       } finally {
         setIsSubmittingPayment(false); // Stop loading after payment processing
@@ -221,6 +218,7 @@ function StripePaymentWrapper({
     resourceTypeId,
     clientSecret,
     isCreatingPaymentIntent,
+    mutateAsync,
   ]);
 
   const handleTryAgain = () => {
@@ -291,7 +289,7 @@ function PaymentPage() {
   const router = useRouter();
 
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [currentSession, setCurrentSession] = useState<Session | null>(null); // State to hold session
+  const [currentSession, setCurrentSession] = useState<Session | null>(null);
 
   const {
     data: booking,
@@ -311,7 +309,6 @@ function PaymentPage() {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      console.log("router", router);
       if (!session) {
         // If no session, redirect to auth page with returnUrl
         const currentPath = window.location.pathname + window.location.search;
@@ -322,7 +319,8 @@ function PaymentPage() {
       }
     }
     checkSession();
-  }, [router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const {
     data: location,
@@ -467,7 +465,7 @@ function DirectBookingConfirmation({
   const [isPolling, setIsPolling] = useState(false);
   const bookingId = booking.id; // Get bookingId from the booking object
 
-  const { data: bookingStatus, isLoading: isBookingStatusLoading } =
+  const { data: bookingStatus } =
     useBookingStatus(bookingId, isPolling);
 
   useEffect(() => {
@@ -480,7 +478,7 @@ function DirectBookingConfirmation({
       });
       router.push(`/booking/payment/success?${params.toString()}`);
     }
-  }, [bookingStatus, router, bookingId, amount, locationName, currentSession]);
+  }, [bookingStatus, router, bookingId, amount, locationName, currentSession?.user?.email]);
 
   const handleConfirm = async () => {
     setLoading(true);

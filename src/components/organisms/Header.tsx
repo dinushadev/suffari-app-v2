@@ -5,7 +5,6 @@ import Image from "next/image"; // Import Image component
 import { ThemeToggle } from "@/components/ThemeToggler";
 import { User } from "@supabase/supabase-js"; // Import User type
 import { useRouter } from "next/navigation";
-import Button from "../atoms/Button";
 import { ButtonV2 } from "../atoms";
 
 const Header = () => {

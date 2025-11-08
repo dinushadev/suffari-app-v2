@@ -8,6 +8,7 @@ import { useMergeGuestSession } from "@/data/useMergeGuestSession";
 import { FullScreenLoader } from "@/components/atoms";
 import { Input } from "@/components/ui/input";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
+import Image from "next/image";
 // Client-side component for checking pending booking
 function PendingBookingNotice() {
   const [hasPendingBooking, setHasPendingBooking] = useState(false);
@@ -97,8 +98,6 @@ function AuthPageContent() {
         // Handle pending booking association
         const pendingDataStr = localStorage.getItem("pendingBookingData");
         if (pendingDataStr) {
-          const pendingData = JSON.parse(pendingDataStr);
-          const bookingId = pendingData.bookingId;
           try {
             //   await associateBooking.mutateAsync({ bookingId, userId: session.user.id });
             localStorage.removeItem("pendingBookingData");
@@ -113,7 +112,7 @@ function AuthPageContent() {
     };
 
     handleSessionAndMerge();
-  }, [returnUrl]);
+  }, [returnUrl, mergeGuestSessionMutation, router]);
 
   const handleOAuth = async (provider: "google" | "facebook") => {
     setOauthLoading((prev) => ({ ...prev, [provider]: true }));
@@ -140,7 +139,7 @@ function AuthPageContent() {
       // await otpSendMutation.mutateAsync({ email });
       setOtpSendLoading(true);
       //  await otpSendMutation.mutateAsync({ email });
-      const { data, error } = await supabase.auth.signInWithOtp({
+      const { error } = await supabase.auth.signInWithOtp({
         email: email,
         options: {
           // set this to false if you do not want the user to be automatically signed up
@@ -169,9 +168,11 @@ function AuthPageContent() {
       </h1>
       <p className="mb-8 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">
         Conscious Travel{" "}
-        <img
+        <Image
           src="/images/logo-raahi.png"
           alt="RAAHI Logo"
+          width={40}
+          height={40}
           className="mb-1 w-10 h-10"
         />{" "}
         Responsible Tourism

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ContactInfo,
@@ -14,6 +14,7 @@ import {
   ErrorDisplay,
   Loader,
   PickupOption,
+  FullScreenLoader,
 } from "@/components/atoms";
 import { useVehicleTypes } from "@/data/useVehicleTypes";
 import {
@@ -38,7 +39,7 @@ const airportOptions: AirportOption[] = [
     pickupLocation: {
       address: "Bandaranaike International Airport, Katunayake, Sri Lanka",
       country: "Sri Lanka",
-      placeId: null,
+      placeId: undefined,
       coordinate: { lat: 7.1808, lng: 79.8841 },
     },
   },
@@ -49,7 +50,7 @@ const airportOptions: AirportOption[] = [
     pickupLocation: {
       address: "Mattala Rajapaksa International Airport, Mattala, Sri Lanka",
       country: "Sri Lanka",
-      placeId: null,
+      placeId: undefined,
       coordinate: { lat: 6.2839, lng: 81.125 },
     },
   },
@@ -60,7 +61,7 @@ const airportOptions: AirportOption[] = [
     pickupLocation: {
       address: "Colombo International Airport, Ratmalana, Sri Lanka",
       country: "Sri Lanka",
-      placeId: null,
+      placeId: undefined,
       coordinate: { lat: 6.8219, lng: 79.8854 },
     },
   },
@@ -82,7 +83,7 @@ function calculateStayLength(startDate: string, endDate: string): number {
   return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
 }
 
-export default function NewBookingPage() {
+function NewBookingPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const locationId =
@@ -217,10 +218,10 @@ export default function NewBookingPage() {
       }
 
       const pickupForPayload: PickupLocation = selectedPickupLocation || {
-        placeId: null,
+        placeId: undefined,
         coordinate: { lat: 0, lng: 0 },
         address: "",
-        country: null,
+        country: undefined,
       };
 
       const bookingPayload: BookingPayload = {
@@ -450,7 +451,7 @@ export default function NewBookingPage() {
               />
             </div>
 
-            {bookingError && (
+            {bookingError !== null && (
               <ErrorDisplay
                 error={bookingError}
                 onRetry={handleCreateBooking}
@@ -471,5 +472,13 @@ export default function NewBookingPage() {
         </section>
       </div>
     </main>
+  );
+}
+
+export default function NewBookingPage() {
+  return (
+    <Suspense fallback={<FullScreenLoader />}>
+      <NewBookingPageContent />
+    </Suspense>
   );
 }

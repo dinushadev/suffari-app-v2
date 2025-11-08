@@ -2,8 +2,8 @@
 
 import { ResourceLocationList } from "../components/organisms";
 import { useLocations } from "../data/useLocations";
-import { useRouter } from "next/navigation";
 import { Loader } from "../components/atoms";
+import Image from "next/image";
 
 export default function Home() {
   // const router = useRouter(); // router is no longer directly used here, but keeping it for now in case other logic depends on it.
@@ -19,9 +19,11 @@ export default function Home() {
       </h1>
       <p className="mb-8 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">
         Conscious Travel{" "}
-        <img
+        <Image
           src="/images/logo-raahi.png"
           alt="RAAHI Logo"
+          width={40}
+          height={40}
           className="mb-1 w-10 h-10"
         />{" "}
         Responsible Tourism

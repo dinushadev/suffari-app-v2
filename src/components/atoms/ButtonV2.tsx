@@ -22,7 +22,6 @@ const ButtonV2: React.FC<ButtonV2Props> = ({ children, variant = 'primary', size
     lg: 'h-11 px-8 rounded-full text-lg',
     icon: 'h-10 w-10 rounded-full',
   };
-  const disabledStyles = 'opacity-50 cursor-not-allowed bg-muted text-muted-foreground hover:bg-muted';
   const isDisabled = props.disabled || loading;
 
   return (

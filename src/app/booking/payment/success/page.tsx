@@ -41,7 +41,7 @@ function PaymentSuccessPageContent() {
     );
   }
 
-  const { schedule, pickupLocation, resourceTypeId, group, paymentAmount } =
+  const { schedule, pickupLocation, group, paymentAmount } =
     bookingDetails;
 
   // Directly use data from bookingDetails
@@ -50,7 +50,6 @@ function PaymentSuccessPageContent() {
   const timeSlot = schedule.timeSlot;
   const fromGate = pickupLocation && pickupLocation.address === "Park Gate"; // Adjust based on actual pickupLocation structure
   const pickup = pickupLocation || {};
-  const amount = paymentAmount; // Amount still from search params or fetched from backend if available
 
   // Dummy data for contact info (these are not passed via URL)
   const contactWithin = "20-30 minutes"; // Placeholder - will come from backend later

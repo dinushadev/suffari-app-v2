@@ -16,14 +16,34 @@ export interface ApiError extends Error {
 }
 
 /**
+ * Type guard to check if data is an object with string properties
+ */
+function isErrorData(data: unknown): data is Record<string, unknown> {
+  return typeof data === 'object' && data !== null;
+}
+
+/**
+ * Helper to safely get a string property from error data
+ */
+function getErrorProperty(data: unknown, key: string): string | undefined {
+  if (isErrorData(data) && typeof data[key] === 'string') {
+    return data[key] as string;
+  }
+  return undefined;
+}
+
+/**
  * Create a structured API error with appropriate type and message
  */
-function createApiError(response: Response, data: any): ApiError {
+function createApiError(response: Response, data: unknown): ApiError {
   const status = response.status;
   const statusText = response.statusText;
   
   let errorType: ApiError['type'] = 'server';
   let userMessage = 'An unexpected error occurred. Please try again.';
+  
+  // Helper to get message or error from data
+  const getMessage = () => getErrorProperty(data, 'message') || getErrorProperty(data, 'error');
   
   // Determine error type and user-friendly message based on status code
   if (status >= 400 && status < 500) {
@@ -32,7 +52,7 @@ function createApiError(response: Response, data: any): ApiError {
     switch (status) {
       case 400:
         errorType = 'validation';
-        userMessage = data?.message || data?.error || 'Invalid request. Please check your input and try again.';
+        userMessage = getMessage() || 'Invalid request. Please check your input and try again.';
         break;
       case 401:
         errorType = 'authentication';
@@ -50,13 +70,13 @@ function createApiError(response: Response, data: any): ApiError {
         break;
       case 422:
         errorType = 'validation';
-        userMessage = data?.message || data?.error || 'Please check your input and try again.';
+        userMessage = getMessage() || 'Please check your input and try again.';
         break;
       case 429:
         userMessage = 'Too many requests. Please wait a moment and try again.';
         break;
       default:
-        userMessage = data?.message || data?.error || 'Request failed. Please try again.';
+        userMessage = getMessage() || 'Request failed. Please try again.';
     }
   } else if (status >= 500) {
     errorType = 'server';
@@ -82,11 +102,16 @@ function createApiError(response: Response, data: any): ApiError {
   error.status = status;
   error.statusText = statusText;
   error.type = errorType;
-  error.details = data?.details || data?.error;
-  error.code = data?.code;
-  error.errorCode = data?.errorCode;
-  error.description = data?.description;
-  error.validationErrors = data?.validationErrors;
+  
+  if (isErrorData(data)) {
+    error.details = getErrorProperty(data, 'details') || getErrorProperty(data, 'error');
+    error.code = getErrorProperty(data, 'code');
+    error.errorCode = getErrorProperty(data, 'errorCode');
+    error.description = getErrorProperty(data, 'description');
+    if (Array.isArray(data.validationErrors)) {
+      error.validationErrors = data.validationErrors as ApiError['validationErrors'];
+    }
+  }
   
   return error;
 }
@@ -118,10 +143,10 @@ export async function apiClient<T>(endpoint: string, { method = "GET", body, bas
       ...(body ? { body: typeof body === 'string' ? body : JSON.stringify(body) } : {}),
     });
     
-    let data: any;
+    let data: unknown;
     try {
       data = await res.json();
-    } catch (parseError) {
+    } catch {
       // If response is not JSON, create a generic error
       const error = new Error('Invalid response from server') as ApiError;
       error.status = res.status;
