@@ -1,12 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { GuideCard } from "@/components/molecules/GuideCard";
 import { mockGuides } from "@/data/mockGuides";
+import type { Guide } from "@/types/guide";
 
 const GuidesPage = () => {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [languageFilter, setLanguageFilter] = useState("all");
   const [resourceFilter, setResourceFilter] = useState("all");
@@ -57,6 +60,25 @@ const GuidesPage = () => {
       );
     });
   }, [searchTerm, languageFilter, resourceFilter, availabilityOnly]);
+
+  const handleBookGuide = (guide: Guide) => {
+    const params = new URLSearchParams();
+    params.set("guideId", guide.id);
+    const preferredName =
+      guide.bio.preferredName ||
+      `${guide.bio.firstName} ${guide.bio.lastName}`.trim();
+    params.set("guideName", preferredName);
+    if (guide.resourceTypeId) {
+      params.set("resourceTypeId", guide.resourceTypeId);
+    }
+    if (guide.resourceType?.name) {
+      params.set("resourceLabel", guide.resourceType.name);
+    }
+    if (guide.resourceType?.price) {
+      params.set("resourcePrice", String(guide.resourceType.price));
+    }
+    router.push(`/booking/new?${params.toString()}`);
+  };
 
   return (
     <main className="min-h-screen bg-background px-4 py-10 sm:px-6 lg:px-10">
@@ -135,7 +157,13 @@ const GuidesPage = () => {
 
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
           {filteredGuides.length > 0 ? (
-            filteredGuides.map((guide) => <GuideCard key={guide.id} guide={guide} />)
+            filteredGuides.map((guide) => (
+              <GuideCard
+                key={guide.id}
+                guide={guide}
+                onBook={handleBookGuide}
+              />
+            ))
           ) : (
             <div className="col-span-full flex flex-col items-center rounded-3xl border border-dashed border-border/60 bg-card/40 p-10 text-center">
               <p className="text-lg font-semibold text-foreground">
