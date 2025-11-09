@@ -128,10 +128,10 @@ function NewBookingPageContent() {
     if (!isLoaded || typeof window === "undefined" || !window.google) return;
 
     const fetchPlaceIds = () => {
-      const updatedOptions = initialAirportOptions.map((option) => {
+      initialAirportOptions.forEach((option) => {
         // If placeId already exists, skip fetching
         if (option.pickupLocation.placeId) {
-          return option;
+          return;
         }
 
         const service = new window.google.maps.places.AutocompleteService();
@@ -245,7 +245,6 @@ function NewBookingPageContent() {
             }
           }
         );
-        return option;
       });
     };
 
@@ -254,7 +253,7 @@ function NewBookingPageContent() {
 
   const selectedAirport = useMemo(
     () => airportOptions.find((option) => option.id === selectedAirportId),
-    [selectedAirportId]
+    [selectedAirportId, airportOptions]
   );
 
   const selectedPickupLocation: PickupLocation | undefined =

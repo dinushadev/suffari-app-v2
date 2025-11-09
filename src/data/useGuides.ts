@@ -10,9 +10,17 @@ export interface UseGuidesParams {
 }
 
 /**
+ * Raw guide data from API before normalization
+ * speaking_languages can be a string (CSV) or array
+ */
+type RawGuide = Omit<Guide, "speaking_languages"> & {
+  speaking_languages: string | string[];
+};
+
+/**
  * Transform guide data to ensure speaking_languages is always an array
  */
-const normalizeGuide = (guide: any): Guide => {
+const normalizeGuide = (guide: RawGuide): Guide => {
   return {
     ...guide,
     speaking_languages: normalizeLanguages(guide.speaking_languages),
@@ -37,7 +45,7 @@ const fetchGuides = async (params: UseGuidesParams): Promise<Guide[]> => {
   const queryString = queryParams.toString();
   const endpoint = `/guides${queryString ? `?${queryString}` : ""}`;
   
-  const guides = await apiClient<any[]>(endpoint);
+  const guides = await apiClient<RawGuide[]>(endpoint);
   
   // Normalize languages from CSV to array for each guide
   return guides.map(normalizeGuide);
