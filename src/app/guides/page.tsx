@@ -13,7 +13,6 @@ const GuidesPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [languageFilter, setLanguageFilter] = useState("all");
   const [resourceFilter, setResourceFilter] = useState("all");
-  const [availabilityOnly, setAvailabilityOnly] = useState(false);
 
   const languages = useMemo(() => {
     const values = new Set<string>();
@@ -53,13 +52,11 @@ const GuidesPage = () => {
         guide.resourceType.name === resourceFilter ||
         guide.resourceType.id === resourceFilter;
 
-      const matchesAvailability = !availabilityOnly || guide.available;
-
       return (
-        matchesSearch && matchesLanguage && matchesResource && matchesAvailability
+        matchesSearch && matchesLanguage && matchesResource
       );
     });
-  }, [searchTerm, languageFilter, resourceFilter, availabilityOnly]);
+  }, [searchTerm, languageFilter, resourceFilter]);
 
   const handleBookGuide = (guide: Guide) => {
     const params = new URLSearchParams();
@@ -76,6 +73,9 @@ const GuidesPage = () => {
     }
     if (guide.resourceType?.price) {
       params.set("resourcePrice", String(guide.resourceType.price));
+    }
+    if (guide.pricing && guide.pricing.length > 0) {
+      params.set("guidePricing", JSON.stringify(guide.pricing));
     }
     router.push(`/booking/new?${params.toString()}`);
   };
@@ -96,7 +96,7 @@ const GuidesPage = () => {
           </p>
         </header>
 
-        <div className="grid w-full gap-4 rounded-3xl border border-border/40 bg-card/60 p-4 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_auto]">
+        <div className="grid w-full gap-4 rounded-3xl border border-border/40 bg-card/60 p-4 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr]">
           <label className="relative flex flex-col gap-1 text-sm font-medium text-muted-foreground sm:col-span-2 lg:col-span-1">
             Search guides
             <div className="relative">
@@ -140,18 +140,6 @@ const GuidesPage = () => {
                 </option>
               ))}
             </Select>
-          </label>
-
-          <label className="flex items-center justify-center gap-2 rounded-2xl border border-border/40 bg-background/40 px-4">
-            <input
-              type="checkbox"
-              checked={availabilityOnly}
-              onChange={(event) => setAvailabilityOnly(event.target.checked)}
-              className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
-            />
-            <span className="text-sm font-semibold text-foreground">
-              Available now
-            </span>
           </label>
         </div>
 

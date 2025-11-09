@@ -81,14 +81,16 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
       <CardContent className="text-base">
         <p className="mt-2"><strong>Group Size:</strong> Adults: {booking.group.adults}, Children: {booking.group.children} (Total: {booking.group.size})</p>
         <p className="mt-1"><strong>Pickup Location:</strong> {booking.pickupLocation.address}</p>
-        <ButtonV2
-          onClick={() => router.push(`/booking/cancel/${booking.id}`)}
-          disabled={!canCancel}
-          variant="destructive"
-          className="mt-4"
-        >
-          Cancel Booking
-        </ButtonV2>
+        {booking.status !== "canceled" && (
+          <ButtonV2
+            onClick={() => router.push(`/booking/cancel/${booking.id}`)}
+            disabled={!canCancel}
+            variant="destructive"
+            className="mt-4"
+          >
+            Cancel Booking
+          </ButtonV2>
+        )}
       </CardContent>
     </Card>
   );

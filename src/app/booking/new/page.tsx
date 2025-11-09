@@ -8,7 +8,6 @@ import {
   CustomPickupLocationInput,
   DatePicker,
   GroupSizeSelector,
-  VehicleTypeSelector,
 } from "@/components/molecules";
 import {
   ButtonV2,
@@ -17,13 +16,14 @@ import {
   PickupOption,
   FullScreenLoader,
 } from "@/components/atoms";
-import { useVehicleTypes } from "@/data/useVehicleTypes";
+import { useGuideDetails } from "@/data/useGuideDetails";
 import {
   useCreateBooking,
   type BookingPayload,
 } from "@/data/useCreateBooking";
 import type { PickupLocation } from "@/components/molecules/PickupLocationInput";
 import { supabase } from "@/data/apiConfig";
+import type { GuidePricing } from "@/types/guide";
 
 const libraries: ("places")[] = ["places"];
 
@@ -92,16 +92,13 @@ function NewBookingPageContent() {
   const locationId =
     searchParams.get("location") || DEFAULT_LOCATION_ID;
   const guideIdParam = searchParams.get("guideId") || "";
-  const guideName = searchParams.get("guideName") || "";
-  const guideResourceTypeId = searchParams.get("resourceTypeId") || "";
-  const guideResourceLabel =
-    searchParams.get("resourceLabel") || guideResourceTypeId || "";
-  const guideResourcePriceParam = searchParams.get("resourcePrice");
-  const guideResourcePrice = guideResourcePriceParam
-    ? Number.parseFloat(guideResourcePriceParam) || 0
-    : 0;
 
-  const [vehicle, setVehicle] = useState(guideResourceTypeId);
+  // Fetch guide details from API
+  const {
+    data: guideData,
+    isLoading: guideLoading,
+    error: guideError,
+  } = useGuideDetails(guideIdParam);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [pickupMode, setPickupMode] = useState<"airport" | "custom">("airport");
@@ -124,20 +121,7 @@ function NewBookingPageContent() {
     libraries,
   });
 
-  const {
-    data: vehicleTypes,
-    isLoading: vehicleTypesLoading,
-    error: vehicleTypesError,
-  } = useVehicleTypes();
   const createBookingMutation = useCreateBooking();
-
-  useEffect(() => {
-    if (guideResourceTypeId) {
-      setVehicle((prev) =>
-        prev === guideResourceTypeId ? prev : guideResourceTypeId
-      );
-    }
-  }, [guideResourceTypeId]);
 
   // Fetch place IDs for airports using Google Places API
   useEffect(() => {
@@ -268,17 +252,6 @@ function NewBookingPageContent() {
     fetchPlaceIds();
   }, [isLoaded]);
 
-  const vehicleOptions =
-    vehicleTypes?.map((v) => ({
-      label: v.name,
-      value: v.id,
-      description: v.discription,
-      imageUrl: v.imageUrl,
-      price: v.price,
-      featureList: v.featureList,
-      numberOfGuests: v.numberOfGuests,
-    })) || [];
-
   const selectedAirport = useMemo(
     () => airportOptions.find((option) => option.id === selectedAirportId),
     [selectedAirportId]
@@ -287,21 +260,73 @@ function NewBookingPageContent() {
   const selectedPickupLocation: PickupLocation | undefined =
     pickupMode === "airport" ? selectedAirport?.pickupLocation : customPickup;
 
-  const resolvedResourceTypeId = guideResourceTypeId || vehicle;
-  const guidePreselected = Boolean(guideIdParam);
+  // Extract data from guide API response
+  const guideName = guideData?.bio?.preferredName || 
+    `${guideData?.bio?.firstName || ""} ${guideData?.bio?.lastName || ""}`.trim() || 
+    "Guide";
+  const guideResourceTypeId = guideData?.resourceTypeId || guideData?.resourceType?.id || "";
+  const guideResourceLabel = guideData?.resourceType?.name || guideData?.resourceType?.description || "";
+  // Use 'rates' from API, fallback to 'pricing' for backward compatibility
+  const guidePricing: GuidePricing[] | null = guideData?.rates || guideData?.pricing || null;
 
   const stayLengthInDays = calculateStayLength(startDate, endDate);
   const totalGuests = adults + children;
-  const selectedVehicle = vehicleOptions.find(
-    (v) => v.value === resolvedResourceTypeId
-  );
-  const baseRate =
-    selectedVehicle?.price ??
-    (guideResourceTypeId ? guideResourcePrice : undefined);
-  const paymentEstimate =
-    (baseRate || 0) *
-    Math.max(1, totalGuests) *
-    Math.max(1, stayLengthInDays || 1);
+
+  // Calculate payment estimate based on guide pricing if available
+  const paymentEstimate = useMemo(() => {
+    // If no guide data, return 0
+    if (!guideData) return 0;
+    
+    // If no dates selected, return 0
+    if (stayLengthInDays <= 0) return 0;
+
+    // If guide rates/pricing is available, use it to calculate based on selected days
+    if (guidePricing && guidePricing.length > 0) {
+      // Prefer daily rate for multi-day bookings, otherwise use hourly
+      const dailyRate = guidePricing.find((r) => r.type === "daily");
+      const hourlyRate = guidePricing.find((r) => r.type === "hourly");
+      
+      // Use daily rate if available, otherwise use hourly
+      const selectedRate = dailyRate || hourlyRate;
+      
+      if (selectedRate && selectedRate.amount && selectedRate.amount > 0) {
+        if (selectedRate.type === "hourly") {
+          // Default: 8 hours per day (09:00-17:00)
+          const hoursPerDay = 8;
+          const totalHours = stayLengthInDays * hoursPerDay;
+          const calculatedAmount = selectedRate.amount * totalHours;
+          return Number.isFinite(calculatedAmount) && calculatedAmount > 0 ? calculatedAmount : 0;
+        } else if (selectedRate.type === "daily") {
+          const calculatedAmount = selectedRate.amount * stayLengthInDays;
+          return Number.isFinite(calculatedAmount) && calculatedAmount > 0 ? calculatedAmount : 0;
+        }
+      }
+    }
+    
+    // Fallback: use resource type price if available
+    const baseRate = guideData?.resourceType?.price;
+    if (baseRate && baseRate > 0) {
+      const fallbackAmount =
+        baseRate *
+        Math.max(1, totalGuests) *
+        Math.max(1, stayLengthInDays);
+      return Number.isFinite(fallbackAmount) && fallbackAmount > 0 ? fallbackAmount : 0;
+    }
+    
+    return 0;
+  }, [guidePricing, stayLengthInDays, totalGuests, guideData]);
+
+  // Debug: Log guide data to console (remove in production)
+  useEffect(() => {
+    if (guideData) {
+      console.log("Guide Data:", guideData);
+      console.log("Guide Pricing:", guidePricing);
+      console.log("Resource Type Price:", guideData?.resourceType?.price);
+      console.log("Stay Length:", stayLengthInDays);
+      console.log("Total Guests:", totalGuests);
+      console.log("Payment Estimate:", paymentEstimate);
+    }
+  }, [guideData, guidePricing, stayLengthInDays, totalGuests, paymentEstimate]);
 
   const isDateRangeValid =
     !!startDate && !!endDate && calculateStayLength(startDate, endDate) > 0;
@@ -313,7 +338,8 @@ function NewBookingPageContent() {
 
   const isFormValid =
     !!locationId &&
-    !!resolvedResourceTypeId &&
+    !!guideIdParam &&
+    !!guideResourceTypeId &&
     isDateRangeValid &&
     isPickupValid &&
     totalGuests > 0 &&
@@ -374,7 +400,7 @@ function NewBookingPageContent() {
           sessionId: customer.sessionId,
           name,
         },
-        resourceTypeId: resolvedResourceTypeId,
+        resourceTypeId: guideResourceTypeId,
         resourceId: guideIdParam || null,
         resourceOwnerId: null,
         locationId,
@@ -393,14 +419,15 @@ function NewBookingPageContent() {
           address: pickupForPayload.address || "",
           country: pickupForPayload.country || null,
         },
-        paymentAmount: paymentEstimate,
+        // Use calculated payment estimate based on guide pricing and selected days
+        paymentAmount: Number.isFinite(paymentEstimate) ? paymentEstimate : 0,
       };
 
       const bookingResponse = await createBookingMutation.mutateAsync(
         bookingPayload
       );
       if (bookingResponse?.id) {
-        router.push(`/booking/payment?bookingId=${bookingResponse.id}`);
+        router.push(`/booking/payment?orderId=${bookingResponse.id}`);
         return;
       }
     } catch (error) {
@@ -426,7 +453,36 @@ function NewBookingPageContent() {
             who&apos;s joining. We&apos;ll handle the rest.
           </p>
         </header>
-        {guideName && (
+        
+        {!guideIdParam && (
+          <div className="rounded-3xl border border-red-400 bg-red-50 p-4 text-sm text-red-600 shadow-sm">
+            <p className="text-base font-semibold">
+              Missing Guide ID
+            </p>
+            <p className="text-muted-foreground">
+              Please provide a guide ID in the URL parameters to continue with the booking.
+            </p>
+          </div>
+        )}
+
+        {guideLoading && (
+          <div className="flex justify-center items-center py-8">
+            <Loader />
+          </div>
+        )}
+
+        {guideError && (
+          <div className="rounded-3xl border border-red-400 bg-red-50 p-4 text-sm text-red-600 shadow-sm">
+            <p className="text-base font-semibold">
+              Failed to Load Guide Details
+            </p>
+            <p className="text-muted-foreground">
+              {guideError instanceof Error ? guideError.message : "An error occurred while loading guide information."}
+            </p>
+          </div>
+        )}
+
+        {guideData && (
           <div className="rounded-3xl border border-primary/40 bg-primary/10 p-4 text-sm text-primary shadow-sm">
             <p className="text-base font-semibold">
               You&apos;re booking {guideName}
@@ -438,8 +494,51 @@ function NewBookingPageContent() {
           </div>
         )}
 
-        <section className="w-full">
-          <div className="space-y-6 bg-card p-6 rounded-3xl shadow-lg border border-border">
+        {guideData && (
+          <section className="w-full">
+            <div className="space-y-6 bg-card p-6 rounded-3xl shadow-lg border border-border">
+            <div>
+              <h2 className="font-bold text-lg mb-2 text-foreground">
+                Guide Details
+              </h2>
+              <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 text-sm text-foreground">
+                <p className="text-base font-semibold text-primary">
+                  {guideName}
+                </p>
+                {guideData.bio?.description && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    {guideData.bio.description}
+                  </p>
+                )}
+                <p className="text-muted-foreground mt-2">
+                  Experience type:{" "}
+                  <span className="font-semibold text-foreground">
+                    {guideResourceLabel || "Guide"}
+                  </span>
+                </p>
+                {guideData.expertise && guideData.expertise.length > 0 && (
+                  <p className="text-muted-foreground mt-2">
+                    Expertise:{" "}
+                    <span className="font-semibold text-foreground">
+                      {guideData.expertise.join(", ")}
+                    </span>
+                  </p>
+                )}
+                {guideData.speaking_languages && guideData.speaking_languages.length > 0 && (
+                  <p className="text-muted-foreground mt-2">
+                    Languages:{" "}
+                    <span className="font-semibold text-foreground">
+                      {guideData.speaking_languages.join(", ")}
+                    </span>
+                  </p>
+                )}
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Need a different guide or experience? Return to the guides
+                  list to switch before submitting.
+                </p>
+              </div>
+            </div>
+
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <h2 className="font-bold text-lg mb-2 text-foreground">
@@ -467,6 +566,91 @@ function NewBookingPageContent() {
                 End date must be on or after the start date.
               </p>
             )}
+
+            {/* Dynamic Rate Display */}
+            {stayLengthInDays > 0 && guideData && (() => {
+              // Prefer daily rate for display, matching calculation logic
+              const dailyRate = guidePricing?.find((r) => r.type === "daily");
+              const hourlyRate = guidePricing?.find((r) => r.type === "hourly");
+              const selectedRate = dailyRate || hourlyRate;
+              
+              return (
+                <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4">
+                  <h3 className="text-sm font-semibold text-muted-foreground mb-3">
+                    Booking Rate
+                  </h3>
+                  {selectedRate && selectedRate.amount > 0 ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-foreground">
+                          {selectedRate.type === "hourly" ? "Hourly Rate" : "Daily Rate"}
+                        </span>
+                        <span className="text-sm font-semibold text-foreground">
+                          {selectedRate.currency || "USD"} {selectedRate.amount.toFixed(2)}/{selectedRate.type === "hourly" ? "hour" : "day"}
+                        </span>
+                      </div>
+                      {selectedRate.type === "hourly" ? (
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>
+                            {stayLengthInDays} day{stayLengthInDays !== 1 ? "s" : ""} × 8 hours/day
+                          </span>
+                          <span>
+                            = {stayLengthInDays * 8} hours
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>
+                            {stayLengthInDays} day{stayLengthInDays !== 1 ? "s" : ""}
+                          </span>
+                        </div>
+                      )}
+                      <div className="pt-2 border-t border-border/50 flex items-center justify-between">
+                        <span className="text-base font-bold text-foreground">
+                          Total Rate
+                        </span>
+                        <span className="text-lg font-bold text-primary">
+                          {selectedRate.currency || "USD"} {paymentEstimate.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  ) : guideData?.resourceType?.price && guideData.resourceType.price > 0 ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-foreground">
+                        Base Rate per Guest per Day
+                      </span>
+                      <span className="text-sm font-semibold text-foreground">
+                        ${guideData.resourceType.price.toFixed(2)} USD
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>
+                        {stayLengthInDays} day{stayLengthInDays !== 1 ? "s" : ""} × {totalGuests} guest{totalGuests !== 1 ? "s" : ""}
+                      </span>
+                    </div>
+                    <div className="pt-2 border-t border-border/50 flex items-center justify-between">
+                      <span className="text-base font-bold text-foreground">
+                        Estimated Total
+                      </span>
+                      <span className="text-lg font-bold text-primary">
+                        ${paymentEstimate.toFixed(2)} USD
+                      </span>
+                    </div>
+                  </div>
+                  ) : (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-foreground">
+                        Estimated Total
+                      </span>
+                      <span className="text-lg font-bold text-primary">
+                        ${paymentEstimate.toFixed(2)} USD
+                      </span>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             <div>
               <h2 className="font-bold text-lg mb-2 text-foreground">
@@ -543,39 +727,6 @@ function NewBookingPageContent() {
 
             <div>
               <h2 className="font-bold text-lg mb-2 text-foreground">
-                {guidePreselected ? "Guide" : "Vehicle"} Preference
-              </h2>
-              {guidePreselected ? (
-                <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 text-sm text-foreground">
-                  <p className="text-base font-semibold text-primary">
-                    {guideName}
-                  </p>
-                  <p className="text-muted-foreground">
-                    Experience type:{" "}
-                    <span className="font-semibold text-foreground">
-                      {guideResourceLabel || guideResourceTypeId || "Guide"}
-                    </span>
-                  </p>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Need a different guide or experience? Return to the guides
-                    list to switch before submitting.
-                  </p>
-                </div>
-              ) : vehicleTypesLoading ? (
-                <Loader />
-              ) : vehicleTypesError ? (
-                <p className="text-red-500">Failed to load vehicle types.</p>
-              ) : (
-                <VehicleTypeSelector
-                  options={vehicleOptions}
-                  selected={vehicle}
-                  onSelect={setVehicle}
-                />
-              )}
-            </div>
-
-            <div>
-              <h2 className="font-bold text-lg mb-2 text-foreground">
                 Contact Information
               </h2>
               <ContactInfo
@@ -612,6 +763,7 @@ function NewBookingPageContent() {
             </ButtonV2>
           </div>
         </section>
+        )}
       </div>
     </main>
   );

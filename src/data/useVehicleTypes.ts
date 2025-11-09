@@ -20,9 +20,10 @@ const fetchVehicleTypes = async (): Promise<VehicleType[]> => {
   return res.json();
 };
 
-export function useVehicleTypes() {
+export function useVehicleTypes(enabled: boolean = true) {
   return useQuery<VehicleType[]>({
     queryKey: ["vehicleTypes"],
     queryFn: fetchVehicleTypes,
+    enabled,
   });
 }

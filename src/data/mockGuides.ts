@@ -54,6 +54,13 @@ export const mockGuides: Guide[] = [
     },
     created_at: "2025-11-07T06:27:34.395Z",
     updated_at: "2025-11-07T06:27:34.395Z",
+    pricing: [
+      {
+        type: "hourly",
+        amount: 10,
+        currency: "USD",
+      },
+    ],
   },
   {
     id: "119265b9-92bc-4941-b3d4-75d27e57e03d",
@@ -100,6 +107,13 @@ export const mockGuides: Guide[] = [
     },
     created_at: "2025-11-07T06:27:34.395Z",
     updated_at: "2025-11-07T06:27:34.395Z",
+    pricing: [
+      {
+        type: "hourly",
+        amount: 10,
+        currency: "USD",
+      },
+    ],
   },
   {
     id: "219265b9-92bc-4941-b3d4-75d27e57e03d",
@@ -150,5 +164,12 @@ export const mockGuides: Guide[] = [
     },
     created_at: "2025-11-07T06:27:34.395Z",
     updated_at: "2025-11-07T06:27:34.395Z",
+    pricing: [
+      {
+        type: "hourly",
+        amount: 10,
+        currency: "USD",
+      },
+    ],
   },
 ];

@@ -11,12 +11,11 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 import { Suspense } from "react";
-import { FullScreenLoader } from "../../../components/atoms";
+import { FullScreenLoader, Loader } from "../../../components/atoms";
 import type { PaymentRequest as StripePaymentRequest } from "@stripe/stripe-js";
 import { usePaymentIntent } from "../../../data/usePaymentIntent"; // Import the new hook
 import { Session } from "@supabase/supabase-js"; // Import Session type
 import { useBookingStatus } from "../../../data/useBookingStatus"; // Import the new hook
-import { useVehicleTypes } from "../../../data/useVehicleTypes"; // Re-add useVehicleTypes
 import { supabase } from "../../../data/apiConfig"; // Re-add supabase import
 import { useLocationDetails } from "@/data/useLocationDetails";
 import { useBookingDetails } from "@/data/useBookingDetails";
@@ -228,15 +227,14 @@ function StripePaymentWrapper({
 
   if (isCreatingPaymentIntent || !clientSecret) {
     return (
-      <main className="min-h-screen flex flex-col items-center bg-background p-4">
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground mb-2 drop-shadow-sm text-center">
-          RAAHI
-        </h1>
-        <p className="mb-8 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">
-          Setting up payment...
-        </p>
-        <FullScreenLoader />
-      </main>
+      <div className="mt-8 p-6">
+        <div className="flex flex-col items-center justify-center py-8">
+          <Loader />
+          <p className="mt-4 text-sm text-muted-foreground text-center">
+            Setting up payment...
+          </p>
+        </div>
+      </div>
     );
   }
 
@@ -328,16 +326,9 @@ function PaymentPage() {
     error: locationError,
   } = useLocationDetails(booking?.locationId || "");
 
-  const {
-    data: vehicleTypes,
-    isLoading: vehicleTypesLoading,
-    error: vehicleTypesError,
-  } = useVehicleTypes(); // Re-add useVehicleTypes hook
-
   if (
     bookingLoading ||
     locationLoading ||
-    vehicleTypesLoading ||
     userEmail === null
   ) {
     return (
@@ -346,8 +337,8 @@ function PaymentPage() {
       </main>
     );
   }
-  if (bookingError || locationError || vehicleTypesError || !booking || !location) {
-    const error = bookingError || locationError || vehicleTypesError || new Error('Failed to load booking details');
+  if (bookingError || locationError || !booking || !location) {
+    const error = bookingError || locationError || new Error('Failed to load booking details');
     return (
       <div className="min-h-screen flex flex-col items-center bg-background p-4">
         <div className="w-full max-w-lg">
@@ -365,19 +356,13 @@ function PaymentPage() {
     );
   }
 
-  const selectedVehicle = vehicleTypes?.find(
-    (v) => v.id === booking.resourceTypeId
-  );
-
-  if (!selectedVehicle)
-    return <div className="text-red-500">Vehicle not found.</div>;
-
-  if (!selectedVehicle) {
+  // Use booking.resourceType directly (works for both vehicle and guide bookings)
+  if (!booking.resourceType) {
     return (
       <div className="min-h-screen flex flex-col items-center bg-background p-4">
         <div className="w-full max-w-lg">
           <ErrorDisplay 
-            error={new Error('Vehicle not found. Please try again.')}
+            error={new Error('Resource type not found. Please try again.')}
             onRetry={() => {
               window.location.reload();
             }}
@@ -392,11 +377,92 @@ function PaymentPage() {
 
   const groupSizeLabel = `${booking.group.adults} Adult${booking.group.adults !== 1 ? 's' : ''}${booking.group.children > 0 ? `, ${booking.group.children} Child${booking.group.children !== 1 ? 'ren' : ''}` : ''}`;
 
+  // Handle both regular bookings (date/timeSlot) and custom bookings (startDateTime/endDateTime)
+  // Regular bookings have schedule.date and schedule.timeSlot
+  // Custom bookings might have startTime/endTime or schedule.date might be derived
+  const getDateDisplay = () => {
+    // First try schedule.date (for regular bookings)
+    if (booking.schedule?.date) {
+      // Format date consistently (YYYY-MM-DD to readable format)
+      try {
+        const date = new Date(booking.schedule.date);
+        if (!isNaN(date.getTime())) {
+          return date.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          });
+        }
+      } catch {
+        // If parsing fails, return as-is
+        return booking.schedule.date;
+      }
+      return booking.schedule.date;
+    }
+    // Fallback to startTime if date is not available (for custom bookings)
+    if (booking.startTime) {
+      try {
+        const date = new Date(booking.startTime);
+        if (!isNaN(date.getTime())) {
+          return date.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          });
+        }
+      } catch {
+        return booking.startTime;
+      }
+    }
+    return "N/A";
+  };
+
+  const getTimeSlotDisplay = () => {
+    // First try schedule.timeSlot (for regular bookings like morning, afternoon, etc.)
+    if (booking.schedule?.timeSlot) {
+      // Capitalize first letter and format
+      return booking.schedule.timeSlot
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    }
+    // For custom bookings with date range, show the date range in time slot
+    if (booking.startTime && booking.endTime) {
+      try {
+        const startDate = new Date(booking.startTime);
+        const endDate = new Date(booking.endTime);
+        if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+          const startFormatted = startDate.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric' 
+          });
+          const endFormatted = endDate.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric',
+            year: 'numeric'
+          });
+          
+          // If same date, show as "Full Day"
+          if (startDate.toDateString() === endDate.toDateString()) {
+            return "Full Day";
+          }
+          // Otherwise show date range
+          return `${startFormatted} - ${endFormatted}`;
+        }
+      } catch {
+        // If parsing fails, return raw values
+        return `${booking.startTime} - ${booking.endTime}`;
+      }
+    }
+    // Fallback for custom bookings without time slot
+    return "Custom Booking";
+  };
+
   const summary = {
     location: location.name,
-    date: booking.schedule.date,
-    timeSlot: booking.schedule.timeSlot,
-    vehicleType: selectedVehicle.name, // Use vehicle name for display
+    date: getDateDisplay(),
+    timeSlot: getTimeSlotDisplay(),
+    vehicleType: booking.resourceType.name, // Use resource type name (works for both vehicle and guide bookings)
     groupType: groupSizeLabel,
     pickupLocation:
       booking.pickupLocation.address === "Pickup from park gate"

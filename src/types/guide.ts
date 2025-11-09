@@ -35,6 +35,12 @@ export interface GuideResourceType {
   imageUrl?: string | null;
 }
 
+export interface GuidePricing {
+  type: "hourly" | "daily";
+  amount: number;
+  currency: string;
+}
+
 export interface Guide {
   id: string;
   speaking_languages: string[];
@@ -55,4 +61,6 @@ export interface Guide {
   images: string[];
   created_at: string;
   updated_at: string;
+  pricing?: GuidePricing[]; // Legacy field
+  rates?: GuidePricing[]; // New field from API
 }
