@@ -1,62 +1,72 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { GuideCard } from "@/components/molecules/GuideCard";
-import { mockGuides } from "@/data/mockGuides";
+import { useGuides } from "@/data/useGuides";
+import Loader from "@/components/atoms/Loader";
+import { ErrorDisplay } from "@/components/atoms/ErrorDisplay";
 import type { Guide } from "@/types/guide";
 
 const GuidesPage = () => {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [languageFilter, setLanguageFilter] = useState("all");
   const [resourceFilter, setResourceFilter] = useState("all");
 
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Build API params
+  const apiParams = useMemo(() => {
+    const params: {
+      resourceType?: string;
+      speakingLanguage?: string;
+      search?: string;
+    } = {};
+
+    if (resourceFilter && resourceFilter !== "all") {
+      params.resourceType = resourceFilter;
+    }
+
+    if (languageFilter && languageFilter !== "all") {
+      params.speakingLanguage = languageFilter;
+    }
+
+    if (debouncedSearch && debouncedSearch.trim()) {
+      params.search = debouncedSearch.trim();
+    }
+
+    return params;
+  }, [resourceFilter, languageFilter, debouncedSearch]);
+
+  // Fetch guides from API
+  const { data: guides = [], isLoading, error, refetch } = useGuides(apiParams);
+
+  // Extract available languages from guides
   const languages = useMemo(() => {
     const values = new Set<string>();
-    mockGuides.forEach((guide) =>
+    guides.forEach((guide) =>
       guide.speaking_languages.forEach((language) => values.add(language))
     );
-    return Array.from(values);
-  }, []);
+    return Array.from(values).sort();
+  }, [guides]);
 
-  const resourceTypes = useMemo(() => {
-    const values = new Set<string>();
-    mockGuides.forEach((guide) => values.add(guide.resourceType.name));
-    return Array.from(values);
-  }, []);
-
-  const filteredGuides = useMemo(() => {
-    const search = searchTerm.trim().toLowerCase();
-
-    return mockGuides.filter((guide) => {
-      const matchesSearch =
-        !search ||
-        guide.bio.firstName.toLowerCase().includes(search) ||
-        guide.bio.lastName.toLowerCase().includes(search) ||
-        guide.bio.preferredName?.toLowerCase().includes(search) ||
-        guide.resourceType.name.toLowerCase().includes(search) ||
-        guide.address.city.toLowerCase().includes(search) ||
-        guide.speaking_languages.some((language) =>
-          language.toLowerCase().includes(search)
-        );
-
-      const matchesLanguage =
-        languageFilter === "all" ||
-        guide.speaking_languages.includes(languageFilter);
-
-      const matchesResource =
-        resourceFilter === "all" ||
-        guide.resourceType.name === resourceFilter ||
-        guide.resourceType.id === resourceFilter;
-
-      return (
-        matchesSearch && matchesLanguage && matchesResource
-      );
-    });
-  }, [searchTerm, languageFilter, resourceFilter]);
+  // Category options with display labels
+  const categoryOptions = [
+    { value: "naturalist", label: "Naturalist" },
+    { value: "heritage_specialist", label: "Heritage Specialist" },
+    { value: "bird_watcher", label: "Bird Watcher" },
+  ];
 
   const handleBookGuide = (guide: Guide) => {
     const params = new URLSearchParams();
@@ -128,42 +138,52 @@ const GuidesPage = () => {
           </label>
 
           <label className="flex flex-col gap-1 text-sm font-medium text-muted-foreground">
-            Resource type
+            Category
             <Select
               value={resourceFilter}
               onChange={(event) => setResourceFilter(event.target.value)}
             >
-              <option value="all">All types</option>
-              {resourceTypes.map((resource) => (
-                <option key={resource} value={resource}>
-                  {resource}
+              <option value="all">All categories</option>
+              {categoryOptions.map((category) => (
+                <option key={category.value} value={category.value}>
+                  {category.label}
                 </option>
               ))}
             </Select>
           </label>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-          {filteredGuides.length > 0 ? (
-            filteredGuides.map((guide) => (
-              <GuideCard
-                key={guide.id}
-                guide={guide}
-                onBook={handleBookGuide}
-              />
-            ))
-          ) : (
-            <div className="col-span-full flex flex-col items-center rounded-3xl border border-dashed border-border/60 bg-card/40 p-10 text-center">
-              <p className="text-lg font-semibold text-foreground">
-                No guides match your criteria
-              </p>
-              <p className="mt-2 max-w-md text-sm text-muted-foreground">
-                Try adjusting your filters or search term to explore more verified
-                storytellers from our RAAHI community.
-              </p>
-            </div>
-          )}
-        </div>
+        {isLoading ? (
+          <div className="flex justify-center items-center py-20">
+            <Loader />
+          </div>
+        ) : error ? (
+          <div className="py-4">
+            <ErrorDisplay error={error} onRetry={() => refetch()} />
+          </div>
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+            {guides.length > 0 ? (
+              guides.map((guide) => (
+                <GuideCard
+                  key={guide.id}
+                  guide={guide}
+                  onBook={handleBookGuide}
+                />
+              ))
+            ) : (
+              <div className="col-span-full flex flex-col items-center rounded-3xl border border-dashed border-border/60 bg-card/40 p-10 text-center">
+                <p className="text-lg font-semibold text-foreground">
+                  No guides match your criteria
+                </p>
+                <p className="mt-2 max-w-md text-sm text-muted-foreground">
+                  Try adjusting your filters or search term to explore more verified
+                  storytellers from our RAAHI community.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </main>
   );

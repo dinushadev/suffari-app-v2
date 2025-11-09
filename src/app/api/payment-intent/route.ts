@@ -20,8 +20,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Create payment intent with Stripe
+    // Stripe expects amounts in the smallest currency unit (cents for USD)
+    // Convert dollars to cents by multiplying by 100
+    const amountInCents = Math.round(amount * 100);
+    
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount), // Ensure amount is an integer
+      amount: amountInCents, // Amount in cents
       currency: typeof currency === 'string' ? currency : 'usd',
       automatic_payment_methods: { enabled: true },
       metadata: {

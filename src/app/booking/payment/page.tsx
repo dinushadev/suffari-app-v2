@@ -55,12 +55,16 @@ function StripePaymentForm({
 
   useEffect(() => {
     if (stripe) {
+      // Stripe expects amounts in the smallest currency unit (cents for USD)
+      // Convert dollars to cents by multiplying by 100
+      const amountInCents = Math.round(amount * 100);
+      
       const pr = stripe.paymentRequest({
         country: "US",
         currency: "usd",
         total: {
           label: "RAAHI Booking",
-          amount: amount,
+          amount: amountInCents, // Amount in cents
         },
         requestPayerName: true,
         requestPayerEmail: true,

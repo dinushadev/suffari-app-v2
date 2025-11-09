@@ -1,11 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 import { API_BASE_URL } from "./apiConfig";
+import { normalizeLanguages } from "@/lib/utils";
 import type { Guide } from "@/types/guide";
 
 const fetchGuideDetails = async (id: string): Promise<Guide> => {
   const res = await fetch(`${API_BASE_URL}/resources/guide/${id}`);
   if (!res.ok) throw new Error("Failed to fetch guide details");
-  return res.json();
+  const guide = await res.json();
+  
+  // Normalize languages from CSV to array
+  return {
+    ...guide,
+    speaking_languages: normalizeLanguages(guide.speaking_languages),
+  };
 };
 
 export function useGuideDetails(guideId: string) {
@@ -15,4 +22,5 @@ export function useGuideDetails(guideId: string) {
     enabled: !!guideId, // Only run the query if guideId is available
   });
 }
+
 

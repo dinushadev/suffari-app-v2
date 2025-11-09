@@ -1,4 +1,3 @@
-import Image from "next/image";
 import {
   BriefcaseIcon,
   EnvelopeIcon,
@@ -9,7 +8,7 @@ import {
 
 import { Guide } from "@/types/guide";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { ButtonV2 } from "@/components/atoms";
+import { ButtonV2, CustomImage } from "@/components/atoms";
 
 interface GuideCardProps {
   guide: Guide;
@@ -33,16 +32,51 @@ export const GuideCard = ({ guide, onBook }: GuideCardProps) => {
     return Math.max(currentYear - issueYear, 0);
   })();
 
+  // Validate and get image source - use placeholder for invalid URLs
+  const getImageSrc = () => {
+    if (!guide.profileImage) {
+      return "/images/placeholder.svg";
+    }
+    
+    const imageUrl = guide.profileImage.trim();
+    
+    // Check for common invalid/placeholder URLs
+    const invalidPatterns = [
+      "example.com",
+      "placeholder.com",
+      "placehold.co",
+      "via.placeholder.com",
+      "dummyimage.com",
+    ];
+    
+    // If it's a relative path, use it directly
+    if (imageUrl.startsWith("/")) {
+      return imageUrl;
+    }
+    
+    try {
+      const url = new URL(imageUrl);
+      // Check if hostname is invalid or matches placeholder patterns
+      if (
+        !url.hostname ||
+        invalidPatterns.some((pattern) => url.hostname.includes(pattern))
+      ) {
+        return "/images/placeholder.svg";
+      }
+      return imageUrl;
+    } catch {
+      // If URL parsing fails, use placeholder
+      return "/images/placeholder.svg";
+    }
+  };
+
   return (
     <Card className="flex h-full flex-col rounded-3xl border border-border/40 bg-card/95 text-card-foreground shadow-lg shadow-primary/5 transition hover:-translate-y-1 hover:shadow-xl">
       <CardContent className="flex flex-1 flex-col gap-6 p-5 sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <div className="group relative h-28 w-28 flex-shrink-0 overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br from-accent/40 to-secondary/30">
-            <Image
-              src={
-                guide.profileImage ||
-                "https://placehold.co/200x200/6D7B8D/FFFFFF?text=Guide"
-              }
+            <CustomImage
+              src={getImageSrc()}
               alt={`${guide.bio.firstName} ${guide.bio.lastName}`}
               fill
               sizes="112px"
