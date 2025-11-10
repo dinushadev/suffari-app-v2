@@ -4,7 +4,6 @@ import { Button } from "../../../../components/atoms";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   CheckCircleIcon,
-  ShieldCheckIcon,
   PhoneIcon,
   CalendarIcon,
   MapPinIcon,
@@ -51,13 +50,52 @@ function PaymentSuccessPageContent() {
   const fromGate = pickupLocation && pickupLocation.address === "Park Gate"; // Adjust based on actual pickupLocation structure
   const pickup = pickupLocation || {};
 
+  // Determine the resource label based on category
+  const resourceLabel = bookingDetails.resourceType.category === 'safari_vehicles' || !bookingDetails.resourceType.category 
+    ? 'Vehicle' 
+    : 'Guide';
+
   // Dummy data for contact info (these are not passed via URL)
   const contactWithin = "20-30 minutes"; // Placeholder - will come from backend later
   const email = bookingDetails.customer.email || "";
   const location = bookingDetails.location.name || "";
 
-  // Helper to format date and time slot
-  const formatDateTime = (dateStr: string | undefined, timeSlotStr: string | undefined) => {
+  // Get start and end dates for date range display
+  const startDate = bookingDetails.startTime || schedule.startDateTime;
+  const endDate = bookingDetails.endTime || schedule.endDateTime;
+
+  // Helper to format date and time slot, with support for date ranges
+  const formatDateTime = (dateStr: string | undefined, timeSlotStr: string | undefined, startDateStr?: string, endDateStr?: string) => {
+    // If we have start and end dates, format as date range
+    if (startDateStr && endDateStr) {
+      try {
+        const start = new Date(startDateStr);
+        const end = new Date(endDateStr);
+        if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+          const startFormatted = start.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          });
+          const endFormatted = end.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          });
+          
+          // If same date, show single date with time slot
+          if (start.toDateString() === end.toDateString()) {
+            return `${startFormatted}${timeSlotStr ? ` • ${timeSlotStr}` : ''}`;
+          }
+          // Otherwise show date range
+          return `${startFormatted} - ${endFormatted}`;
+        }
+      } catch (e) {
+        console.error("Error formatting date range:", e);
+      }
+    }
+    
+    // Fallback to original date and timeSlot display
     if (!dateStr || !timeSlotStr) return "N/A";
     try {
       const d = new Date(dateStr);
@@ -68,7 +106,7 @@ function PaymentSuccessPageContent() {
     }
   };
 
-  const dateTime = formatDateTime(date, timeSlot);
+  const dateTime = formatDateTime(date, timeSlot, startDate, endDate);
 
   // Calculate estimated contact time: 30 minutes from now
   function getEstimatedContactTime() {
@@ -134,7 +172,7 @@ function PaymentSuccessPageContent() {
           </div>
 
           {/* Payment Protection */}
-          <div className="w-full bg-yellow-50 rounded-xl p-4 flex flex-col gap-1 border border-yellow-100">
+          {/* <div className="w-full bg-yellow-50 rounded-xl p-4 flex flex-col gap-1 border border-yellow-100">
             <div className="flex items-center gap-2 text-yellow-700 font-semibold">
               <ShieldCheckIcon className="h-5 w-5" /> Payment Protection
             </div>
@@ -143,7 +181,7 @@ function PaymentSuccessPageContent() {
               host. This ensures you&apos;re completely satisfied with your
               safari arrangement before any payment is processed.
             </div>
-          </div>
+          </div> */}
 
           {/* Safari Details */}
           <div className="w-full bg-white rounded-xl p-4 flex flex-col gap-3 border border-gray-100">
@@ -183,7 +221,7 @@ function PaymentSuccessPageContent() {
                   />
                 </svg>
               </span>
-              <span className="font-medium">Vehicle:</span> <span className="font-light">{vehicle}</span>
+              <span className="font-medium">{resourceLabel}:</span> <span className="font-light">{vehicle}</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-700">
               <span className="inline-block">

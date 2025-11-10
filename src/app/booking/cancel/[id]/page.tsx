@@ -61,16 +61,39 @@ const CancelBookingPage = () => {
   const bookingTimezone = typedBooking.schedule?.timezone || 'Asia/Colombo';
   
   // Format dates in the booking's timezone
-  const formattedStartTime = formatInTimezone(
-    typedBooking.startTime,
-    bookingTimezone,
-    'EEE, MMM d, yyyy h:mm a'
-  );
-  const formattedEndTime = formatInTimezone(
-    typedBooking.endTime,
-    bookingTimezone,
-    'h:mm a'
-  );
+  const startDate = new Date(typedBooking.startTime);
+  const endDate = new Date(typedBooking.endTime);
+  const isSameDate = startDate.toDateString() === endDate.toDateString();
+  
+  // Format date/time display - show date range if different dates
+  let formattedDateTime: string;
+  if (isSameDate) {
+    // Same date: show full start time and end time only
+    const formattedStartTime = formatInTimezone(
+      typedBooking.startTime,
+      bookingTimezone,
+      'EEE, MMM d, yyyy h:mm a'
+    );
+    const formattedEndTime = formatInTimezone(
+      typedBooking.endTime,
+      bookingTimezone,
+      'h:mm a'
+    );
+    formattedDateTime = `${formattedStartTime} - ${formattedEndTime}`;
+  } else {
+    // Different dates: show date range
+    const formattedStartDate = formatInTimezone(
+      typedBooking.startTime,
+      bookingTimezone,
+      'EEE, MMM d, yyyy'
+    );
+    const formattedEndDate = formatInTimezone(
+      typedBooking.endTime,
+      bookingTimezone,
+      'EEE, MMM d, yyyy'
+    );
+    formattedDateTime = `${formattedStartDate} - ${formattedEndDate}`;
+  }
   
   // Get timezone abbreviation for display
   const timezoneAbbr = getTimezoneAbbreviation(bookingTimezone, new Date(typedBooking.startTime));
@@ -118,7 +141,7 @@ const CancelBookingPage = () => {
             <CardTitle className="text-xl font-bold">{typedBooking.resourceType?.name || 'N/A'} at {typedBooking.location?.name || 'N/A'}</CardTitle>
             <CardDescription className="text-sm text-gray-600">
               <p className="mt-1"><strong>Status:</strong> <span className="capitalize">{typedBooking.status}</span></p>
-              <p className="mt-1"><strong>Time:</strong> {formattedStartTime} - {formattedEndTime} {timezoneAbbr}</p>
+              <p className="mt-1"><strong>Date & Time:</strong> {formattedDateTime} {timezoneAbbr}</p>
             </CardDescription>
           </CardHeader>
           <CardContent className="text-base">

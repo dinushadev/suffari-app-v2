@@ -71,16 +71,39 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
   const bookingTimezone = booking.schedule?.timezone || 'Asia/Colombo';
   
   // Format dates in the booking's timezone
-  const formattedStartTime = formatInTimezone(
-    booking.startTime,
-    bookingTimezone,
-    'EEE, MMM d, yyyy h:mm a'
-  );
-  const formattedEndTime = formatInTimezone(
-    booking.endTime,
-    bookingTimezone,
-    'h:mm a'
-  );
+  const startDate = new Date(booking.startTime);
+  const endDate = new Date(booking.endTime);
+  const isSameDate = startDate.toDateString() === endDate.toDateString();
+  
+  // Format date/time display - show date range if different dates
+  let formattedDateTime: string;
+  if (isSameDate) {
+    // Same date: show full start time and end time only
+    const formattedStartTime = formatInTimezone(
+      booking.startTime,
+      bookingTimezone,
+      'EEE, MMM d, yyyy h:mm a'
+    );
+    const formattedEndTime = formatInTimezone(
+      booking.endTime,
+      bookingTimezone,
+      'h:mm a'
+    );
+    formattedDateTime = `${formattedStartTime} - ${formattedEndTime}`;
+  } else {
+    // Different dates: show date range
+    const formattedStartDate = formatInTimezone(
+      booking.startTime,
+      bookingTimezone,
+      'EEE, MMM d, yyyy'
+    );
+    const formattedEndDate = formatInTimezone(
+      booking.endTime,
+      bookingTimezone,
+      'EEE, MMM d, yyyy'
+    );
+    formattedDateTime = `${formattedStartDate} - ${formattedEndDate}`;
+  }
   
   // Get timezone abbreviation for display
   const timezoneAbbr = getTimezoneAbbreviation(bookingTimezone, new Date(booking.startTime));
@@ -91,7 +114,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
         <CardTitle className="text-xl font-bold">{booking.resourceType?.name || 'N/A'} at {booking.location?.name || 'N/A'}</CardTitle>
         <CardDescription className="text-sm text-gray-600">
           <p className="mt-1"><strong>Status:</strong> <span className={statusColorClass}>{booking.status}</span></p>
-          <p className="mt-1"><strong>Time:</strong> {formattedStartTime} - {formattedEndTime} {timezoneAbbr}</p>
+          <p className="mt-1"><strong>Date & Time:</strong> {formattedDateTime} {timezoneAbbr}</p>
         </CardDescription>
       </CardHeader>
       <CardContent className="text-base">

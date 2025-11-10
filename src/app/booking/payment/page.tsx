@@ -462,6 +462,10 @@ function PaymentPage() {
     return "Custom Booking";
   };
 
+  // Get start and end dates for date range display
+  const startDate = booking.startTime || booking.schedule?.startDateTime || undefined;
+  const endDate = booking.endTime || booking.schedule?.endDateTime || undefined;
+
   const summary = {
     location: location.name,
     date: getDateDisplay(),
@@ -494,6 +498,9 @@ function PaymentPage() {
             groupType={summary.groupType}
             pickupLocation={summary.pickupLocation}
             paymentAmount={parseFloat(booking.paymentAmount)}
+            resourceCategory={booking.resourceType.category}
+            startDate={startDate}
+            endDate={endDate}
           />
           {process.env.NEXT_PUBLIC_ENABLE_PAYMENTS === "true" ? (
             <StripePaymentWrapper
