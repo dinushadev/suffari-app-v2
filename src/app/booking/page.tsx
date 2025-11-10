@@ -22,6 +22,7 @@ import type { BookingResponse } from "../../data/useCreateBooking";
 import { useBookingDetails } from "../../data/useBookingDetails";
 import { ButtonV2 } from "../../components/atoms";
 import { FullScreenLoader } from "../../components/atoms";
+import { getTimezoneForLocation, convertLocalToUTC } from "../../lib/timezoneUtils";
 
 const timeSlotOptions = [
   {
@@ -227,6 +228,12 @@ function BookingPageContent() {
       ? (selectedVehicle.price || 0) * (adults + children)
       : 0;
 
+    // Get timezone for the location
+    const pickupCountry = fromGate
+      ? location.pickupLocations?.[0]?.country || null
+      : pickup.country || null;
+    const locationTimezone = getTimezoneForLocation(locationId || "", pickupCountry || undefined);
+
     // For jeep/safari vehicle bookings: convert date + timeSlot to startDateTime
     // Map timeSlot to a default time (morning: 09:00, afternoon: 12:00, night: 18:00, full-day: 09:00)
     const getTimeForSlot = (slot: string): string => {
@@ -243,7 +250,10 @@ function BookingPageContent() {
           return "09:00:00";
       }
     };
-    const startDateTime = date ? `${date}T${getTimeForSlot(timeSlot)}Z` : "";
+    
+    // Convert local time in location's timezone to UTC
+    const timeForSlot = getTimeForSlot(timeSlot);
+    const startDateTime = date ? convertLocalToUTC(date, timeForSlot, locationTimezone) : "";
 
     // Prepare booking data in required structure, using null for missing values
     const bookingData: BookingPayload = {
@@ -260,6 +270,7 @@ function BookingPageContent() {
       schedule: {
         startDateTime,
         timeSlot: timeSlot || "",
+        timezone: locationTimezone,
       },
       group: {
         adults: adults,
@@ -334,6 +345,12 @@ function BookingPageContent() {
         ? (selectedVehicle.price || 0) * (adults + children)
         : 0;
 
+      // Get timezone for the location
+      const pickupCountry = fromGate
+        ? location.pickupLocations?.[0]?.country || null
+        : pickup.country || null;
+      const locationTimezone = getTimezoneForLocation(locationId || "", pickupCountry || undefined);
+
       // For jeep/safari vehicle bookings: convert date + timeSlot to startDateTime
       const getTimeForSlot = (slot: string): string => {
         switch (slot) {
@@ -349,7 +366,10 @@ function BookingPageContent() {
             return "09:00:00";
         }
       };
-      const startDateTime = date ? `${date}T${getTimeForSlot(timeSlot)}Z` : "";
+      
+      // Convert local time in location's timezone to UTC
+      const timeForSlot = getTimeForSlot(timeSlot);
+      const startDateTime = date ? convertLocalToUTC(date, timeForSlot, locationTimezone) : "";
 
       // Prepare booking data in required structure
       const bookingData: BookingPayload = {
@@ -366,6 +386,7 @@ function BookingPageContent() {
         schedule: {
           startDateTime,
           timeSlot: timeSlot,
+          timezone: locationTimezone,
         },
         group: {
           adults: adults,

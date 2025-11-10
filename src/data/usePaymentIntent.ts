@@ -12,11 +12,9 @@ interface PaymentIntentRequestParams {
 }
 
 const fetchPaymentIntent = async (params: PaymentIntentRequestParams): Promise<PaymentIntentResponse> => {
-  // Use Next.js API route directly (not external API)
-  const data = await apiClient<PaymentIntentResponse>("/api/payment-intent", {
+  const data = await apiClient<PaymentIntentResponse>("/payments/intent", {
     method: "POST",
     body: { amount: params.amount, currency: 'usd', bookingId: params.bookingId, resourceTypeId: params.resourceTypeId },
-    baseUrl: typeof window !== 'undefined' ? window.location.origin : '', // Use current origin for Next.js API routes
   });
 
   if (!data.clientSecret) {

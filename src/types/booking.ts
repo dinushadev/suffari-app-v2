@@ -9,7 +9,13 @@ export interface Booking {
   resourceOwnerId: string | null;
   status: 'initiated' | 'confirmed' | 'canceled' | 'upcoming' | 'past'; // Broadened to include all possible statuses
   paymentAmount: string;
-  schedule: { date: string; timeSlot: string };
+  schedule: { 
+    date?: string; 
+    timeSlot?: string;
+    startDateTime?: string;
+    endDateTime?: string;
+    timezone?: string; // IANA timezone identifier (e.g., 'Asia/Colombo')
+  };
   pickupLocation: { placeId: string; coordinate: { lat: number; lng: number }; address: string; country: string };
   group: { adults: number; children: number; size: number };
   createdAt: string;

@@ -32,6 +32,19 @@ export const GuideCard = ({ guide, onBook }: GuideCardProps) => {
     return Math.max(currentYear - issueYear, 0);
   })();
 
+  // Format currency amount
+  const formatCurrency = (amount: number, currency: string) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currency || "USD",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  };
+
+  // Get rates (prefer rates over pricing for backward compatibility)
+  const rates = guide.rates || guide.pricing || [];
+
   // Validate and get image source - use placeholder for invalid URLs
   const getImageSrc = () => {
     if (!guide.profileImage) {
@@ -121,10 +134,29 @@ export const GuideCard = ({ guide, onBook }: GuideCardProps) => {
                   </div>
                 )}
               </div>
-              <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                <MapPinIcon className="h-4 w-4 text-primary" />
-                {guide.address.city}, {guide.address.state}
-              </p>
+              <div className="flex flex-wrap items-center gap-4">
+                <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <MapPinIcon className="h-4 w-4 text-primary" />
+                  {guide.address.city}, {guide.address.state}
+                </p>
+                {rates.length > 0 && (
+                  <div className="flex items-center gap-3">
+                    {rates.map((rate, index) => (
+                      <div
+                        key={`${guide.id}-rate-${index}`}
+                        className="flex items-baseline gap-1.5"
+                      >
+                        <span className="text-xs text-muted-foreground">
+                          {rate.type === "hourly" ? "Hour" : rate.type === "daily" ? "Day" : rate.type}
+                        </span>
+                        <span className="text-base font-semibold text-foreground">
+                          {formatCurrency(rate.amount, rate.currency)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

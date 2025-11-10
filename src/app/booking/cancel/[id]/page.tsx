@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { ButtonV2 } from "@/components/atoms";
 import Loader from "@/components/atoms/Loader";
 import { Booking } from "@/types/booking";
+import { formatInTimezone, getTimezoneAbbreviation } from "@/lib/timezoneUtils";
 
 const CancelBookingPage = () => {
   const router = useRouter();
@@ -56,8 +57,23 @@ const CancelBookingPage = () => {
 
   const typedBooking = booking as Booking;
 
-  const formattedStartTime = new Date(typedBooking.startTime).toLocaleString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-  const formattedEndTime = new Date(typedBooking.endTime).toLocaleString(undefined, { hour: '2-digit', minute: '2-digit' });
+  // Get timezone from booking schedule or default to Asia/Colombo
+  const bookingTimezone = typedBooking.schedule?.timezone || 'Asia/Colombo';
+  
+  // Format dates in the booking's timezone
+  const formattedStartTime = formatInTimezone(
+    typedBooking.startTime,
+    bookingTimezone,
+    'EEE, MMM d, yyyy h:mm a'
+  );
+  const formattedEndTime = formatInTimezone(
+    typedBooking.endTime,
+    bookingTimezone,
+    'h:mm a'
+  );
+  
+  // Get timezone abbreviation for display
+  const timezoneAbbr = getTimezoneAbbreviation(bookingTimezone, new Date(typedBooking.startTime));
 
   const handleConfirmCancellation = async () => {
     if (!reason.trim()) {
@@ -102,7 +118,7 @@ const CancelBookingPage = () => {
             <CardTitle className="text-xl font-bold">{typedBooking.resourceType?.name || 'N/A'} at {typedBooking.location?.name || 'N/A'}</CardTitle>
             <CardDescription className="text-sm text-gray-600">
               <p className="mt-1"><strong>Status:</strong> <span className="capitalize">{typedBooking.status}</span></p>
-              <p className="mt-1"><strong>Time:</strong> {formattedStartTime} - {formattedEndTime}</p>
+              <p className="mt-1"><strong>Time:</strong> {formattedStartTime} - {formattedEndTime} {timezoneAbbr}</p>
             </CardDescription>
           </CardHeader>
           <CardContent className="text-base">

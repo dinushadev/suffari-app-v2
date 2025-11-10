@@ -28,11 +28,13 @@ export interface BookingPayload {
         // For guide bookings
         startDateTime: string;
         endDateTime: string;
+        timezone?: string; // IANA timezone identifier (e.g., 'Asia/Colombo')
       }
     | {
         // For jeep/safari vehicle bookings
         startDateTime: string;
         timeSlot: string;
+        timezone?: string; // IANA timezone identifier (e.g., 'Asia/Colombo')
       };
   group: {
     adults: number;

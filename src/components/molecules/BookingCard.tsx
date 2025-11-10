@@ -3,6 +3,7 @@ import React from 'react';
 import { Booking } from '@/types/booking';
 import { ButtonV2 } from "@/components/atoms";
 import { useRouter } from 'next/navigation';
+import { formatInTimezone, getTimezoneAbbreviation } from '@/lib/timezoneUtils';
 
 interface BookingCardProps {
   booking: Booking;
@@ -66,8 +67,23 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
       break;
   }
 
-  const formattedStartTime = new Date(booking.startTime).toLocaleString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-  const formattedEndTime = new Date(booking.endTime).toLocaleString(undefined, { hour: '2-digit', minute: '2-digit' });
+  // Get timezone from booking schedule or default to Asia/Colombo
+  const bookingTimezone = booking.schedule?.timezone || 'Asia/Colombo';
+  
+  // Format dates in the booking's timezone
+  const formattedStartTime = formatInTimezone(
+    booking.startTime,
+    bookingTimezone,
+    'EEE, MMM d, yyyy h:mm a'
+  );
+  const formattedEndTime = formatInTimezone(
+    booking.endTime,
+    bookingTimezone,
+    'h:mm a'
+  );
+  
+  // Get timezone abbreviation for display
+  const timezoneAbbr = getTimezoneAbbreviation(bookingTimezone, new Date(booking.startTime));
 
   return (
     <Card className={cardClasses}>
@@ -75,7 +91,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
         <CardTitle className="text-xl font-bold">{booking.resourceType?.name || 'N/A'} at {booking.location?.name || 'N/A'}</CardTitle>
         <CardDescription className="text-sm text-gray-600">
           <p className="mt-1"><strong>Status:</strong> <span className={statusColorClass}>{booking.status}</span></p>
-          <p className="mt-1"><strong>Time:</strong> {formattedStartTime} - {formattedEndTime}</p>
+          <p className="mt-1"><strong>Time:</strong> {formattedStartTime} - {formattedEndTime} {timezoneAbbr}</p>
         </CardDescription>
       </CardHeader>
       <CardContent className="text-base">

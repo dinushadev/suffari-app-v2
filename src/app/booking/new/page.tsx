@@ -24,6 +24,7 @@ import {
 import type { PickupLocation } from "@/components/molecules/PickupLocationInput";
 import { supabase } from "@/data/apiConfig";
 import type { GuidePricing } from "@/types/guide";
+import { getTimezoneForLocation, convertLocalToUTC } from "@/lib/timezoneUtils";
 
 const libraries: ("places")[] = ["places"];
 
@@ -263,7 +264,29 @@ function NewBookingPageContent() {
   const guideName = guideData?.bio?.preferredName || 
     `${guideData?.bio?.firstName || ""} ${guideData?.bio?.lastName || ""}`.trim() || 
     "Guide";
-  const guideResourceTypeId = guideData?.resourceTypeId || guideData?.resourceType?.id || "";
+  
+  // Extract resourceTypeId - should be normalized by useGuideDetails hook
+  // But keep fallback logic in case API structure is different
+  const guideResourceTypeId = 
+    guideData?.resourceTypeId ||           // Primary: normalized from hook
+    guideData?.resourceType?.id ||          // Fallback: nested in resourceType object
+    "";
+  
+  // Log guide data structure for debugging
+  useEffect(() => {
+    if (guideData) {
+      console.log("Guide Data Structure:", {
+        resourceTypeId: guideData.resourceTypeId,
+        resourceType: guideData.resourceType,
+        resourceType_id: guideData.resourceType?.id,
+        extractedResourceTypeId: guideResourceTypeId,
+      });
+      if (!guideResourceTypeId) {
+        console.warn("⚠️ resourceTypeId is missing from guide data! Full guide data:", guideData);
+      }
+    }
+  }, [guideData, guideResourceTypeId]);
+  
   const guideResourceLabel = guideData?.resourceType?.name || guideData?.resourceType?.description || "";
   // Use 'rates' from API, fallback to 'pricing' for backward compatibility
   const guidePricing: GuidePricing[] | null = guideData?.rates || guideData?.pricing || null;
@@ -345,8 +368,52 @@ function NewBookingPageContent() {
     isNameValid &&
     isPhoneValid;
 
+  // Debug: Log form validation state
+  useEffect(() => {
+    console.log("Form Validation Debug:", {
+      locationId: !!locationId,
+      guideIdParam: !!guideIdParam,
+      guideResourceTypeId: !!guideResourceTypeId,
+      guideResourceTypeIdValue: guideResourceTypeId,
+      isDateRangeValid,
+      isPickupValid,
+      totalGuests,
+      isNameValid,
+      isPhoneValid,
+      isFormValid,
+      startDate,
+      endDate,
+      pickupMode,
+      selectedAirport: !!selectedAirport,
+      customPickup: customPickup,
+      name,
+      phoneNumber,
+    });
+  }, [
+    locationId,
+    guideIdParam,
+    guideResourceTypeId,
+    isDateRangeValid,
+    isPickupValid,
+    totalGuests,
+    isNameValid,
+    isPhoneValid,
+    isFormValid,
+    startDate,
+    endDate,
+    pickupMode,
+    selectedAirport,
+    customPickup,
+    name,
+    phoneNumber,
+  ]);
+
   const handleCreateBooking = async () => {
-    if (!isFormValid) return;
+    console.log("Submit button clicked. Form valid:", isFormValid);
+    if (!isFormValid) {
+      console.log("Form validation failed. Cannot submit.");
+      return;
+    }
     setBookingError(null);
     setIsButtonLoading(true);
     try {
@@ -388,9 +455,45 @@ function NewBookingPageContent() {
       };
 
       // For guide bookings: convert dates to ISO datetime strings
-      // Default start time: 09:00:00, default end time: 17:00:00
-      const startDateTime = startDate ? `${startDate}T09:00:00Z` : "";
-      const endDateTime = endDate ? `${endDate}T17:00:00Z` : "";
+      // Both dates use 00:00:00 (midnight) for date-only selections
+      // Use consistent timezone handling - ensure both dates use the same time format
+      if (!startDate || !endDate) {
+        setBookingError("Please select both start and end dates.");
+        setIsButtonLoading(false);
+        return;
+      }
+
+      // Validate that end date is not before start date
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (end < start) {
+        setBookingError("End date must be on or after the start date.");
+        setIsButtonLoading(false);
+        return;
+      }
+
+      // Get timezone for the location
+      const locationTimezone = getTimezoneForLocation(
+        locationId,
+        pickupForPayload.country || undefined
+      );
+
+      // Convert local times in the location's timezone to UTC
+      // Start date: beginning of day (00:00:00) - represents start of booking
+      // End date: end of day (23:59:59.999) - represents end of booking
+      const startDateTime = convertLocalToUTC(startDate, "00:00:00", locationTimezone);
+      const endDateTime = convertLocalToUTC(endDate, "23:59:59.999", locationTimezone);
+
+      // Debug logging
+      console.log("Booking date/time values:", {
+        startDate,
+        endDate,
+        locationTimezone,
+        startDateTime,
+        endDateTime,
+        startDateParsed: new Date(startDateTime).toISOString(),
+        endDateParsed: new Date(endDateTime).toISOString(),
+      });
 
       const bookingPayload: BookingPayload = {
         customer: {
@@ -406,6 +509,7 @@ function NewBookingPageContent() {
         schedule: {
           startDateTime,
           endDateTime,
+          timezone: locationTimezone,
         },
         group: {
           adults,
@@ -751,12 +855,49 @@ function NewBookingPageContent() {
               />
             )}
 
+            {/* Debug: Show validation status */}
+            {process.env.NODE_ENV === "development" && (
+              <div className="rounded-lg border border-yellow-400 bg-yellow-50 p-4 text-xs text-yellow-800">
+                <p className="font-semibold mb-2">Form Validation Status:</p>
+                <ul className="space-y-1">
+                  <li className={locationId ? "text-green-600" : "text-red-600"}>
+                    Location ID: {locationId ? "✓" : "✗"}
+                  </li>
+                  <li className={guideIdParam ? "text-green-600" : "text-red-600"}>
+                    Guide ID: {guideIdParam ? "✓" : "✗"}
+                  </li>
+                  <li className={guideResourceTypeId ? "text-green-600" : "text-red-600"}>
+                    Guide Resource Type ID: {guideResourceTypeId ? "✓" : "✗"} ({guideResourceTypeId || "empty"})
+                  </li>
+                  <li className={isDateRangeValid ? "text-green-600" : "text-red-600"}>
+                    Date Range: {isDateRangeValid ? "✓" : "✗"}
+                  </li>
+                  <li className={isPickupValid ? "text-green-600" : "text-red-600"}>
+                    Pickup Location: {isPickupValid ? "✓" : "✗"}
+                  </li>
+                  <li className={totalGuests > 0 ? "text-green-600" : "text-red-600"}>
+                    Group Size: {totalGuests > 0 ? "✓" : "✗"} ({totalGuests} guests)
+                  </li>
+                  <li className={isNameValid ? "text-green-600" : "text-red-600"}>
+                    Name Valid: {isNameValid ? "✓" : "✗"} ({name || "empty"})
+                  </li>
+                  <li className={isPhoneValid ? "text-green-600" : "text-red-600"}>
+                    Phone Valid: {isPhoneValid ? "✓" : "✗"} ({phoneNumber || "empty"})
+                  </li>
+                  <li className={isFormValid ? "text-green-600 font-bold" : "text-red-600 font-bold"}>
+                    Form Valid: {isFormValid ? "✓ READY TO SUBMIT" : "✗ CANNOT SUBMIT"}
+                  </li>
+                </ul>
+              </div>
+            )}
+
             <ButtonV2
               className="w-full"
               variant="primary"
               onClick={handleCreateBooking}
               disabled={!isFormValid}
               loading={isButtonLoading}
+              type="button"
             >
               Submit Custom Booking
             </ButtonV2>
