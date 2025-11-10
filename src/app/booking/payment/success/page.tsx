@@ -57,7 +57,7 @@ function PaymentSuccessPageContent() {
   const location = bookingDetails.location.name || "";
 
   // Helper to format date and time slot
-  const formatDateTime = (dateStr: string, timeSlotStr: string) => {
+  const formatDateTime = (dateStr: string | undefined, timeSlotStr: string | undefined) => {
     if (!dateStr || !timeSlotStr) return "N/A";
     try {
       const d = new Date(dateStr);
