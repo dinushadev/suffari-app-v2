@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/data/apiConfig";
 import { useSearchParams } from "next/navigation";
@@ -44,6 +44,10 @@ function AuthPageContent() {
   //const associateBooking = useAssociateBooking();
   const [otpSendLoading, setOtpSendLoading] = useState(false);
   const mergeGuestSessionMutation = useMergeGuestSession();
+  const { mutateAsync } = mergeGuestSessionMutation;
+  
+  // Guard to prevent multiple API calls
+  const hasProcessedRef = useRef(false);
 
   // React Query hooks for OTP operations
   // const otpSendMutation = useOtpSend();
@@ -52,6 +56,11 @@ function AuthPageContent() {
 
   useEffect(() => {
     const handleSessionAndMerge = async () => {
+      // Prevent multiple calls - early return if already processed
+      if (hasProcessedRef.current) {
+        return;
+      }
+
       console.log("handleSessionAndMerge ... called");
       const {
         data: { session },
@@ -62,11 +71,14 @@ function AuthPageContent() {
           : null;
 
       if (session?.user?.id) {
+        // Mark as processed immediately to prevent re-entry
+        hasProcessedRef.current = true;
+
         // User is logged in
         if (guestSessionId) {
           // Attempt to merge guest data if a guest session exists
           try {
-            await mergeGuestSessionMutation.mutateAsync({
+            await mutateAsync({
               userId: session.user.id,
               email: session.user.email,
               fullName: session.user.user_metadata?.full_name,
@@ -78,11 +90,14 @@ function AuthPageContent() {
           } catch (err) {
             console.error("Error merging guest session:", err);
             setError((err as Error).message || "Failed to merge guest session");
+            // Reset guard on error to allow retry
+            hasProcessedRef.current = false;
+            return;
           }
         } else {
           // No guest session - ensure customer creation for new sign-ups
           try {
-            await mergeGuestSessionMutation.mutateAsync({
+            await mutateAsync({
               userId: session.user.id,
               email: session.user.email,
               fullName: session.user.user_metadata?.full_name,
@@ -92,6 +107,9 @@ function AuthPageContent() {
           } catch (err) {
             console.error("Error creating customer:", err);
             setError((err as Error).message || "Failed to create customer");
+            // Reset guard on error to allow retry
+            hasProcessedRef.current = false;
+            return;
           }
         }
 
@@ -112,7 +130,7 @@ function AuthPageContent() {
     };
 
     handleSessionAndMerge();
-  }, [returnUrl, mergeGuestSessionMutation, router]);
+  }, [returnUrl, mutateAsync, router]);
 
   const handleOAuth = async (provider: "google" | "facebook") => {
     setOauthLoading((prev) => ({ ...prev, [provider]: true }));
