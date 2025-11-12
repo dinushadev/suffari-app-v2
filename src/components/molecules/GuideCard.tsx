@@ -201,7 +201,7 @@ export const GuideCard = ({ guide, onBook }: GuideCardProps) => {
           </div>
         )}
 
-        <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-border/40 bg-background/60 p-4 text-sm text-foreground">
+        {/* <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-border/40 bg-background/60 p-4 text-sm text-foreground">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Contact
           </p>
@@ -232,7 +232,7 @@ export const GuideCard = ({ guide, onBook }: GuideCardProps) => {
               </a>
             )}
           </div>
-        </div>
+        </div> */}
       </CardContent>
       <CardFooter className="p-5 pt-0 sm:p-6 sm:pt-0">
         <ButtonV2

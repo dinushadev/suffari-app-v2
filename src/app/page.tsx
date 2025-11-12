@@ -48,7 +48,7 @@ export default function Home() {
                   Guide
                 </h2>
                 <p className="text-white/90 text-sm sm:text-base drop-shadow-md">
-                  Connect with local experts
+                Worldwide Expert-Led Travel
                 </p>
               </div>
             </div>

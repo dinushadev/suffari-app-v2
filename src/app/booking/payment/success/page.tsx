@@ -50,10 +50,17 @@ function PaymentSuccessPageContent() {
   const fromGate = pickupLocation && pickupLocation.address === "Park Gate"; // Adjust based on actual pickupLocation structure
   const pickup = pickupLocation || {};
 
-  // Determine the resource label based on category
-  const resourceLabel = bookingDetails.resourceType.category === 'safari_vehicles' || !bookingDetails.resourceType.category 
-    ? 'Vehicle' 
-    : 'Guide';
+  // Determine the resource label and booking type based on category
+  const isSafariBooking = bookingDetails.resourceType.category === 'safari_vehicles' || !bookingDetails.resourceType.category;
+  const resourceLabel = isSafariBooking ? 'Vehicle' : 'Guide';
+  const bookingType = isSafariBooking ? 'safari' : 'guide';
+  const experienceType = isSafariBooking ? 'safari experience' : 'guide tour';
+  const partnerType = isSafariBooking ? 'safari partner' : 'guide partner';
+  const detailsType = isSafariBooking ? 'vehicle details' : 'guide details';
+  const confirmationType = isSafariBooking ? 'vehicle confirmation' : 'guide confirmation';
+  const contactType = isSafariBooking ? 'driver details' : 'guide details';
+  const arrangementType = isSafariBooking ? 'safari arrangement' : 'guide arrangement';
+  const sectionTitle = isSafariBooking ? 'Your Safari Details' : 'Your Guide Details';
 
   // Dummy data for contact info (these are not passed via URL)
   const contactWithin = "20-30 minutes"; // Placeholder - will come from backend later
@@ -129,16 +136,16 @@ function PaymentSuccessPageContent() {
           <div className="flex flex-col items-center gap-2">
             <CheckCircleIcon className="h-12 w-12 text-green-600" />
             <div className="text-2xl font-bold text-green-700">
-              Booking Confirmed!
+              Booking placed!
             </div>
             <div className="text-base text-foreground font-medium">
               Booking ID: <span className="font-mono">{bookingDetails.id}</span>
             </div>
             <div className="text-center mt-2">
-              Your booking is confirmed &amp; locked in our system
+              Your booking is placed &amp; locked in our system
               <br />
-              We&apos;ve successfully reserved your safari experience. Our local
-              partner will contact you shortly to finalize the details and
+              We&apos;ve successfully reserved your {experienceType}. Our local{" "}
+              {partnerType} will contact you shortly to finalize the details and
               confirm your adventure.
             </div>
           </div>
@@ -154,8 +161,8 @@ function PaymentSuccessPageContent() {
             </div>
             <div className="text-sm text-gray-600">
               Your dedicated host will reach out within{" "}
-              <span className="font-semibold">{contactWithin}</span> to confirm
-              vehicle details and provide final instructions for your safari.
+              <span className="font-semibold">{contactWithin}</span> to confirm{" "}
+              {detailsType} and provide final instructions for your {bookingType} booking.
             </div>
           </div>
 
@@ -183,10 +190,10 @@ function PaymentSuccessPageContent() {
             </div>
           </div> */}
 
-          {/* Safari Details */}
+          {/* Booking Details */}
           <div className="w-full bg-white rounded-xl p-4 flex flex-col gap-3 border border-gray-100">
             <div className="text-sm font-semibold text-gray-800 mb-1">
-              Your Safari Details
+              {sectionTitle}
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-700">
               <MapPinIcon className="h-5 w-5" />{" "}
@@ -268,12 +275,12 @@ function PaymentSuccessPageContent() {
             </div>
             <ul className="list-disc pl-5 text-gray-700 text-sm flex flex-col gap-1">
               <li>
-                Your local safari partner will contact you within{" "}
+                Your local {partnerType} will contact you within{" "}
                 {contactWithin}
               </li>
-              <li>Confirm vehicle details and pickup arrangements</li>
-              <li>Receive your confirmation code and driver details</li>
-              <li>Complete payment only after vehicle confirmation</li>
+              <li>Confirm {detailsType} and pickup arrangements</li>
+              <li>Receive your confirmation code and {contactType}</li>
+              <li>Complete payment only after {confirmationType}</li>
               <li>Enjoy your responsible wildlife adventure!</li>
             </ul>
           </div>

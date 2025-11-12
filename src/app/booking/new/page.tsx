@@ -549,7 +549,7 @@ function NewBookingPageContent() {
             Plan Your Adventure
           </p>
           <h1 className="text-3xl font-extrabold text-foreground">
-            Custom Booking Request
+            Booking Request
           </h1>
           <p className="text-muted-foreground">
             Tell us when you&apos;d like to travel, where to pick you up, and
@@ -899,7 +899,7 @@ function NewBookingPageContent() {
               loading={isButtonLoading}
               type="button"
             >
-              Submit Custom Booking
+              Submit Booking
             </ButtonV2>
           </div>
         </section>

@@ -95,10 +95,11 @@ const GuidesPage = () => {
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-10">
         <header className="text-center space-y-3">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-primary">
-            Local Expertise
+          Worldwide Expert-Led Travel
           </p>
           <h1 className="mt-3 text-3xl font-bold text-foreground sm:text-4xl lg:text-5xl">
-            Meet your next guide
+            {/* Meet your next guide */}
+            Top Tour Guides, Specialists, and Experts
           </h1>
           <p className="mx-auto mt-3 max-w-2xl text-base text-muted-foreground sm:text-lg">
             Browse verified guides, explore their strengths, and connect with the
@@ -112,7 +113,7 @@ const GuidesPage = () => {
             <div className="relative">
               <Input
                 value={searchTerm}
-                placeholder="Search by name, city, or expertise"
+                placeholder="Search by name, place, skill, or passion"
                 onChange={(event) => setSearchTerm(event.target.value)}
                 className="pl-10"
               />
@@ -123,7 +124,7 @@ const GuidesPage = () => {
           </label>
 
           <label className="flex flex-col gap-1 text-sm font-medium text-muted-foreground">
-            Speaking language
+          Languages spoken
             <Select
               value={languageFilter}
               onChange={(event) => setLanguageFilter(event.target.value)}
@@ -138,12 +139,12 @@ const GuidesPage = () => {
           </label>
 
           <label className="flex flex-col gap-1 text-sm font-medium text-muted-foreground">
-            Category
+          I’m looking for…
             <Select
               value={resourceFilter}
               onChange={(event) => setResourceFilter(event.target.value)}
             >
-              <option value="all">All categories</option>
+              <option value="all">Choose your experience</option>
               {categoryOptions.map((category) => (
                 <option key={category.value} value={category.value}>
                   {category.label}
