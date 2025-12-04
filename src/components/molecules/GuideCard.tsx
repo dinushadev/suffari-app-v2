@@ -16,16 +16,23 @@ interface GuideCardProps {
 }
 
 export const GuideCard = ({ guide, onBook }: GuideCardProps) => {
-  const fullName = guide.bio.preferredName
-    ? `${guide.bio.preferredName} (${guide.bio.firstName} ${guide.bio.lastName})`
-    : `${guide.bio.firstName} ${guide.bio.lastName}`;
-  const description = guide.bio.description?.trim();
+  // Get name from user object (new API) or bio (legacy)
+  const firstName = guide.user?.firstName || guide.bio?.firstName || "";
+  const lastName = guide.user?.lastName || guide.bio?.lastName || "";
+  const otherName = guide.user?.otherName || guide.bio?.preferredName;
+  const fullName = otherName
+    ? `${otherName} (${firstName} ${lastName})`
+    : `${firstName} ${lastName}`;
+  
+  // Get description from bio
+  const description = guide.bio?.description?.trim();
   const summary =
     description && description.length > 140
       ? `${description.slice(0, 137)}...`
       : description;
 
-  const experienceYears = (() => {
+  // Use yearsOfExperience directly (new API) or calculate from license (legacy)
+  const experienceYears = guide.yearsOfExperience ?? (() => {
     if (!guide.license?.issueDate) return null;
     const issueYear = new Date(guide.license.issueDate).getFullYear();
     const currentYear = new Date().getFullYear();
@@ -90,7 +97,7 @@ export const GuideCard = ({ guide, onBook }: GuideCardProps) => {
           <div className="group relative h-28 w-28 flex-shrink-0 overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br from-accent/40 to-secondary/30">
             <CustomImage
               src={getImageSrc()}
-              alt={`${guide.bio.firstName} ${guide.bio.lastName}`}
+              alt={fullName}
               fill
               sizes="112px"
               className="object-cover transition duration-500 group-hover:scale-105"
@@ -172,7 +179,7 @@ export const GuideCard = ({ guide, onBook }: GuideCardProps) => {
             Speaking languages
           </p>
           <div className="flex flex-wrap gap-2">
-            {guide.speaking_languages.map((language) => (
+            {(guide.speakingLanguages || guide.speaking_languages || []).map((language) => (
               <span
                 key={`${guide.id}-${language}`}
                 className="rounded-full border border-accent/50 bg-accent/20 px-3 py-1 text-xs font-semibold tracking-wide text-accent-foreground"

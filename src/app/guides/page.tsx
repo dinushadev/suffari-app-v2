@@ -56,7 +56,7 @@ const GuidesPage = () => {
   const languages = useMemo(() => {
     const values = new Set<string>();
     guides.forEach((guide) =>
-      guide.speaking_languages.forEach((language) => values.add(language))
+      (guide.speakingLanguages || guide.speaking_languages || []).forEach((language) => values.add(language))
     );
     return Array.from(values).sort();
   }, [guides]);
@@ -71,10 +71,14 @@ const GuidesPage = () => {
   const handleBookGuide = (guide: Guide) => {
     const params = new URLSearchParams();
     params.set("guideId", guide.id);
-    const preferredName =
-      guide.bio.preferredName ||
-      `${guide.bio.firstName} ${guide.bio.lastName}`.trim();
-    params.set("guideName", preferredName);
+    
+    // Get name from user object (new API) or bio (legacy)
+    const firstName = guide.user?.firstName || guide.bio?.firstName || "";
+    const lastName = guide.user?.lastName || guide.bio?.lastName || "";
+    const otherName = guide.user?.otherName || guide.bio?.preferredName;
+    const guideName = otherName || `${firstName} ${lastName}`.trim();
+    params.set("guideName", guideName);
+    
     if (guide.resourceTypeId) {
       params.set("resourceTypeId", guide.resourceTypeId);
     }
@@ -84,8 +88,10 @@ const GuidesPage = () => {
     if (guide.resourceType?.price) {
       params.set("resourcePrice", String(guide.resourceType.price));
     }
-    if (guide.pricing && guide.pricing.length > 0) {
-      params.set("guidePricing", JSON.stringify(guide.pricing));
+    // Use rates (new API) or pricing (legacy)
+    const pricing = guide.rates || guide.pricing;
+    if (pricing && pricing.length > 0) {
+      params.set("guidePricing", JSON.stringify(pricing));
     }
     router.push(`/booking/new?${params.toString()}`);
   };

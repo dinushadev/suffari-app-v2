@@ -3,19 +3,53 @@ import { API_BASE_URL } from "./apiConfig";
 import { normalizeLanguages } from "@/lib/utils";
 import type { Guide } from "@/types/guide";
 
+/**
+ * Raw guide data from API before normalization
+ */
+type RawGuide = Partial<Guide> & {
+  speakingLanguages?: string | string[];
+  speaking_languages?: string | string[];
+  createdAt?: string;
+  created_at?: string;
+  updatedAt?: string;
+  updated_at?: string;
+  images?: string[] | null;
+  resourceTypeId?: string;
+  resource_type_id?: string;
+};
+
 const fetchGuideDetails = async (id: string): Promise<Guide> => {
   const res = await fetch(`${API_BASE_URL}/resources/guide/${id}`);
   if (!res.ok) throw new Error("Failed to fetch guide details");
-  const guide = await res.json();
+  const guide: RawGuide = await res.json();
   
-  // Normalize languages from CSV to array
-  // Also normalize resourceTypeId - API might return it as resource_type_id (snake_case)
-  const normalizedGuide = {
+  // Normalize speakingLanguages (prefer camelCase, fallback to snake_case)
+  const speakingLanguages = normalizeLanguages(
+    guide.speakingLanguages || guide.speaking_languages || []
+  );
+
+  // Normalize timestamps (prefer camelCase, fallback to snake_case)
+  const createdAt = guide.createdAt || guide.created_at || "";
+  const updatedAt = guide.updatedAt || guide.updated_at || "";
+
+  // Normalize images (ensure it's an array or null)
+  const images = guide.images === undefined ? null : guide.images;
+
+  // Ensure resourceTypeId is always available
+  const resourceTypeId = guide.resourceTypeId || guide.resource_type_id || guide.resourceType?.id || "";
+
+  const normalizedGuide: Guide = {
     ...guide,
-    speaking_languages: normalizeLanguages(guide.speaking_languages),
-    // Ensure resourceTypeId is always available, check both camelCase and snake_case
-    resourceTypeId: guide.resourceTypeId || guide.resource_type_id || guide.resourceType?.id || "",
-  };
+    speakingLanguages,
+    createdAt,
+    updatedAt,
+    images,
+    resourceTypeId,
+    // Keep legacy fields for backward compatibility
+    speaking_languages: speakingLanguages,
+    created_at: createdAt,
+    updated_at: updatedAt,
+  } as Guide;
   
   return normalizedGuide;
 };

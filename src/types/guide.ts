@@ -6,33 +6,60 @@ export interface GuideAddress {
   zipCode: string;
 }
 
-export interface GuideBio {
+export interface GuideUser {
+  id: string;
+  email: string;
   firstName: string;
   lastName: string;
+  otherName?: string | null;
+  phone: string;
+  nic: string;
+  profileImage: string | null;
+  deviceToken: string;
+  role: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GuideBio {
+  gender: string;
+  birthDate: string;
+  description: string;
+  // Legacy fields for backward compatibility
+  firstName?: string;
+  lastName?: string;
   preferredName?: string;
-  gender?: string;
-  birthDate?: string;
-  description?: string;
 }
 
 export interface GuideLicense {
-  licenseNumber: string;
   type: string;
   issuedBy: string;
   issueDate: string;
   expiryDate: string;
-  frontImageUrl?: string;
-  backImageUrl?: string;
+  licenseNumber: string;
+  frontImageUrl?: string | null;
+  backImageUrl?: string | null;
+}
+
+export interface GuideResourceTypeFeature {
+  id: string;
+  title: string;
+  description: string;
 }
 
 export interface GuideResourceType {
   id: string;
   name: string;
-  description?: string;
-  category?: string;
-  price?: number;
-  numberOfGuests?: number;
-  imageUrl?: string | null;
+  description: string;
+  category: string;
+  imageUrl: string | null;
+  price: number;
+  featureList: GuideResourceTypeFeature[];
+  numberOfGuests: number;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  locations: unknown[];
 }
 
 export interface GuidePricing {
@@ -43,24 +70,30 @@ export interface GuidePricing {
 
 export interface Guide {
   id: string;
-  speaking_languages: string[];
+  user: GuideUser;
+  speakingLanguages: string[];
   expertise: string[];
-  profileImage: string | null;
-  available: boolean;
-  bookings?: unknown[];
   contactDetails: {
-    email: string;
-    phone: string;
-    whatsapp?: string;
+    facebook: string;
+    whatsapp: string;
+    instagram: string;
   };
   address: GuideAddress;
   bio: GuideBio;
   license: GuideLicense;
-  resourceType: GuideResourceType;
+  profileImage: string | null;
+  images: string[] | null;
+  available: boolean;
+  yearsOfExperience: number;
+  rates: GuidePricing[];
+  bookings: unknown[];
   resourceTypeId: string;
-  images: string[];
-  created_at: string;
-  updated_at: string;
-  pricing?: GuidePricing[]; // Legacy field
-  rates?: GuidePricing[]; // New field from API
+  resourceType: GuideResourceType;
+  createdAt: string;
+  updatedAt: string;
+  // Legacy fields for backward compatibility
+  speaking_languages?: string[];
+  pricing?: GuidePricing[];
+  created_at?: string;
+  updated_at?: string;
 }

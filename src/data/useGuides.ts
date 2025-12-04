@@ -11,20 +11,45 @@ export interface UseGuidesParams {
 
 /**
  * Raw guide data from API before normalization
- * speaking_languages can be a string (CSV) or array
+ * Handles both camelCase (new API) and snake_case (legacy) formats
  */
-type RawGuide = Omit<Guide, "speaking_languages"> & {
-  speaking_languages: string | string[];
+type RawGuide = Partial<Guide> & {
+  speakingLanguages?: string | string[];
+  speaking_languages?: string | string[];
+  createdAt?: string;
+  created_at?: string;
+  updatedAt?: string;
+  updated_at?: string;
+  images?: string[] | null;
 };
 
 /**
- * Transform guide data to ensure speaking_languages is always an array
+ * Transform guide data to ensure consistent format
  */
 const normalizeGuide = (guide: RawGuide): Guide => {
+  // Normalize speakingLanguages (prefer camelCase, fallback to snake_case)
+  const speakingLanguages = normalizeLanguages(
+    guide.speakingLanguages || guide.speaking_languages || []
+  );
+
+  // Normalize timestamps (prefer camelCase, fallback to snake_case)
+  const createdAt = guide.createdAt || guide.created_at || "";
+  const updatedAt = guide.updatedAt || guide.updated_at || "";
+
+  // Normalize images (ensure it's an array or null)
+  const images = guide.images === undefined ? null : guide.images;
+
   return {
     ...guide,
-    speaking_languages: normalizeLanguages(guide.speaking_languages),
-  };
+    speakingLanguages,
+    createdAt,
+    updatedAt,
+    images,
+    // Keep legacy fields for backward compatibility
+    speaking_languages: speakingLanguages,
+    created_at: createdAt,
+    updated_at: updatedAt,
+  } as Guide;
 };
 
 const fetchGuides = async (params: UseGuidesParams): Promise<Guide[]> => {
@@ -47,7 +72,7 @@ const fetchGuides = async (params: UseGuidesParams): Promise<Guide[]> => {
   
   const guides = await apiClient<RawGuide[]>(endpoint);
   
-  // Normalize languages from CSV to array for each guide
+  // Normalize each guide
   return guides.map(normalizeGuide);
 };
 
