@@ -142,10 +142,12 @@ export const GuideCard = ({ guide, onBook }: GuideCardProps) => {
                 )}
               </div>
               <div className="flex flex-wrap items-center gap-4">
-                <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <MapPinIcon className="h-4 w-4 text-primary" />
-                  {guide.address.city}, {guide.address.state}
-                </p>
+                {guide.address?.city && guide.address?.state && (
+                  <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <MapPinIcon className="h-4 w-4 text-primary" />
+                    {guide.address.city}, {guide.address.state}
+                  </p>
+                )}
                 {rates.length > 0 && (
                   <div className="flex items-center gap-3">
                     {rates.map((rate, index) => (

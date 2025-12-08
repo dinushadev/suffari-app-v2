@@ -1,9 +1,9 @@
 export interface GuideAddress {
-  street: string;
-  city: string;
-  state: string;
-  country: string;
-  zipCode: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  zipCode?: string;
 }
 
 export interface GuideUser {
@@ -78,7 +78,7 @@ export interface Guide {
     whatsapp: string;
     instagram: string;
   };
-  address: GuideAddress;
+  address?: GuideAddress;
   bio: GuideBio;
   license: GuideLicense;
   profileImage: string | null;
