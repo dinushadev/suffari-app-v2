@@ -21,6 +21,7 @@ type RawGuide = Partial<Guide> & {
   updatedAt?: string;
   updated_at?: string;
   images?: string[] | null;
+  locationId?: string;
 };
 
 /**
@@ -39,12 +40,16 @@ const normalizeGuide = (guide: RawGuide): Guide => {
   // Normalize images (ensure it's an array or null)
   const images = guide.images === undefined ? null : guide.images;
 
+  // Get locationId from guide object
+  const locationId = guide.locationId || undefined;
+
   return {
     ...guide,
     speakingLanguages,
     createdAt,
     updatedAt,
     images,
+    locationId,
     // Keep legacy fields for backward compatibility
     speaking_languages: speakingLanguages,
     created_at: createdAt,

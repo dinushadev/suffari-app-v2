@@ -90,8 +90,6 @@ function calculateStayLength(startDate: string, endDate: string): number {
 function NewBookingPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const locationId =
-    searchParams.get("location") || DEFAULT_LOCATION_ID;
   const guideIdParam = searchParams.get("guideId") || "";
 
   // Fetch guide details from API
@@ -100,6 +98,11 @@ function NewBookingPageContent() {
     isLoading: guideLoading,
     error: guideError,
   } = useGuideDetails(guideIdParam);
+
+  // Get locationId from guide object first, then URL params, then default
+  const locationId = useMemo(() => {
+    return guideData?.locationId || searchParams.get("location") || DEFAULT_LOCATION_ID;
+  }, [guideData?.locationId, searchParams]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [pickupMode, setPickupMode] = useState<"airport" | "custom">("airport");
@@ -280,12 +283,24 @@ function NewBookingPageContent() {
         resourceType: guideData.resourceType,
         resourceType_id: guideData.resourceType?.id,
         extractedResourceTypeId: guideResourceTypeId,
+        locationId: guideData.locationId,
+        locationIdFromGuide: !!guideData.locationId,
+        locationIdFromUrl: !!searchParams.get("location"),
+        finalLocationId: locationId,
+        locationIdSource: guideData.locationId ? "guide" : searchParams.get("location") ? "url" : "default",
       });
       if (!guideResourceTypeId) {
         console.warn("⚠️ resourceTypeId is missing from guide data! Full guide data:", guideData);
       }
+      if (!guideData.locationId) {
+        console.warn("⚠️ locationId is missing from guide data! Using fallback:", {
+          urlParam: searchParams.get("location"),
+          default: DEFAULT_LOCATION_ID,
+          final: locationId,
+        });
+      }
     }
-  }, [guideData, guideResourceTypeId]);
+  }, [guideData, guideResourceTypeId, locationId, searchParams]);
   
   const guideResourceLabel = guideData?.resourceType?.name || guideData?.resourceType?.description || "";
   // Use 'rates' from API, fallback to 'pricing' for backward compatibility
@@ -372,6 +387,8 @@ function NewBookingPageContent() {
   useEffect(() => {
     console.log("Form Validation Debug:", {
       locationId: !!locationId,
+      locationIdValue: locationId,
+      locationIdSource: guideData?.locationId ? "guide" : searchParams.get("location") ? "url" : "default",
       guideIdParam: !!guideIdParam,
       guideResourceTypeId: !!guideResourceTypeId,
       guideResourceTypeIdValue: guideResourceTypeId,
@@ -391,6 +408,7 @@ function NewBookingPageContent() {
     });
   }, [
     locationId,
+    guideData?.locationId,
     guideIdParam,
     guideResourceTypeId,
     isDateRangeValid,
@@ -406,6 +424,7 @@ function NewBookingPageContent() {
     customPickup,
     name,
     phoneNumber,
+    searchParams,
   ]);
 
   const handleCreateBooking = async () => {
@@ -861,7 +880,7 @@ function NewBookingPageContent() {
                 <p className="font-semibold mb-2">Form Validation Status:</p>
                 <ul className="space-y-1">
                   <li className={locationId ? "text-green-600" : "text-red-600"}>
-                    Location ID: {locationId ? "✓" : "✗"}
+                    Location ID: {locationId ? "✓" : "✗"} ({locationId || "empty"}) - Source: {guideData?.locationId ? "guide" : searchParams.get("location") ? "URL" : "default"}
                   </li>
                   <li className={guideIdParam ? "text-green-600" : "text-red-600"}>
                     Guide ID: {guideIdParam ? "✓" : "✗"}

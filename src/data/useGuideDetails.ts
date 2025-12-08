@@ -16,6 +16,7 @@ type RawGuide = Partial<Guide> & {
   images?: string[] | null;
   resourceTypeId?: string;
   resource_type_id?: string;
+  locationId?: string;
 };
 
 const fetchGuideDetails = async (id: string): Promise<Guide> => {
@@ -38,6 +39,9 @@ const fetchGuideDetails = async (id: string): Promise<Guide> => {
   // Ensure resourceTypeId is always available
   const resourceTypeId = guide.resourceTypeId || guide.resource_type_id || guide.resourceType?.id || "";
 
+  // Get locationId from guide object
+  const locationId = guide.locationId || undefined;
+
   const normalizedGuide: Guide = {
     ...guide,
     speakingLanguages,
@@ -45,6 +49,7 @@ const fetchGuideDetails = async (id: string): Promise<Guide> => {
     updatedAt,
     images,
     resourceTypeId,
+    locationId,
     // Keep legacy fields for backward compatibility
     speaking_languages: speakingLanguages,
     created_at: createdAt,

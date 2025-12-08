@@ -89,6 +89,7 @@ export interface Guide {
   bookings: unknown[];
   resourceTypeId: string;
   resourceType: GuideResourceType;
+  locationId?: string;
   createdAt: string;
   updatedAt: string;
   // Legacy fields for backward compatibility
