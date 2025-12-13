@@ -7,6 +7,15 @@ export interface UseGuidesParams {
   resourceType?: string;
   speakingLanguage?: string;
   search?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface PaginatedGuidesResponse {
+  data: Guide[];
+  total: number;
+  page: number;
+  limit: number;
 }
 
 /**
@@ -57,7 +66,7 @@ const normalizeGuide = (guide: RawGuide): Guide => {
   } as Guide;
 };
 
-const fetchGuides = async (params: UseGuidesParams): Promise<Guide[]> => {
+const fetchGuides = async (params: UseGuidesParams): Promise<PaginatedGuidesResponse> => {
   const queryParams = new URLSearchParams();
   
   if (params.resourceType && params.resourceType !== "all") {
@@ -72,17 +81,37 @@ const fetchGuides = async (params: UseGuidesParams): Promise<Guide[]> => {
     queryParams.append("search", params.search.trim());
   }
   
+  if (params.page !== undefined) {
+    queryParams.append("page", String(params.page));
+  }
+  
+  if (params.limit !== undefined) {
+    queryParams.append("limit", String(params.limit));
+  }
+  
   const queryString = queryParams.toString();
   const endpoint = `/guides${queryString ? `?${queryString}` : ""}`;
   
-  const guides = await apiClient<RawGuide[]>(endpoint);
+  const response = await apiClient<{
+    data: RawGuide[];
+    total: number;
+    page: number;
+    limit: number;
+  }>(endpoint);
   
   // Normalize each guide
-  return guides.map(normalizeGuide);
+  const normalizedGuides = response.data.map(normalizeGuide);
+  
+  return {
+    data: normalizedGuides,
+    total: response.total,
+    page: response.page,
+    limit: response.limit,
+  };
 };
 
 export function useGuides(params: UseGuidesParams = {}) {
-  return useQuery<Guide[]>({
+  return useQuery<PaginatedGuidesResponse>({
     queryKey: ["guides", params],
     queryFn: () => fetchGuides(params),
   });

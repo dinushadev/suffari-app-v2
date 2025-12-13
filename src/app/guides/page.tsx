@@ -16,6 +16,8 @@ const GuidesPage = () => {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [languageFilter, setLanguageFilter] = useState("all");
   const [resourceFilter, setResourceFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
 
   // Debounce search input
   useEffect(() => {
@@ -26,13 +28,23 @@ const GuidesPage = () => {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [resourceFilter, languageFilter, debouncedSearch]);
+
   // Build API params
   const apiParams = useMemo(() => {
     const params: {
       resourceType?: string;
       speakingLanguage?: string;
       search?: string;
-    } = {};
+      page?: number;
+      limit?: number;
+    } = {
+      page,
+      limit,
+    };
 
     if (resourceFilter && resourceFilter !== "all") {
       params.resourceType = resourceFilter;
@@ -47,10 +59,16 @@ const GuidesPage = () => {
     }
 
     return params;
-  }, [resourceFilter, languageFilter, debouncedSearch]);
+  }, [resourceFilter, languageFilter, debouncedSearch, page, limit]);
 
   // Fetch guides from API
-  const { data: guides = [], isLoading, error, refetch } = useGuides(apiParams);
+  const { data: guidesResponse, isLoading, error, refetch } = useGuides(apiParams);
+  
+  // Extract guides and pagination info
+  const guides = guidesResponse?.data || [];
+  const total = guidesResponse?.total || 0;
+  const currentPage = guidesResponse?.page || 1;
+  const totalPages = Math.ceil(total / limit);
 
   // Extract available languages from guides
   const languages = useMemo(() => {
@@ -169,27 +187,52 @@ const GuidesPage = () => {
             <ErrorDisplay error={error} onRetry={() => refetch()} />
           </div>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-            {guides.length > 0 ? (
-              guides.map((guide) => (
-                <GuideCard
-                  key={guide.id}
-                  guide={guide}
-                  onBook={handleBookGuide}
-                />
-              ))
-            ) : (
-              <div className="col-span-full flex flex-col items-center rounded-3xl border border-dashed border-border/60 bg-card/40 p-10 text-center">
-                <p className="text-lg font-semibold text-foreground">
-                  No guides match your criteria
-                </p>
-                <p className="mt-2 max-w-md text-sm text-muted-foreground">
-                  Try adjusting your filters or search term to explore more verified
-                  storytellers from our RAAHI community.
-                </p>
+          <>
+            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+              {guides.length > 0 ? (
+                guides.map((guide) => (
+                  <GuideCard
+                    key={guide.id}
+                    guide={guide}
+                    onBook={handleBookGuide}
+                  />
+                ))
+              ) : (
+                <div className="col-span-full flex flex-col items-center rounded-3xl border border-dashed border-border/60 bg-card/40 p-10 text-center">
+                  <p className="text-lg font-semibold text-foreground">
+                    No guides match your criteria
+                  </p>
+                  <p className="mt-2 max-w-md text-sm text-muted-foreground">
+                    Try adjusting your filters or search term to explore more verified
+                    storytellers from our RAAHI community.
+                  </p>
+                </div>
+              )}
+            </div>
+            
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-4 pt-6">
+                <button
+                  onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="rounded-lg border border-border/40 bg-card px-4 py-2 text-sm font-medium text-foreground transition hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                <span className="text-sm text-muted-foreground">
+                  Page {currentPage} of {totalPages} ({total} total)
+                </span>
+                <button
+                  onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage >= totalPages}
+                  className="rounded-lg border border-border/40 bg-card px-4 py-2 text-sm font-medium text-foreground transition hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
     </main>
