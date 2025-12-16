@@ -84,15 +84,32 @@ export function convertUTCToLocal(
  * @param date - Date object or ISO string
  * @param timezone - IANA timezone identifier
  * @param format - date-fns format string (e.g., 'EEE, MMM d, yyyy h:mm a')
- * @returns Formatted date string
+ * @returns Formatted date string, or 'Invalid date' if date is invalid
  */
 export function formatInTimezone(
-  date: Date | string,
+  date: Date | string | null | undefined,
   timezone: string,
   format: string = 'EEE, MMM d, yyyy h:mm a'
 ): string {
+  // Handle null/undefined
+  if (!date) {
+    return 'Invalid date';
+  }
+
+  // Convert to Date object if string
   const dateObj = typeof date === 'string' ? new Date(date) : date;
-  return formatInTimeZone(dateObj, timezone, format);
+  
+  // Validate the date object
+  if (!(dateObj instanceof Date) || isNaN(dateObj.getTime())) {
+    return 'Invalid date';
+  }
+
+  try {
+    return formatInTimeZone(dateObj, timezone, format);
+  } catch (error) {
+    console.error('Error formatting date:', error, { date, timezone, format });
+    return 'Invalid date';
+  }
 }
 
 /**
@@ -105,14 +122,26 @@ export function getTimezoneAbbreviation(
   timezone: string,
   date: Date = new Date()
 ): string {
-  // Use Intl.DateTimeFormat to get timezone abbreviation
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone: timezone,
-    timeZoneName: 'short',
-  });
-  
-  const parts = formatter.formatToParts(date);
-  const tzPart = parts.find(part => part.type === 'timeZoneName');
-  return tzPart?.value || timezone;
+  // Validate the date object
+  if (!(date instanceof Date) || isNaN(date.getTime())) {
+    // Return a default abbreviation if date is invalid
+    return timezone.split('/').pop()?.substring(0, 3).toUpperCase() || 'UTC';
+  }
+
+  try {
+    // Use Intl.DateTimeFormat to get timezone abbreviation
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      timeZoneName: 'short',
+    });
+    
+    const parts = formatter.formatToParts(date);
+    const tzPart = parts.find(part => part.type === 'timeZoneName');
+    return tzPart?.value || timezone;
+  } catch (error) {
+    console.error('Error getting timezone abbreviation:', error, { timezone, date });
+    // Fallback: extract abbreviation from timezone string
+    return timezone.split('/').pop()?.substring(0, 3).toUpperCase() || 'UTC';
+  }
 }
 

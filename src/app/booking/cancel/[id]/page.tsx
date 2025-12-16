@@ -61,9 +61,12 @@ const CancelBookingPage = () => {
   const bookingTimezone = typedBooking.schedule?.timezone || 'Asia/Colombo';
   
   // Format dates in the booking's timezone
-  const startDate = new Date(typedBooking.startTime);
-  const endDate = new Date(typedBooking.endTime);
-  const isSameDate = startDate.toDateString() === endDate.toDateString();
+  // Validate dates before creating Date objects
+  const startDate = typedBooking.startTime ? new Date(typedBooking.startTime) : null;
+  const endDate = typedBooking.endTime ? new Date(typedBooking.endTime) : null;
+  const isSameDate = startDate && endDate && 
+    !isNaN(startDate.getTime()) && !isNaN(endDate.getTime()) &&
+    startDate.toDateString() === endDate.toDateString();
   
   // Format date/time display - show date range if different dates
   let formattedDateTime: string;
@@ -96,7 +99,10 @@ const CancelBookingPage = () => {
   }
   
   // Get timezone abbreviation for display
-  const timezoneAbbr = getTimezoneAbbreviation(bookingTimezone, new Date(typedBooking.startTime));
+  const timezoneAbbr = getTimezoneAbbreviation(
+    bookingTimezone, 
+    typedBooking.startTime ? new Date(typedBooking.startTime) : new Date()
+  );
 
   const handleConfirmCancellation = async () => {
     if (!reason.trim()) {
@@ -132,7 +138,7 @@ const CancelBookingPage = () => {
           <span className="block sm:inline"> {errorMessage}</span>
         </div>
       )}
-      <div className="flex-grow overflow-auto">
+      <div className=" overflow-auto">
         <h1 className="text-3xl font-bold mb-6">Confirm Cancellation</h1>
         <p className="text-lg text-gray-700 mb-6">Please review your booking details before confirming cancellation.</p>
 
@@ -140,8 +146,8 @@ const CancelBookingPage = () => {
           <CardHeader>
             <CardTitle className="text-xl font-bold">{typedBooking.resourceType?.name || 'N/A'} at {typedBooking.location?.name || 'N/A'}</CardTitle>
             <CardDescription className="text-sm text-gray-600">
-              <p className="mt-1"><strong>Status:</strong> <span className="capitalize">{typedBooking.status}</span></p>
-              <p className="mt-1"><strong>Date & Time:</strong> {formattedDateTime} {timezoneAbbr}</p>
+              <span className="block mt-1"><strong>Status:</strong> <span className="capitalize">{typedBooking.status}</span></span>
+              <span className="block mt-1"><strong>Date & Time:</strong> {formattedDateTime} {timezoneAbbr}</span>
             </CardDescription>
           </CardHeader>
           <CardContent className="text-base">

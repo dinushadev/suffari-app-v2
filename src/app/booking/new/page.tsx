@@ -562,6 +562,7 @@ function NewBookingPageContent() {
 
   return (
     <main className="min-h-screen bg-background p-4">
+      {isButtonLoading && <FullScreenLoader />}
       <div className="max-w-5xl mx-auto w-full space-y-6">
         <header className="text-center space-y-2">
           <p className="text-sm uppercase tracking-tight text-muted-foreground">

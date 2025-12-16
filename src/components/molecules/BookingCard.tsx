@@ -113,8 +113,8 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
       <CardHeader>
         <CardTitle className="text-xl font-bold">{booking.resourceType?.name || 'N/A'} at {booking.location?.name || 'N/A'}</CardTitle>
         <CardDescription className="text-sm text-gray-600">
-          <p className="mt-1"><strong>Status:</strong> <span className={statusColorClass}>{booking.status}</span></p>
-          <p className="mt-1"><strong>Date & Time:</strong> {formattedDateTime} {timezoneAbbr}</p>
+          <span className="block mt-1"><strong>Status:</strong> <span className={statusColorClass}>{booking.status}</span></span>
+          <span className="block mt-1"><strong>Date & Time:</strong> {formattedDateTime} {timezoneAbbr}</span>
         </CardDescription>
       </CardHeader>
       <CardContent className="text-base">
