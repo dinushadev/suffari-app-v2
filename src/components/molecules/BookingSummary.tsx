@@ -18,9 +18,10 @@ interface BookingSummaryProps {
   resourceCategory?: string; // Category to determine label (e.g., "safari_vehicles", "guide")
   startDate?: string; // Start date for date range display
   endDate?: string; // End date for date range display
+  currency?: string; // Currency code for payment amount display
 }
 
-const BookingSummary: React.FC<BookingSummaryProps> = ({ location, date, timeSlot, vehicleType, groupType, pickupLocation, paymentAmount, resourceCategory, startDate, endDate }) => {
+const BookingSummary: React.FC<BookingSummaryProps> = ({ location, date, timeSlot, vehicleType, groupType, pickupLocation, paymentAmount, resourceCategory, startDate, endDate, currency = "USD" }) => {
   // Determine the label based on category
   const resourceLabel = resourceCategory === 'safari_vehicles' || !resourceCategory 
     ? 'Vehicle Type' 
@@ -94,7 +95,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({ location, date, timeSlo
         {typeof paymentAmount === 'number' && (
           <li className="py-2 flex items-center justify-between">
             <span className="text-muted-foreground font-medium">Payment Amount</span>
-            <span className="text-foreground font-semibold">${(paymentAmount ).toFixed(2)} USD</span>
+            <span className="text-foreground font-semibold">{currency} {(paymentAmount ).toFixed(2)}</span>
           </li>
         )}
       </ul>

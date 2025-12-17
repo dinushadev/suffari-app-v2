@@ -20,6 +20,7 @@ import { supabase } from "../../../data/apiConfig"; // Re-add supabase import
 import { useLocationDetails } from "@/data/useLocationDetails";
 import { useBookingDetails } from "@/data/useBookingDetails";
 import { ButtonV2, ErrorDisplay } from '../../../components/atoms';
+import { getCurrencyFromResourceType, getDefaultCurrency } from "@/lib/currencyUtils";
 
 // Validate Stripe publishable key
 if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
@@ -35,11 +36,13 @@ const stripePromise = loadStripe(
 function StripePaymentForm({
   amount,
   error,
+  currency,
 }: {
   amount: number;
   error: Error | null;
   locationName: string;
   userEmail: string;
+  currency: string;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -55,16 +58,16 @@ function StripePaymentForm({
 
   useEffect(() => {
     if (stripe) {
-      // Stripe expects amounts in the smallest currency unit (cents for USD)
-      // Convert dollars to cents by multiplying by 100
-      const amountInCents = Math.round(amount * 100);
+      // Stripe expects amounts in the smallest currency unit (cents for USD, etc.)
+      // Convert to smallest unit by multiplying by 100
+      const amountInSmallestUnit = Math.round(amount * 100);
       
       const pr = stripe.paymentRequest({
         country: "US",
-        currency: "usd",
+        currency: currency.toLowerCase(),
         total: {
           label: "RAAHI Booking",
-          amount: amountInCents, // Amount in cents
+          amount: amountInSmallestUnit, // Amount in smallest currency unit
         },
         requestPayerName: true,
         requestPayerEmail: true,
@@ -75,7 +78,7 @@ function StripePaymentForm({
         }
       });
     }
-  }, [stripe, amount]);
+  }, [stripe, amount, currency]);
 
   const [isPolling, setIsPolling] = useState(false);
   const { data: bookingStatus } =
@@ -180,12 +183,14 @@ function StripePaymentWrapper({
   userEmail,
   bookingId,
   resourceTypeId,
+  currency,
 }: {
   amount: number;
   locationName: string;
   userEmail: string;
   bookingId: string;
   resourceTypeId: string;
+  currency: string;
 }) {
   const {
     mutateAsync,
@@ -206,7 +211,7 @@ function StripePaymentWrapper({
         !isCreatingPaymentIntent
       ) {
         try {
-          await mutateAsync({ amount, bookingId, resourceTypeId });
+          await mutateAsync({ amount, bookingId, resourceTypeId, currency });
           // setPaymentIntentError(null); // Clear error on success - REMOVED
         } catch (err) {
           console.error("Failed to create payment intent", err);
@@ -219,6 +224,7 @@ function StripePaymentWrapper({
     amount,
     bookingId,
     resourceTypeId,
+    currency,
     clientSecret,
     isCreatingPaymentIntent,
     mutateAsync,
@@ -226,7 +232,7 @@ function StripePaymentWrapper({
 
   const handleTryAgain = () => {
     reset(); // Reset the mutation state, clearing any errors
-    mutateAsync({ amount, bookingId, resourceTypeId });
+    mutateAsync({ amount, bookingId, resourceTypeId, currency });
   };
 
   if (isCreatingPaymentIntent || !clientSecret) {
@@ -265,6 +271,7 @@ function StripePaymentWrapper({
           error={error}
           locationName={locationName}
           userEmail={userEmail}
+          currency={currency}
         />
       </Elements>
     </>
@@ -466,6 +473,9 @@ function PaymentPage() {
   const startDate = booking.startTime || booking.schedule?.startDateTime || undefined;
   const endDate = booking.endTime || booking.schedule?.endDateTime || undefined;
 
+  // Extract currency from booking resourceType
+  const currency = getCurrencyFromResourceType(booking.resourceType) || getDefaultCurrency();
+
   const summary = {
     location: location.name,
     date: getDateDisplay(),
@@ -501,6 +511,7 @@ function PaymentPage() {
             resourceCategory={booking.resourceType.category}
             startDate={startDate}
             endDate={endDate}
+            currency={currency}
           />
           {process.env.NEXT_PUBLIC_ENABLE_PAYMENTS === "true" ? (
             <StripePaymentWrapper
@@ -509,6 +520,7 @@ function PaymentPage() {
               bookingId={booking.id}
               userEmail={userEmail || ""}
               resourceTypeId={booking.resourceTypeId}
+              currency={currency}
             />
           ) : (
             <DirectBookingConfirmation

@@ -8,6 +8,7 @@ export interface VehicleType {
   imageUrl: string;    // from API
   catogory?: string;   // optional, from API
   price?: number;
+  currency?: string;
   featureList?: string[];
   numberOfGuests?: number;
 }

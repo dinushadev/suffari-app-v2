@@ -12,6 +12,7 @@ import {
 import { Suspense } from "react";
 import { FullScreenLoader } from "../../../../components/atoms";
 import { useBookingDetails } from "../../../../data/useBookingDetails";
+import { getCurrencyFromResourceType, getDefaultCurrency } from "../../../../lib/currencyUtils";
 
 function PaymentSuccessPageContent() {
   const router = useRouter();
@@ -40,8 +41,11 @@ function PaymentSuccessPageContent() {
     );
   }
 
-  const { schedule, pickupLocation, group, paymentAmount } =
+  const { schedule, pickupLocation, group, paymentAmount, resourceType } =
     bookingDetails;
+
+  // Extract currency from booking resourceType
+  const currency = getCurrencyFromResourceType(resourceType) || getDefaultCurrency();
 
   // Directly use data from bookingDetails
   const vehicle = bookingDetails.resourceType.name;
@@ -259,7 +263,7 @@ function PaymentSuccessPageContent() {
             <div className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
               <span className="text-gray-700">Total Amount Paid:</span>
               <span className="font-bold text-lg text-green-600">
-                USD {paymentAmount}
+                {currency} {paymentAmount}
               </span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">

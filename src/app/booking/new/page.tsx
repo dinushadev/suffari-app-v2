@@ -25,6 +25,7 @@ import type { PickupLocation } from "@/components/molecules/PickupLocationInput"
 import { supabase } from "@/data/apiConfig";
 import type { GuidePricing } from "@/types/guide";
 import { getTimezoneForLocation, convertLocalToUTC } from "@/lib/timezoneUtils";
+import { getCurrencyFromGuide, getDefaultCurrency, getDisplayAmountFromRate } from "@/lib/currencyUtils";
 
 const libraries: ("places")[] = ["places"];
 
@@ -306,6 +307,9 @@ function NewBookingPageContent() {
   // Use 'rates' from API, fallback to 'pricing' for backward compatibility
   const guidePricing: GuidePricing[] | null = guideData?.rates || guideData?.pricing || null;
 
+  // Extract currency from guide rates (prefers displayPrice.currency from API)
+  const currency = getCurrencyFromGuide(guideData);
+
   const stayLengthInDays = calculateStayLength(startDate, endDate);
   const totalGuests = adults + children;
 
@@ -326,16 +330,21 @@ function NewBookingPageContent() {
       // Use daily rate if available, otherwise use hourly
       const selectedRate = dailyRate || hourlyRate;
       
-      if (selectedRate && selectedRate.amount && selectedRate.amount > 0) {
-        if (selectedRate.type === "hourly") {
-          // Default: 8 hours per day (09:00-17:00)
-          const hoursPerDay = 8;
-          const totalHours = stayLengthInDays * hoursPerDay;
-          const calculatedAmount = selectedRate.amount * totalHours;
-          return Number.isFinite(calculatedAmount) && calculatedAmount > 0 ? calculatedAmount : 0;
-        } else if (selectedRate.type === "daily") {
-          const calculatedAmount = selectedRate.amount * stayLengthInDays;
-          return Number.isFinite(calculatedAmount) && calculatedAmount > 0 ? calculatedAmount : 0;
+      if (selectedRate) {
+        // Use displayPrice.amount if available, otherwise fallback to amount
+        const rateAmount = getDisplayAmountFromRate(selectedRate);
+        
+        if (rateAmount && rateAmount > 0) {
+          if (selectedRate.type === "hourly") {
+            // Default: 8 hours per day (09:00-17:00)
+            const hoursPerDay = 8;
+            const totalHours = stayLengthInDays * hoursPerDay;
+            const calculatedAmount = rateAmount * totalHours;
+            return Number.isFinite(calculatedAmount) && calculatedAmount > 0 ? calculatedAmount : 0;
+          } else if (selectedRate.type === "daily") {
+            const calculatedAmount = rateAmount * stayLengthInDays;
+            return Number.isFinite(calculatedAmount) && calculatedAmount > 0 ? calculatedAmount : 0;
+          }
         }
       }
     }
@@ -352,6 +361,30 @@ function NewBookingPageContent() {
     
     return 0;
   }, [guidePricing, stayLengthInDays, totalGuests, guideData]);
+
+  // Calculate USD payment estimate if displayPriceUsd is available
+  const paymentEstimateUsd = useMemo(() => {
+    if (!guidePricing || guidePricing.length === 0 || stayLengthInDays <= 0) return null;
+    
+    const dailyRate = guidePricing.find((r) => r.type === "daily");
+    const hourlyRate = guidePricing.find((r) => r.type === "hourly");
+    const selectedRate = dailyRate || hourlyRate;
+    
+    if (selectedRate?.displayPriceUsd?.amount) {
+      const usdRateAmount = selectedRate.displayPriceUsd.amount;
+      if (selectedRate.type === "hourly") {
+        const hoursPerDay = 8;
+        const totalHours = stayLengthInDays * hoursPerDay;
+        const calculatedAmount = usdRateAmount * totalHours;
+        return Number.isFinite(calculatedAmount) && calculatedAmount > 0 ? calculatedAmount : null;
+      } else if (selectedRate.type === "daily") {
+        const calculatedAmount = usdRateAmount * stayLengthInDays;
+        return Number.isFinite(calculatedAmount) && calculatedAmount > 0 ? calculatedAmount : null;
+      }
+    }
+    
+    return null;
+  }, [guidePricing, stayLengthInDays]);
 
   // Debug: Log guide data to console (remove in production)
   useEffect(() => {
@@ -702,14 +735,21 @@ function NewBookingPageContent() {
                   <h3 className="text-sm font-semibold text-muted-foreground mb-3">
                     Booking Rate
                   </h3>
-                  {selectedRate && selectedRate.amount > 0 ? (
+                  {selectedRate && (getDisplayAmountFromRate(selectedRate) > 0 || selectedRate.amount > 0) ? (
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-foreground">
                           {selectedRate.type === "hourly" ? "Hourly Rate" : "Daily Rate"}
                         </span>
-                        <span className="text-sm font-semibold text-foreground">
-                          {selectedRate.currency || "USD"} {selectedRate.amount.toFixed(2)}/{selectedRate.type === "hourly" ? "hour" : "day"}
+                        <span className="text-sm font-semibold text-foreground flex items-center gap-2">
+                          <span>
+                            {selectedRate.displayPrice?.currency || selectedRate.currency || currency} {getDisplayAmountFromRate(selectedRate).toFixed(2)}/{selectedRate.type === "hourly" ? "hour" : "day"}
+                          </span>
+                          {selectedRate.displayPriceUsd && selectedRate.displayPriceUsd.amount > 0 && (
+                            <span className="text-xs text-muted-foreground">
+                              ({selectedRate.displayPriceUsd.currency} {selectedRate.displayPriceUsd.amount.toFixed(2)})
+                            </span>
+                          )}
                         </span>
                       </div>
                       {selectedRate.type === "hourly" ? (
@@ -732,8 +772,15 @@ function NewBookingPageContent() {
                         <span className="text-base font-bold text-foreground">
                           Total Rate
                         </span>
-                        <span className="text-lg font-bold text-primary">
-                          {selectedRate.currency || "USD"} {paymentEstimate.toFixed(2)}
+                        <span className="text-lg font-bold text-primary flex items-center gap-2">
+                          <span>
+                            {selectedRate.displayPrice?.currency || selectedRate.currency || currency} {paymentEstimate.toFixed(2)}
+                          </span>
+                          {paymentEstimateUsd !== null && (
+                            <span className="text-sm font-normal text-muted-foreground">
+                              ({selectedRate.displayPriceUsd?.currency || "USD"} {paymentEstimateUsd.toFixed(2)})
+                            </span>
+                          )}
                         </span>
                       </div>
                     </div>
@@ -744,7 +791,7 @@ function NewBookingPageContent() {
                         Base Rate per Guest per Day
                       </span>
                       <span className="text-sm font-semibold text-foreground">
-                        ${guideData.resourceType.price.toFixed(2)} USD
+                        {currency} {guideData.resourceType.price.toFixed(2)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -757,7 +804,7 @@ function NewBookingPageContent() {
                         Estimated Total
                       </span>
                       <span className="text-lg font-bold text-primary">
-                        ${paymentEstimate.toFixed(2)} USD
+                        {currency} {paymentEstimate.toFixed(2)}
                       </span>
                     </div>
                   </div>
@@ -767,7 +814,7 @@ function NewBookingPageContent() {
                         Estimated Total
                       </span>
                       <span className="text-lg font-bold text-primary">
-                        ${paymentEstimate.toFixed(2)} USD
+                        {currency} {paymentEstimate.toFixed(2)}
                       </span>
                     </div>
                   )}

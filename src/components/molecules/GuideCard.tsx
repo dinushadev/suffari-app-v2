@@ -161,20 +161,35 @@ export const GuideCard = ({ guide, onBook }: GuideCardProps) => {
 
         {/* 4. Cost: $ Rate/hr (Bold/Highlight) */}
         {rates.length > 0 && (
-          <div className="flex items-baseline gap-2">
-            {rates.map((rate, index) => (
-              <div
-                key={`${guide.id}-rate-${index}`}
-                className="flex items-baseline gap-1.5"
-              >
-                <span className="text-sm sm:text-base text-muted-foreground">
-                  {rate.type === "hourly" ? "/hr" : rate.type === "daily" ? "/day" : `/${rate.type}`}
-                </span>
-                <span className="text-lg sm:text-xl font-bold text-primary">
-                  {formatCurrency(rate.amount, rate.currency)}
-                </span>
-              </div>
-            ))}
+          <div className="flex flex-col gap-2">
+            {rates.map((rate, index) => {
+              // Use displayPrice if available, otherwise fallback to rate.amount and rate.currency
+              const displayAmount = rate.displayPrice?.amount ?? rate.amount;
+              const displayCurrency = rate.displayPrice?.currency ?? rate.currency;
+              const usd = rate.displayPriceUsd;
+              const hasUsdRate = (usd?.amount ?? 0) > 0;
+              
+              return (
+                <div
+                  key={`${guide.id}-rate-${index}`}
+                  className="flex flex-col gap-1"
+                >
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-sm sm:text-base text-muted-foreground">
+                      {rate.type === "hourly" ? "/hr" : rate.type === "daily" ? "/day" : `/${rate.type}`}
+                    </span>
+                    <span className="text-lg sm:text-xl font-bold text-primary">
+                      {formatCurrency(displayAmount, displayCurrency)}
+                    </span>
+                    {hasUsdRate && usd && (
+                      <span className="text-sm text-muted-foreground">
+                        ({formatCurrency(usd.amount, usd.currency)})
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
 

@@ -3,7 +3,7 @@ export interface Booking {
   userId: string;
   locationId: string;
   resourceTypeId: string;
-  resourceType: { id: string; name: string; description: string; category: string };
+  resourceType: { id: string; name: string; description: string; category: string; currency?: string };
   location: { id: string; name: string; address: string; description: string; about: string; images: string[]; facilities: string[]; };
   resourceId: string | null;
   resourceOwnerId: string | null;

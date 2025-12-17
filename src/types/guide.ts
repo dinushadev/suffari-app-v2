@@ -54,6 +54,7 @@ export interface GuideResourceType {
   category: string;
   imageUrl: string | null;
   price: number;
+  currency?: string;
   featureList: GuideResourceTypeFeature[];
   numberOfGuests: number;
   status: string;
@@ -66,6 +67,18 @@ export interface GuidePricing {
   type: "hourly" | "daily";
   amount: number;
   currency: string;
+  displayPrice?: {
+    amount: number;
+    currency: string;
+  };
+  displayPriceUsd?: {
+    amount: number;
+    currency: string;
+  };
+  vendorPrice?: {
+    amount: number;
+    currency: string;
+  };
 }
 
 export interface Guide {

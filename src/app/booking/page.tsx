@@ -23,6 +23,7 @@ import { useBookingDetails } from "../../data/useBookingDetails";
 import { ButtonV2 } from "../../components/atoms";
 import { FullScreenLoader } from "../../components/atoms";
 import { getTimezoneForLocation, convertLocalToUTC } from "../../lib/timezoneUtils";
+import { getCurrencyFromResourceType, getDefaultCurrency } from "../../lib/currencyUtils";
 
 const timeSlotOptions = [
   {
@@ -157,9 +158,16 @@ function BookingPageContent() {
       description: v.discription,
       imageUrl: v.imageUrl,
       price: v.price,
+      currency: v.currency,
       featureList: v.featureList,
       numberOfGuests: v.numberOfGuests,
     })) || [];
+
+  // Extract currency from selected vehicle
+  const selectedVehicleType = vehicleTypes?.find((v) => v.id === vehicle);
+  const currency = selectedVehicleType 
+    ? getCurrencyFromResourceType(selectedVehicleType)
+    : getDefaultCurrency();
 
   // Validation: all fields must be filled
   const isFormValid =
