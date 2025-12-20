@@ -159,7 +159,7 @@ function StripePaymentForm({
       )}
       <PaymentElement />
       {error && (
-        <div className="text-red-500 text-sm mt-2">{error.message}</div>
+        <div className="text-red-600 dark:text-red-400 text-sm mt-2">{error.message}</div>
       )}
 
       <div className="mt-4">

@@ -200,7 +200,7 @@ function AuthPageContent() {
         <button
           type="button"
           onClick={() => handleOAuth("google")}
-          className="flex items-center justify-center gap-2 w-full border border-gray-300 py-2 rounded font-semibold bg-white text-black hover:bg-gray-50 disabled:opacity-50"
+          className="flex items-center justify-center gap-2 w-full border border-border py-2 rounded font-semibold bg-card text-card-foreground hover:bg-accent/10 disabled:opacity-50"
           disabled={oauthLoading.google}
         >
           <svg
@@ -239,7 +239,7 @@ function AuthPageContent() {
         <button
           type="button"
           onClick={() => handleOAuth("facebook")}
-          className="flex items-center justify-center gap-2 w-full border border-gray-300 py-2 rounded font-semibold bg-white text-black hover:bg-gray-50 disabled:opacity-50"
+          className="flex items-center justify-center gap-2 w-full border border-border py-2 rounded font-semibold bg-card text-card-foreground hover:bg-accent/10 disabled:opacity-50"
           disabled={oauthLoading.facebook}
         >
           <svg
@@ -282,13 +282,13 @@ function AuthPageContent() {
           </button>
 
           {otpSent && (
-            <div className="flex items-center justify-center gap-2 text-green-600 text-sm text-center">
+            <div className="flex items-center justify-center gap-2 text-green-600 dark:text-green-400 text-sm text-center">
               <CheckCircleIcon className="w-5 h-5" />
               <span>Check your e-mail and click the link provided.</span>
             </div>
           )}
 
-          {error && <div className="text-red-500 text-sm">{error}</div>}
+          {error && <div className="text-red-600 dark:text-red-400 text-sm">{error}</div>}
         </form>
       </div>
     </main>

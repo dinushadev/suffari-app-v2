@@ -265,7 +265,7 @@ export const GuideCard = ({ guide, onBook }: GuideCardProps) => {
                 href={`https://wa.me/${guide.contactDetails.whatsapp.replace(/\D/g, "")}`}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-2 rounded-full bg-green-100 px-3 py-1 text-green-800 transition hover:bg-green-200"
+                className="flex items-center gap-2 rounded-full bg-green-100 dark:bg-green-950/30 px-3 py-1 text-green-800 dark:text-green-400 transition hover:bg-green-200 dark:hover:bg-green-900/50"
               >
                 <PhoneIcon className="h-4 w-4" />
                 WhatsApp

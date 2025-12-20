@@ -49,7 +49,7 @@ const CancelBookingPage = () => {
   if (isError || !booking) {
     return (
       <div className="container mx-auto py-8 text-center">
-        <p className="text-red-500">Error loading booking details or booking not found.</p>
+        <p className="text-red-600 dark:text-red-400">Error loading booking details or booking not found.</p>
         <ButtonV2 onClick={() => router.back()} className="mt-4">Go Back</ButtonV2>
       </div>
     );
@@ -127,25 +127,25 @@ const CancelBookingPage = () => {
   return (
     <div className="container mx-auto py-8 px-8 min-h-screen flex flex-col">
       {successMessage && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <div className="bg-green-100 dark:bg-green-950/30 border border-green-400 dark:border-green-900/50 text-green-700 dark:text-green-400 px-4 py-3 rounded relative mb-4" role="alert">
           <strong className="font-bold">Success!</strong>
           <span className="block sm:inline"> {successMessage}</span>
         </div>
       )}
       {errorMessage && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <div className="bg-red-100 dark:bg-red-950/30 border border-red-400 dark:border-red-900/50 text-red-700 dark:text-red-400 px-4 py-3 rounded relative mb-4" role="alert">
           <strong className="font-bold">Error!</strong>
           <span className="block sm:inline"> {errorMessage}</span>
         </div>
       )}
       <div className=" overflow-auto">
         <h1 className="text-3xl font-bold mb-6">Confirm Cancellation</h1>
-        <p className="text-lg text-gray-700 mb-6">Please review your booking details before confirming cancellation.</p>
+        <p className="text-lg text-foreground mb-6">Please review your booking details before confirming cancellation.</p>
 
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="text-xl font-bold">{typedBooking.resourceType?.name || 'N/A'} at {typedBooking.location?.name || 'N/A'}</CardTitle>
-            <CardDescription className="text-sm text-gray-600">
+            <CardDescription className="text-sm text-muted-foreground">
               <span className="block mt-1"><strong>Status:</strong> <span className="capitalize">{typedBooking.status}</span></span>
               <span className="block mt-1"><strong>Date & Time:</strong> {formattedDateTime} {timezoneAbbr}</span>
             </CardDescription>

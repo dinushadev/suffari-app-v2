@@ -96,7 +96,7 @@ const ContactInfo: React.FC<ContactInfoProps> = ({ onContactInfoChange }) => {
   return (
     <div className="mt-6 space-y-4">
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
+        <label htmlFor="name" className="block text-sm font-medium text-foreground">Name</label>
         <input
           type="text"
           id="name"
@@ -106,10 +106,10 @@ const ContactInfo: React.FC<ContactInfoProps> = ({ onContactInfoChange }) => {
           onChange={handleNameChange}
           onBlur={() => setIsNameTouched(true)}
         />
-        {isNameTouched && nameError && <p className="text-red-500 text-xs mt-1">{nameError}</p>}
+        {isNameTouched && nameError && <p className="text-red-600 dark:text-red-400 text-xs mt-1">{nameError}</p>}
       </div>
       <div>
-        <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">Phone Number</label>
+        <label htmlFor="phoneNumber" className="block text-sm font-medium text-foreground">Phone Number</label>
         <div className="flex items-center space-x-2">
           <input
             type="tel"
@@ -132,8 +132,8 @@ const ContactInfo: React.FC<ContactInfoProps> = ({ onContactInfoChange }) => {
             pattern="[0-9]*"
           />
         </div>
-        {isCountryCodeTouched && countryCodeError && <p className="text-red-500 text-xs mt-1">{countryCodeError}</p>}
-        {isLocalPhoneNumberTouched && phoneNumberError && <p className="text-red-500 text-xs mt-1">{phoneNumberError}</p>}
+        {isCountryCodeTouched && countryCodeError && <p className="text-red-600 dark:text-red-400 text-xs mt-1">{countryCodeError}</p>}
+        {isLocalPhoneNumberTouched && phoneNumberError && <p className="text-red-600 dark:text-red-400 text-xs mt-1">{phoneNumberError}</p>}
       </div>
     </div>
   );

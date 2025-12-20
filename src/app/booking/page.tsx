@@ -580,7 +580,7 @@ function BookingPageContent() {
             {vehicleTypesLoading ? (
               <Loader />
             ) : vehicleTypesError ? (
-              <div className="text-red-500">Failed to load vehicle types.</div>
+              <div className="text-red-600 dark:text-red-400">Failed to load vehicle types.</div>
             ) : (
               <VehicleTypeSelector
                 options={vehicleOptions}

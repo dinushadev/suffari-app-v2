@@ -33,9 +33,9 @@ export function ErrorDisplay({
   const needsAuth = requiresAuthentication(error);
   
   const severityClasses = {
-    low: 'text-yellow-600 bg-yellow-50 border-yellow-200',
-    medium: 'text-orange-600 bg-orange-50 border-orange-200',
-    high: 'text-red-600 bg-red-50 border-red-200'
+    low: 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-950/30 border-yellow-200 dark:border-yellow-900/50',
+    medium: 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-900/50',
+    high: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900/50'
   };
   
   const handleAction = () => {
@@ -89,7 +89,7 @@ export function ErrorDisplay({
         {dismissible && (
           <button
             onClick={handleDismiss}
-            className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
+            className="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors"
             aria-label="Dismiss error"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

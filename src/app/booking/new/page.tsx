@@ -718,7 +718,7 @@ function NewBookingPageContent() {
               </div>
             </div>
             {!isDateRangeValid && startDate && endDate && (
-              <p className="text-sm text-red-500">
+              <p className="text-sm text-red-600 dark:text-red-400">
                 End date must be on or after the start date.
               </p>
             )}
@@ -924,34 +924,34 @@ function NewBookingPageContent() {
 
             {/* Debug: Show validation status */}
             {process.env.NODE_ENV === "development" && (
-              <div className="rounded-lg border border-yellow-400 bg-yellow-50 p-4 text-xs text-yellow-800">
+              <div className="rounded-lg border border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-yellow-950/30 p-4 text-xs text-yellow-800 dark:text-yellow-300">
                 <p className="font-semibold mb-2">Form Validation Status:</p>
                 <ul className="space-y-1">
-                  <li className={locationId ? "text-green-600" : "text-red-600"}>
+                  <li className={locationId ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
                     Location ID: {locationId ? "✓" : "✗"} ({locationId || "empty"}) - Source: {guideData?.locationId ? "guide" : searchParams.get("location") ? "URL" : "default"}
                   </li>
-                  <li className={guideIdParam ? "text-green-600" : "text-red-600"}>
+                  <li className={guideIdParam ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
                     Guide ID: {guideIdParam ? "✓" : "✗"}
                   </li>
-                  <li className={guideResourceTypeId ? "text-green-600" : "text-red-600"}>
+                  <li className={guideResourceTypeId ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
                     Guide Resource Type ID: {guideResourceTypeId ? "✓" : "✗"} ({guideResourceTypeId || "empty"})
                   </li>
-                  <li className={isDateRangeValid ? "text-green-600" : "text-red-600"}>
+                  <li className={isDateRangeValid ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
                     Date Range: {isDateRangeValid ? "✓" : "✗"}
                   </li>
-                  <li className={isPickupValid ? "text-green-600" : "text-red-600"}>
+                  <li className={isPickupValid ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
                     Pickup Location: {isPickupValid ? "✓" : "✗"}
                   </li>
-                  <li className={totalGuests > 0 ? "text-green-600" : "text-red-600"}>
+                  <li className={totalGuests > 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
                     Group Size: {totalGuests > 0 ? "✓" : "✗"} ({totalGuests} guests)
                   </li>
-                  <li className={isNameValid ? "text-green-600" : "text-red-600"}>
+                  <li className={isNameValid ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
                     Name Valid: {isNameValid ? "✓" : "✗"} ({name || "empty"})
                   </li>
-                  <li className={isPhoneValid ? "text-green-600" : "text-red-600"}>
+                  <li className={isPhoneValid ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
                     Phone Valid: {isPhoneValid ? "✓" : "✗"} ({phoneNumber || "empty"})
                   </li>
-                  <li className={isFormValid ? "text-green-600 font-bold" : "text-red-600 font-bold"}>
+                  <li className={isFormValid ? "text-green-600 dark:text-green-400 font-bold" : "text-red-600 dark:text-red-400 font-bold"}>
                     Form Valid: {isFormValid ? "✓ READY TO SUBMIT" : "✗ CANNOT SUBMIT"}
                   </li>
                 </ul>

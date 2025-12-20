@@ -86,7 +86,7 @@ const BookingHistoryPage = () => {
   return (
     <div className="container mx-auto py-8 px-8">
       <h1 className="text-3xl font-bold mb-6">My Bookings</h1>
-      {isError && <p className="text-red-500">Error loading bookings.</p>}
+      {isError && <p className="text-red-600 dark:text-red-400">Error loading bookings.</p>}
       {!isLoading &&
         !isError &&
         (bookingsToDisplay.length === 0 ? (

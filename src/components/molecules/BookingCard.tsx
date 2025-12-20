@@ -42,28 +42,28 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
 
   switch (booking.status) {
     case "initiated":
-      cardClasses += " border-l-4 border-yellow-500 bg-yellow-50";
-      statusColorClass = "text-yellow-700 font-semibold";
+      cardClasses += " border-l-4 border-yellow-500 bg-yellow-50 dark:bg-yellow-950/30 dark:border-yellow-600";
+      statusColorClass = "text-yellow-700 dark:text-yellow-400 font-semibold";
       break;
     case "confirmed":
-      cardClasses += " border-l-4 border-green-500 bg-green-50";
-      statusColorClass = "text-green-700 font-semibold";
+      cardClasses += " border-l-4 border-green-500 bg-green-50 dark:bg-green-950/30 dark:border-green-600";
+      statusColorClass = "text-green-700 dark:text-green-400 font-semibold";
       break;
     case "canceled":
-      cardClasses += " border-l-4 border-red-500 bg-red-50";
-      statusColorClass = "text-red-700 font-semibold";
+      cardClasses += " border-l-4 border-red-500 bg-red-50 dark:bg-red-950/30 dark:border-red-600";
+      statusColorClass = "text-red-700 dark:text-red-400 font-semibold";
       break;
     case "upcoming": // Handle upcoming status if it's still present
-      cardClasses += " border-l-4 border-blue-500 bg-blue-50";
-      statusColorClass = "text-blue-700 font-semibold";
+      cardClasses += " border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-600";
+      statusColorClass = "text-blue-700 dark:text-blue-400 font-semibold";
       break;
     case "past": // Handle past status if it's still present
-      cardClasses += " border-l-4 border-gray-400 bg-gray-100";
-      statusColorClass = "text-gray-600";
+      cardClasses += " border-l-4 border-muted bg-muted/30";
+      statusColorClass = "text-muted-foreground";
       break;
     default:
-      cardClasses += " border-l-4 border-gray-300 bg-gray-50";
-      statusColorClass = "text-gray-700";
+      cardClasses += " border-l-4 border-border bg-muted/20";
+      statusColorClass = "text-foreground";
       break;
   }
 
@@ -112,7 +112,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
     <Card className={cardClasses}>
       <CardHeader>
         <CardTitle className="text-xl font-bold">{booking.resourceType?.name || 'N/A'} at {booking.location?.name || 'N/A'}</CardTitle>
-        <CardDescription className="text-sm text-gray-600">
+        <CardDescription className="text-sm text-muted-foreground">
           <span className="block mt-1"><strong>Status:</strong> <span className={statusColorClass}>{booking.status}</span></span>
           <span className="block mt-1"><strong>Date & Time:</strong> {formattedDateTime} {timezoneAbbr}</span>
         </CardDescription>

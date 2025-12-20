@@ -35,7 +35,7 @@ function PaymentSuccessPageContent() {
 
   if (isError || !bookingDetails) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-red-600">
+      <div className="min-h-screen flex items-center justify-center text-red-600 dark:text-red-400">
         Error loading booking details or booking not found.
       </div>
     );
@@ -134,12 +134,12 @@ function PaymentSuccessPageContent() {
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-background">
-      <div className="w-full max-w-lg bg-ivory rounded-3xl shadow-xl overflow-hidden mt-0 sm:mt-8 p-0">
+      <div className="w-full max-w-lg bg-card rounded-3xl shadow-xl overflow-hidden mt-0 sm:mt-8 p-0">
         <div className="p-4 flex flex-col items-center gap-6">
           {/* Booking Confirmed */}
           <div className="flex flex-col items-center gap-2">
-            <CheckCircleIcon className="h-12 w-12 text-green-600" />
-            <div className="text-2xl font-bold text-green-700">
+            <CheckCircleIcon className="h-12 w-12 text-green-600 dark:text-green-400" />
+            <div className="text-2xl font-bold text-green-700 dark:text-green-400">
               Booking placed!
             </div>
             <div className="text-base text-foreground font-medium">
@@ -155,15 +155,15 @@ function PaymentSuccessPageContent() {
           </div>
 
           {/* Expected Host Contact */}
-          <div className="w-full bg-green-50 rounded-xl p-4 flex flex-col gap-1 border border-green-100">
-            <div className="flex items-center gap-2 text-green-700 font-semibold">
+          <div className="w-full bg-green-50 dark:bg-green-950/30 rounded-xl p-4 flex flex-col gap-1 border border-green-100 dark:border-green-900/50">
+            <div className="flex items-center gap-2 text-green-700 dark:text-green-400 font-semibold">
               <PhoneIcon className="h-5 w-5" /> Expected Host Contact
             </div>
-            <div className="text-sm text-gray-700">
+            <div className="text-sm text-foreground">
               Estimated contact time:{" "}
               <span className="font-semibold">{estimatedContact}</span>
             </div>
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-muted-foreground">
               Your dedicated host will reach out within{" "}
               <span className="font-semibold">{contactWithin}</span> to confirm{" "}
               {detailsType} and provide final instructions for your {bookingType} booking.
@@ -171,11 +171,11 @@ function PaymentSuccessPageContent() {
           </div>
 
           {/* Email Confirmation Sent */}
-          <div className="w-full bg-blue-50 rounded-xl p-4 flex flex-col gap-1 border border-blue-100">
-            <div className="flex items-center gap-2 text-blue-700 font-semibold">
+          <div className="w-full bg-blue-50 dark:bg-blue-950/30 rounded-xl p-4 flex flex-col gap-1 border border-blue-100 dark:border-blue-900/50">
+            <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400 font-semibold">
               <EnvelopeIcon className="h-5 w-5" /> Email Confirmation Sent
             </div>
-            <div className="text-sm text-gray-700">
+            <div className="text-sm text-foreground">
               A detailed confirmation email has been sent to{" "}
               <span className="font-semibold">{email}</span> with your booking
               details and contact information.
@@ -195,28 +195,28 @@ function PaymentSuccessPageContent() {
           </div> */}
 
           {/* Booking Details */}
-          <div className="w-full bg-white rounded-xl p-4 flex flex-col gap-3 border border-gray-100">
-            <div className="text-sm font-semibold text-gray-800 mb-1">
+          <div className="w-full bg-card rounded-xl p-4 flex flex-col gap-3 border border-border">
+            <div className="text-sm font-semibold text-card-foreground mb-1">
               {sectionTitle}
             </div>
-            <div className="flex items-center gap-2 text-sm text-gray-700">
+            <div className="flex items-center gap-2 text-sm text-foreground">
               <MapPinIcon className="h-5 w-5" />{" "}
               <span className="font-medium">Location:</span> <span className="font-light">{location}</span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-gray-700">
+            <div className="flex items-center gap-2 text-sm text-foreground">
               <CalendarIcon className="h-5 w-5" />{" "}
               <span className="font-medium">Date & Time:</span> <span className="font-light">{dateTime}</span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-gray-700">
+            <div className="flex items-center gap-2 text-sm text-foreground">
               <EnvelopeIcon className="h-5 w-5" />{" "}
               <span className="font-medium">Email:</span> <span className="font-light">{email}</span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-gray-700">
+            <div className="flex items-center gap-2 text-sm text-foreground">
               <PhoneIcon className="h-5 w-5" />{" "}
               <span className="font-medium">Pickup:</span>{" "}
               <span className="font-light">{fromGate ? "Pickup from park gate" : pickup.address}</span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-gray-700">
+            <div className="flex items-center gap-2 text-sm text-foreground">
               <span className="inline-block">
                 <svg
                   className="h-5 w-5"
@@ -234,7 +234,7 @@ function PaymentSuccessPageContent() {
               </span>
               <span className="font-medium">{resourceLabel}:</span> <span className="font-light">{vehicle}</span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-gray-700">
+            <div className="flex items-center gap-2 text-sm text-foreground">
               <span className="inline-block">
                 <svg
                   className="h-5 w-5"
@@ -256,28 +256,28 @@ function PaymentSuccessPageContent() {
           </div>
 
           {/* Payment Details */}
-          <div className="w-full bg-white rounded-xl p-4 flex flex-col gap-3 border border-gray-100">
-            <div className="text-lg font-semibold text-gray-800 mb-1">
+          <div className="w-full bg-card rounded-xl p-4 flex flex-col gap-3 border border-border">
+            <div className="text-lg font-semibold text-card-foreground mb-1">
               Payment Details
             </div>
-            <div className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
-              <span className="text-gray-700">Total Amount Paid:</span>
-              <span className="font-bold text-lg text-green-600">
+            <div className="flex justify-between items-center py-2 border-b border-border last:border-b-0">
+              <span className="text-foreground">Total Amount Paid:</span>
+              <span className="font-bold text-lg text-green-600 dark:text-green-400">
                 {currency} {paymentAmount}
               </span>
             </div>
-            <div className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
-              <span className="text-gray-700">Payment Status:</span>
-              <span className="font-bold text-lg text-green-600">Paid</span>
+            <div className="flex justify-between items-center py-2 border-b border-border last:border-b-0">
+              <span className="text-foreground">Payment Status:</span>
+              <span className="font-bold text-lg text-green-600 dark:text-green-400">Paid</span>
             </div>
           </div>
 
           {/* What Happens Next */}
-          <div className="w-full bg-gray-50 rounded-xl p-4 flex flex-col gap-2 border border-gray-100">
-            <div className="text-lg font-semibold text-gray-800 mb-1">
+          <div className="w-full bg-muted/30 rounded-xl p-4 flex flex-col gap-2 border border-border">
+            <div className="text-lg font-semibold text-card-foreground mb-1">
               What Happens Next?
             </div>
-            <ul className="list-disc pl-5 text-gray-700 text-sm flex flex-col gap-1">
+            <ul className="list-disc pl-5 text-foreground text-sm flex flex-col gap-1">
               <li>
                 Your local {partnerType} will contact you within{" "}
                 {contactWithin}
