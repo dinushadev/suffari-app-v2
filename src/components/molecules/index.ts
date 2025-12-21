@@ -9,3 +9,5 @@ export { BookingCard } from './BookingCard';
 export { default as ContactInfo } from './ContactInfo';
 export { default as GuideCard } from './GuideCard';
 export { default as CustomPickupLocationInput } from './CustomPickupLocationInput';
+export { MessageBubble } from './MessageBubble';
+export { MessageInput } from './MessageInput';
