@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/data/apiConfig";
 import { useSearchParams } from "next/navigation";
 import { useMergeGuestSession } from "@/data/useMergeGuestSession";
 import { FullScreenLoader } from "@/components/atoms";
 import { Input } from "@/components/ui/input";
+import { CheckCircleIcon } from "@heroicons/react/24/solid";
+import Image from "next/image";
 // Client-side component for checking pending booking
 function PendingBookingNotice() {
   const [hasPendingBooking, setHasPendingBooking] = useState(false);
@@ -33,6 +35,7 @@ function PendingBookingNotice() {
 function AuthPageContent() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
   const [oauthLoading, setOauthLoading] = useState({
     google: false,
     facebook: false,
@@ -41,6 +44,10 @@ function AuthPageContent() {
   //const associateBooking = useAssociateBooking();
   const [otpSendLoading, setOtpSendLoading] = useState(false);
   const mergeGuestSessionMutation = useMergeGuestSession();
+  const { mutateAsync } = mergeGuestSessionMutation;
+  
+  // Guard to prevent multiple API calls
+  const hasProcessedRef = useRef(false);
 
   // React Query hooks for OTP operations
   // const otpSendMutation = useOtpSend();
@@ -49,6 +56,11 @@ function AuthPageContent() {
 
   useEffect(() => {
     const handleSessionAndMerge = async () => {
+      // Prevent multiple calls - early return if already processed
+      if (hasProcessedRef.current) {
+        return;
+      }
+
       console.log("handleSessionAndMerge ... called");
       const {
         data: { session },
@@ -59,11 +71,14 @@ function AuthPageContent() {
           : null;
 
       if (session?.user?.id) {
+        // Mark as processed immediately to prevent re-entry
+        hasProcessedRef.current = true;
+
         // User is logged in
         if (guestSessionId) {
           // Attempt to merge guest data if a guest session exists
           try {
-            await mergeGuestSessionMutation.mutateAsync({
+            await mutateAsync({
               userId: session.user.id,
               email: session.user.email,
               fullName: session.user.user_metadata?.full_name,
@@ -75,14 +90,32 @@ function AuthPageContent() {
           } catch (err) {
             console.error("Error merging guest session:", err);
             setError((err as Error).message || "Failed to merge guest session");
+            // Reset guard on error to allow retry
+            hasProcessedRef.current = false;
+            return;
+          }
+        } else {
+          // No guest session - ensure customer creation for new sign-ups
+          try {
+            await mutateAsync({
+              userId: session.user.id,
+              email: session.user.email,
+              fullName: session.user.user_metadata?.full_name,
+              sessionId: null, // No guest session to merge
+            });
+            console.log("Customer created successfully for new sign-up!");
+          } catch (err) {
+            console.error("Error creating customer:", err);
+            setError((err as Error).message || "Failed to create customer");
+            // Reset guard on error to allow retry
+            hasProcessedRef.current = false;
+            return;
           }
         }
 
         // Handle pending booking association
         const pendingDataStr = localStorage.getItem("pendingBookingData");
         if (pendingDataStr) {
-          const pendingData = JSON.parse(pendingDataStr);
-          const bookingId = pendingData.bookingId;
           try {
             //   await associateBooking.mutateAsync({ bookingId, userId: session.user.id });
             localStorage.removeItem("pendingBookingData");
@@ -97,7 +130,7 @@ function AuthPageContent() {
     };
 
     handleSessionAndMerge();
-  }, [returnUrl]);
+  }, [returnUrl, mutateAsync, router]);
 
   const handleOAuth = async (provider: "google" | "facebook") => {
     setOauthLoading((prev) => ({ ...prev, [provider]: true }));
@@ -118,12 +151,13 @@ function AuthPageContent() {
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setOtpSent(false); // reset previous message
 
     try {
       // await otpSendMutation.mutateAsync({ email });
       setOtpSendLoading(true);
       //  await otpSendMutation.mutateAsync({ email });
-      const { data, error } = await supabase.auth.signInWithOtp({
+      const { error } = await supabase.auth.signInWithOtp({
         email: email,
         options: {
           // set this to false if you do not want the user to be automatically signed up
@@ -131,6 +165,11 @@ function AuthPageContent() {
           emailRedirectTo: `${window.location.origin}${returnUrl}`,
         },
       });
+
+      if (error) throw error;
+
+      // ✅ show message below input
+      setOtpSent(true);
       // After sending magic link, user will receive an email and then be redirected back to /auth
       // No need for OTP input on this page anymore.
     } catch (err) {
@@ -142,14 +181,18 @@ function AuthPageContent() {
 
   return (
     <main className="min-h-screen flex flex-col items-center bg-background p-4">
-       <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground mb-2 drop-shadow-sm text-center">
+      <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground mb-2 drop-shadow-sm text-center">
         RAAHI
       </h1>
       <p className="mb-8 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">
         Conscious Travel{" "}
-        
-        <img src="/images/logo-raahi.png" alt="RAAHI Logo" className="mb-4 w-10 h-10" />
-        {" "}
+        <Image
+          src="/images/logo-raahi.png"
+          alt="RAAHI Logo"
+          width={40}
+          height={40}
+          className="mb-1 w-10 h-10"
+        />{" "}
         Responsible Tourism
       </p>
       <PendingBookingNotice />
@@ -157,7 +200,7 @@ function AuthPageContent() {
         <button
           type="button"
           onClick={() => handleOAuth("google")}
-          className="flex items-center justify-center gap-2 w-full border border-gray-300 py-2 rounded font-semibold bg-white text-black hover:bg-gray-50 disabled:opacity-50"
+          className="flex items-center justify-center gap-2 w-full border border-border py-2 rounded font-semibold bg-card text-card-foreground hover:bg-accent/10 disabled:opacity-50"
           disabled={oauthLoading.google}
         >
           <svg
@@ -196,7 +239,7 @@ function AuthPageContent() {
         <button
           type="button"
           onClick={() => handleOAuth("facebook")}
-          className="flex items-center justify-center gap-2 w-full border border-gray-300 py-2 rounded font-semibold bg-white text-black hover:bg-gray-50 disabled:opacity-50"
+          className="flex items-center justify-center gap-2 w-full border border-border py-2 rounded font-semibold bg-card text-card-foreground hover:bg-accent/10 disabled:opacity-50"
           disabled={oauthLoading.facebook}
         >
           <svg
@@ -219,12 +262,11 @@ function AuthPageContent() {
           <div className="flex-grow border-t border-muted"></div>
         </div>
         <p className="text-center text-lg font-semibold text-foreground ">
-          Email Magic Link
+          E-mail me a link
         </p>
         <form onSubmit={handleSendOtp} className="flex flex-col gap-4 w-full">
           <Input
-
-            type="email" 
+            type="email"
             name="email"
             placeholder="Email"
             value={email}
@@ -236,9 +278,17 @@ function AuthPageContent() {
             className="bg-background text-foreground py-2 rounded font-semibold disabled:opacity-50"
             disabled={otpSendLoading}
           >
-            {otpSendLoading ? "Sending Magic Link..." : "Continue with Email"}
+            {otpSendLoading ? "Sending..." : "Send me the link"}
           </button>
-          {error && <div className="text-red-500 text-sm">{error}</div>}
+
+          {otpSent && (
+            <div className="flex items-center justify-center gap-2 text-green-600 dark:text-green-400 text-sm text-center">
+              <CheckCircleIcon className="w-5 h-5" />
+              <span>Check your e-mail and click the link provided.</span>
+            </div>
+          )}
+
+          {error && <div className="text-red-600 dark:text-red-400 text-sm">{error}</div>}
         </form>
       </div>
     </main>
@@ -247,7 +297,7 @@ function AuthPageContent() {
 export default function AuthPage() {
   return (
     <main className="min-h-screen flex flex-col items-center bg-background p-4">
-      {/* <h1 className="text-3xl sm:text-4xl font-extrabold text-orange mb-2 drop-shadow-sm text-center">RAAHI</h1>
+      {/* <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground mb-2 drop-shadow-sm text-center">RAAHI</h1>
       <p className="mb-8 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">
         Conscious Travel
         <svg

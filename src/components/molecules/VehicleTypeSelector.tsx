@@ -9,6 +9,7 @@ export interface VehicleTypeOption {
   icon?: string; // Add icon property
   imageUrl?: string; // Add imageUrl property
   price?: number;
+  currency?: string;
   featureList?: string[];
   numberOfGuests?: number;
 }
@@ -59,7 +60,7 @@ const VehicleTypeSelector: React.FC<VehicleTypeSelectorProps> = ({ options, sele
               </div>
               {option.price !== undefined && (
                 <div className="bg-primary/10 text-primary font-bold px-3 py-1 rounded-lg text-sm whitespace-nowrap shadow-sm border border-primary/20">
-                   {option.price.toLocaleString()} USD
+                   {option.price.toLocaleString()} {option.currency || "USD"}
                 </div>
               )}
             </div>

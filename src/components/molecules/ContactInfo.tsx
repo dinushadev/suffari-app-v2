@@ -7,7 +7,6 @@ interface ContactInfoProps {
 
 const ContactInfo: React.FC<ContactInfoProps> = ({ onContactInfoChange }) => {
   const [name, setName] = useState<string>('');
-  const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [nameError, setNameError] = useState<string | null>(null);
   const [phoneNumberError, setPhoneNumberError] = useState<string | null>(null);
   const [countryCode, setCountryCode] = useState<string>('+94'); // Default country code, now editable
@@ -91,12 +90,13 @@ const ContactInfo: React.FC<ContactInfoProps> = ({ onContactInfoChange }) => {
     const isCountryCodeValid = validateCountryCode(countryCode);
     const isLocalPhoneValid = validateLocalPhoneNumber(localPhoneNumber);
     onContactInfoChange(name, countryCode + localPhoneNumber, isNameValid, isLocalPhoneValid && isCountryCodeValid);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [name, localPhoneNumber, countryCode]);
 
   return (
     <div className="mt-6 space-y-4">
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
+        <label htmlFor="name" className="block text-sm font-medium text-foreground">Name</label>
         <input
           type="text"
           id="name"
@@ -106,10 +106,10 @@ const ContactInfo: React.FC<ContactInfoProps> = ({ onContactInfoChange }) => {
           onChange={handleNameChange}
           onBlur={() => setIsNameTouched(true)}
         />
-        {isNameTouched && nameError && <p className="text-red-500 text-xs mt-1">{nameError}</p>}
+        {isNameTouched && nameError && <p className="text-red-600 dark:text-red-400 text-xs mt-1">{nameError}</p>}
       </div>
       <div>
-        <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">Phone Number</label>
+        <label htmlFor="phoneNumber" className="block text-sm font-medium text-foreground">Phone Number</label>
         <div className="flex items-center space-x-2">
           <input
             type="tel"
@@ -132,8 +132,8 @@ const ContactInfo: React.FC<ContactInfoProps> = ({ onContactInfoChange }) => {
             pattern="[0-9]*"
           />
         </div>
-        {isCountryCodeTouched && countryCodeError && <p className="text-red-500 text-xs mt-1">{countryCodeError}</p>}
-        {isLocalPhoneNumberTouched && phoneNumberError && <p className="text-red-500 text-xs mt-1">{phoneNumberError}</p>}
+        {isCountryCodeTouched && countryCodeError && <p className="text-red-600 dark:text-red-400 text-xs mt-1">{countryCodeError}</p>}
+        {isLocalPhoneNumberTouched && phoneNumberError && <p className="text-red-600 dark:text-red-400 text-xs mt-1">{phoneNumberError}</p>}
       </div>
     </div>
   );

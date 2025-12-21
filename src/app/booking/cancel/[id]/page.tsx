@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   Card,
@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { ButtonV2 } from "@/components/atoms";
 import Loader from "@/components/atoms/Loader";
 import { Booking } from "@/types/booking";
+import { formatInTimezone, getTimezoneAbbreviation } from "@/lib/timezoneUtils";
 
 const CancelBookingPage = () => {
   const router = useRouter();
@@ -48,7 +49,7 @@ const CancelBookingPage = () => {
   if (isError || !booking) {
     return (
       <div className="container mx-auto py-8 text-center">
-        <p className="text-red-500">Error loading booking details or booking not found.</p>
+        <p className="text-red-600 dark:text-red-400">Error loading booking details or booking not found.</p>
         <ButtonV2 onClick={() => router.back()} className="mt-4">Go Back</ButtonV2>
       </div>
     );
@@ -56,8 +57,52 @@ const CancelBookingPage = () => {
 
   const typedBooking = booking as Booking;
 
-  const formattedStartTime = new Date(typedBooking.startTime).toLocaleString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-  const formattedEndTime = new Date(typedBooking.endTime).toLocaleString(undefined, { hour: '2-digit', minute: '2-digit' });
+  // Get timezone from booking schedule or default to Asia/Colombo
+  const bookingTimezone = typedBooking.schedule?.timezone || 'Asia/Colombo';
+  
+  // Format dates in the booking's timezone
+  // Validate dates before creating Date objects
+  const startDate = typedBooking.startTime ? new Date(typedBooking.startTime) : null;
+  const endDate = typedBooking.endTime ? new Date(typedBooking.endTime) : null;
+  const isSameDate = startDate && endDate && 
+    !isNaN(startDate.getTime()) && !isNaN(endDate.getTime()) &&
+    startDate.toDateString() === endDate.toDateString();
+  
+  // Format date/time display - show date range if different dates
+  let formattedDateTime: string;
+  if (isSameDate) {
+    // Same date: show full start time and end time only
+    const formattedStartTime = formatInTimezone(
+      typedBooking.startTime,
+      bookingTimezone,
+      'EEE, MMM d, yyyy h:mm a'
+    );
+    const formattedEndTime = formatInTimezone(
+      typedBooking.endTime,
+      bookingTimezone,
+      'h:mm a'
+    );
+    formattedDateTime = `${formattedStartTime} - ${formattedEndTime}`;
+  } else {
+    // Different dates: show date range
+    const formattedStartDate = formatInTimezone(
+      typedBooking.startTime,
+      bookingTimezone,
+      'EEE, MMM d, yyyy'
+    );
+    const formattedEndDate = formatInTimezone(
+      typedBooking.endTime,
+      bookingTimezone,
+      'EEE, MMM d, yyyy'
+    );
+    formattedDateTime = `${formattedStartDate} - ${formattedEndDate}`;
+  }
+  
+  // Get timezone abbreviation for display
+  const timezoneAbbr = getTimezoneAbbreviation(
+    bookingTimezone, 
+    typedBooking.startTime ? new Date(typedBooking.startTime) : new Date()
+  );
 
   const handleConfirmCancellation = async () => {
     if (!reason.trim()) {
@@ -75,34 +120,34 @@ const CancelBookingPage = () => {
     } catch (error) {
       console.error("Error cancelling booking:", error);
       setErrorMessage(`Failed to cancel booking ${bookingId}.`);
-      setTimeout(() => setErrorMessage(null), 5000); // Clear error after 5 seconds
+      // Error will persist until manually dismissed
     }
   };
 
   return (
     <div className="container mx-auto py-8 px-8 min-h-screen flex flex-col">
       {successMessage && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <div className="bg-green-100 dark:bg-green-950/30 border border-green-400 dark:border-green-900/50 text-green-700 dark:text-green-400 px-4 py-3 rounded relative mb-4" role="alert">
           <strong className="font-bold">Success!</strong>
           <span className="block sm:inline"> {successMessage}</span>
         </div>
       )}
       {errorMessage && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <div className="bg-red-100 dark:bg-red-950/30 border border-red-400 dark:border-red-900/50 text-red-700 dark:text-red-400 px-4 py-3 rounded relative mb-4" role="alert">
           <strong className="font-bold">Error!</strong>
           <span className="block sm:inline"> {errorMessage}</span>
         </div>
       )}
-      <div className="flex-grow overflow-auto">
+      <div className=" overflow-auto">
         <h1 className="text-3xl font-bold mb-6">Confirm Cancellation</h1>
-        <p className="text-lg text-gray-700 mb-6">Please review your booking details before confirming cancellation.</p>
+        <p className="text-lg text-foreground mb-6">Please review your booking details before confirming cancellation.</p>
 
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="text-xl font-bold">{typedBooking.resourceType?.name || 'N/A'} at {typedBooking.location?.name || 'N/A'}</CardTitle>
-            <CardDescription className="text-sm text-gray-600">
-              <p className="mt-1"><strong>Status:</strong> <span className="capitalize">{typedBooking.status}</span></p>
-              <p className="mt-1"><strong>Time:</strong> {formattedStartTime} - {formattedEndTime}</p>
+            <CardDescription className="text-sm text-muted-foreground">
+              <span className="block mt-1"><strong>Status:</strong> <span className="capitalize">{typedBooking.status}</span></span>
+              <span className="block mt-1"><strong>Date & Time:</strong> {formattedDateTime} {timezoneAbbr}</span>
             </CardDescription>
           </CardHeader>
           <CardContent className="text-base">

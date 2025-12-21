@@ -21,9 +21,10 @@ export interface Location {
 }
 
 const fetchLocations = async (): Promise<Location[]> => {
-  const res = await fetch(`${API_BASE_URL}/locations/`);
+  const res = await fetch(`${API_BASE_URL}/locations?category=suffari`);
   if (!res.ok) throw new Error("Failed to fetch locations");
-  return res.json();
+  const json = await res.json();
+  return json.data;
 };
 
 export function useLocations() {

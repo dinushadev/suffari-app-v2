@@ -6,4 +6,6 @@ export { default as PickupLocationInput } from './PickupLocationInput';
 export { default as BookingSummary } from './BookingSummary';
 export { default as GroupSizeSelector } from './GroupSizeSelector';
 export { BookingCard } from './BookingCard';
-export { default as ContactInfo } from './ContactInfo'; 
+export { default as ContactInfo } from './ContactInfo';
+export { default as GuideCard } from './GuideCard';
+export { default as CustomPickupLocationInput } from './CustomPickupLocationInput';

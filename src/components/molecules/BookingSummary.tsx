@@ -15,9 +15,53 @@ interface BookingSummaryProps {
   groupType: string; // Added groupType
   pickupLocation: PickupLocation;
   paymentAmount?: number; // NEW
+  resourceCategory?: string; // Category to determine label (e.g., "safari_vehicles", "guide")
+  startDate?: string; // Start date for date range display
+  endDate?: string; // End date for date range display
+  currency?: string; // Currency code for payment amount display
 }
 
-const BookingSummary: React.FC<BookingSummaryProps> = ({ location, date, timeSlot, vehicleType, groupType, pickupLocation, paymentAmount }) => {
+const BookingSummary: React.FC<BookingSummaryProps> = ({ location, date, timeSlot, vehicleType, groupType, pickupLocation, paymentAmount, resourceCategory, startDate, endDate, currency = "USD" }) => {
+  // Determine the label based on category
+  const resourceLabel = resourceCategory === 'safari_vehicles' || !resourceCategory 
+    ? 'Vehicle Type' 
+    : 'Guide';
+  
+  // Format date and time display
+  const formatDateRange = () => {
+    if (startDate && endDate) {
+      try {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+          const startFormatted = start.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          });
+          const endFormatted = end.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          });
+          
+          // If same date, show single date with time slot
+          if (start.toDateString() === end.toDateString()) {
+            return `${startFormatted}${timeSlot ? ` • ${timeSlot}` : ''}`;
+          }
+          // Otherwise show date range
+          return `${startFormatted} - ${endFormatted}`;
+        }
+      } catch (e) {
+        console.error("Error formatting date range:", e);
+      }
+    }
+    // Fallback to original date and timeSlot display
+    return `${date}${timeSlot ? ` • ${timeSlot}` : ''}`;
+  };
+
+  const dateTimeDisplay = formatDateRange();
+
   return (
     <div className="bg-card text-card-foreground rounded-2xl shadow-lg p-6 border border-border">
       <h3 className="font-extrabold text-xl mb-4 text-primary tracking-tight">Booking Summary</h3>
@@ -27,15 +71,11 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({ location, date, timeSlo
           <span className="text-foreground font-semibold">{location}</span>
         </li>
         <li className="py-2 flex items-center justify-between">
-          <span className="text-muted-foreground font-medium">Date</span>
-          <span className="text-foreground font-semibold">{date}</span>
+          <span className="text-muted-foreground font-medium">Date & Time</span>
+          <span className="text-foreground font-semibold">{dateTimeDisplay}</span>
         </li>
         <li className="py-2 flex items-center justify-between">
-          <span className="text-muted-foreground font-medium">Time Slot</span>
-          <span className="text-foreground font-semibold">{timeSlot}</span>
-        </li>
-        <li className="py-2 flex items-center justify-between">
-          <span className="text-muted-foreground font-medium">Vehicle Type</span>
+          <span className="text-muted-foreground font-medium">{resourceLabel}</span>
           <span className="text-foreground font-semibold">{vehicleType}</span>
         </li>
         <li className="py-2 flex items-center justify-between">
@@ -55,7 +95,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({ location, date, timeSlo
         {typeof paymentAmount === 'number' && (
           <li className="py-2 flex items-center justify-between">
             <span className="text-muted-foreground font-medium">Payment Amount</span>
-            <span className="text-foreground font-semibold">${(paymentAmount ).toFixed(2)} USD</span>
+            <span className="text-foreground font-semibold">{currency} {(paymentAmount ).toFixed(2)}</span>
           </li>
         )}
       </ul>

@@ -28,7 +28,7 @@ const ResourceLocationList: React.FC<ResourceLocationListProps> = ({
           className="flex items-center bg-card border border-border rounded-3xl shadow-lg p-6 gap-6 hover:shadow-2xl transition flex-col sm:flex-row"
         >
           <Link
-            href={`/location/${location.id}`}
+            href={`/booking?location=${location.id}`}
             className="flex items-center w-full gap-4"
           >
             <CustomImage

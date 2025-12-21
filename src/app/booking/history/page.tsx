@@ -1,26 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { useBookings } from "@/data/useBookings";
 import { supabase } from "@/data/apiConfig"; // Import supabase
 import Loader from "@/components/atoms/Loader";
-import { FullScreenLoader } from "@/components/atoms";
 import { BookingCard } from "@/components/molecules";
-import { Booking } from "@/types/booking";
-import { useQueryClient } from "@tanstack/react-query";
 
 
 const BookingHistoryPage = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [loadingSession, setLoadingSession] = useState(true);
-  const queryClient = useQueryClient();
 
   const {
     data: allBookingsData,
@@ -97,7 +86,7 @@ const BookingHistoryPage = () => {
   return (
     <div className="container mx-auto py-8 px-8">
       <h1 className="text-3xl font-bold mb-6">My Bookings</h1>
-      {isError && <p className="text-red-500">Error loading bookings.</p>}
+      {isError && <p className="text-red-600 dark:text-red-400">Error loading bookings.</p>}
       {!isLoading &&
         !isError &&
         (bookingsToDisplay.length === 0 ? (

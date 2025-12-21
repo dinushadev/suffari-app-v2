@@ -23,10 +23,19 @@ export interface BookingPayload {
   resourceId?: string | null;
   resourceOwnerId?: string | null;
   locationId: string;
-  schedule: {
-    date: string;
-    timeSlot: string;
-  };
+  schedule:
+    | {
+        // For guide bookings
+        startDateTime: string;
+        endDateTime: string;
+        timezone?: string; // IANA timezone identifier (e.g., 'Asia/Colombo')
+      }
+    | {
+        // For jeep/safari vehicle bookings
+        startDateTime: string;
+        timeSlot: string;
+        timezone?: string; // IANA timezone identifier (e.g., 'Asia/Colombo')
+      };
   group: {
     adults: number;
     children: number;

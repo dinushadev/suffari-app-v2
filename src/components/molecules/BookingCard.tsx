@@ -8,7 +8,8 @@ import {
 import React from "react";
 import { Booking } from "@/types/booking";
 import { ButtonV2 } from "@/components/atoms";
-import { useRouter } from "next/navigation";
+import { useRouter } from 'next/navigation';
+import { formatInTimezone, getTimezoneAbbreviation } from '@/lib/timezoneUtils';
 
 interface BookingCardProps {
   booking: Booking;
@@ -53,84 +54,94 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
 
   switch (booking.status) {
     case "initiated":
-      cardClasses += " border-l-4 border-yellow-500 bg-yellow-50";
-      statusColorClass = "text-yellow-700 font-semibold";
+      cardClasses += " border-l-4 border-yellow-500 bg-yellow-50 dark:bg-yellow-950/30 dark:border-yellow-600";
+      statusColorClass = "text-yellow-700 dark:text-yellow-400 font-semibold";
       break;
     case "confirmed":
-      cardClasses += " border-l-4 border-green-500 bg-green-50";
-      statusColorClass = "text-green-700 font-semibold";
+      cardClasses += " border-l-4 border-green-500 bg-green-50 dark:bg-green-950/30 dark:border-green-600";
+      statusColorClass = "text-green-700 dark:text-green-400 font-semibold";
       break;
     case "canceled":
-      cardClasses += " border-l-4 border-red-500 bg-red-50";
-      statusColorClass = "text-red-700 font-semibold";
+      cardClasses += " border-l-4 border-red-500 bg-red-50 dark:bg-red-950/30 dark:border-red-600";
+      statusColorClass = "text-red-700 dark:text-red-400 font-semibold";
       break;
     case "upcoming": // Handle upcoming status if it's still present
-      cardClasses += " border-l-4 border-blue-500 bg-blue-50";
-      statusColorClass = "text-blue-700 font-semibold";
+      cardClasses += " border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-600";
+      statusColorClass = "text-blue-700 dark:text-blue-400 font-semibold";
       break;
     case "past": // Handle past status if it's still present
-      cardClasses += " border-l-4 border-gray-400 bg-gray-100";
-      statusColorClass = "text-gray-600";
+      cardClasses += " border-l-4 border-muted bg-muted/30";
+      statusColorClass = "text-muted-foreground";
       break;
     default:
-      cardClasses += " border-l-4 border-gray-300 bg-gray-50";
-      statusColorClass = "text-gray-700";
+      cardClasses += " border-l-4 border-border bg-muted/20";
+      statusColorClass = "text-foreground";
       break;
   }
 
-  const formattedStartTime = new Date(booking.startTime).toLocaleString(
-    undefined,
-    {
-      weekday: "short",
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }
-  );
-  const formattedEndTime = new Date(booking.endTime).toLocaleString(undefined, {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  // Get timezone from booking schedule or default to Asia/Colombo
+  const bookingTimezone = booking.schedule?.timezone || 'Asia/Colombo';
+  
+  // Format dates in the booking's timezone
+  const startDate = new Date(booking.startTime);
+  const endDate = new Date(booking.endTime);
+  const isSameDate = startDate.toDateString() === endDate.toDateString();
+  
+  // Format date/time display - show date range if different dates
+  let formattedDateTime: string;
+  if (isSameDate) {
+    // Same date: show full start time and end time only
+    const formattedStartTime = formatInTimezone(
+      booking.startTime,
+      bookingTimezone,
+      'EEE, MMM d, yyyy h:mm a'
+    );
+    const formattedEndTime = formatInTimezone(
+      booking.endTime,
+      bookingTimezone,
+      'h:mm a'
+    );
+    formattedDateTime = `${formattedStartTime} - ${formattedEndTime}`;
+  } else {
+    // Different dates: show date range
+    const formattedStartDate = formatInTimezone(
+      booking.startTime,
+      bookingTimezone,
+      'EEE, MMM d, yyyy'
+    );
+    const formattedEndDate = formatInTimezone(
+      booking.endTime,
+      bookingTimezone,
+      'EEE, MMM d, yyyy'
+    );
+    formattedDateTime = `${formattedStartDate} - ${formattedEndDate}`;
+  }
+  
+  // Get timezone abbreviation for display
+  const timezoneAbbr = getTimezoneAbbreviation(bookingTimezone, new Date(booking.startTime));
 
   return (
     <Card className={cardClasses}>
       <CardHeader>
-        <CardTitle className="text-xl font-bold">
-          {booking.resourceType?.name || "N/A"} at{" "}
-          {booking.location?.name || "N/A"}
-        </CardTitle>
-        <CardDescription className="text-sm text-gray-600">
-          <p className="mt-1">
-            <strong>Booking Id: </strong>
-            {booking.id}{" "}
-          </p>
-          <p className="mt-1">
-            <strong>Status:</strong>{" "}
-            <span className={statusColorClass}>{booking.status}</span>
-          </p>
-          <p className="mt-1">
-            <strong>Time:</strong> {formattedStartTime} - {formattedEndTime}
-          </p>
+        <CardTitle className="text-xl font-bold">{booking.resourceType?.name || 'N/A'} at {booking.location?.name || 'N/A'}</CardTitle>
+        <CardDescription className="text-sm text-muted-foreground">
+          <span className="block mt-1"><strong>Status:</strong> <span className={statusColorClass}>{booking.status}</span></span>
+          <span className="block mt-1"><strong>Date & Time:</strong> {formattedDateTime} {timezoneAbbr}</span>
         </CardDescription>
       </CardHeader>
       <CardContent className="text-base">
-        <p className="mt-2">
-          <strong>Group Size:</strong> Adults: {booking.group.adults}, Children:{" "}
-          {booking.group.children} (Total: {booking.group.size})
-        </p>
-        <p className="mt-1">
-          <strong>Pickup Location:</strong> {booking.pickupLocation.address}
-        </p>
-        <ButtonV2
-          onClick={() => router.push(`/booking/cancel/${booking.id}`)}
-          disabled={!canCancel}
-          variant="destructive"
-          className="mt-4"
-        >
-          Cancel Booking
-        </ButtonV2>
+        <p className="mt-2"><strong>Group Size:</strong> Adults: {booking.group.adults}, Children: {booking.group.children} (Total: {booking.group.size})</p>
+        <p className="mt-1"><strong>Pickup Location:</strong> {booking.pickupLocation.address}</p>
+        {booking.status !== "canceled" && (
+          <ButtonV2
+            onClick={() => router.push(`/booking/cancel/${booking.id}`)}
+            disabled={!canCancel}
+            variant="destructive"
+            className="mt-4"
+          >
+            Cancel Booking
+          </ButtonV2>
+        )}
       </CardContent>
     </Card>
   );

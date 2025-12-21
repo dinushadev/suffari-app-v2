@@ -8,21 +8,23 @@ export interface VehicleType {
   imageUrl: string;    // from API
   catogory?: string;   // optional, from API
   price?: number;
+  currency?: string;
   featureList?: string[];
   numberOfGuests?: number;
 }
 
 const fetchVehicleTypes = async (): Promise<VehicleType[]> => {
   const res = await fetch(
-    `${API_BASE_URL}/resources/resource-types?catogory=safari_vehicles`
+    `${API_BASE_URL}/resources/resource-types?category=safari_vehicles`
   );
   if (!res.ok) throw new Error("Failed to fetch vehicle types");
   return res.json();
 };
 
-export function useVehicleTypes() {
+export function useVehicleTypes(enabled: boolean = true) {
   return useQuery<VehicleType[]>({
     queryKey: ["vehicleTypes"],
     queryFn: fetchVehicleTypes,
+    enabled,
   });
 }

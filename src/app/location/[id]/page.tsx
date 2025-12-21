@@ -3,7 +3,7 @@ import React from "react";
 import { useParams, useRouter } from "next/navigation";
 import { StarIcon, HeartIcon } from "@heroicons/react/24/solid";
 import { useLocationDetails } from "../../../data/useLocationDetails";
-import { Button, CustomImage, Loader } from "../../../components/atoms";
+import { CustomImage } from "../../../components/atoms";
 import { FullScreenLoader } from "../../../components/atoms";
 import { ButtonV2 } from "../../../components/atoms";
 

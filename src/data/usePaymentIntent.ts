@@ -9,12 +9,13 @@ interface PaymentIntentRequestParams {
   amount: number;
   bookingId: string;
   resourceTypeId: string;
+  currency: string;
 }
 
 const fetchPaymentIntent = async (params: PaymentIntentRequestParams): Promise<PaymentIntentResponse> => {
   const data = await apiClient<PaymentIntentResponse>("/payments/intent", {
     method: "POST",
-    body: { amount: params.amount, currency: 'usd', bookingId: params.bookingId, resourceTypeId: params.resourceTypeId },
+    body: { amount: params.amount, currency: params.currency.toLowerCase(), bookingId: params.bookingId, resourceTypeId: params.resourceTypeId },
   });
 
   if (!data.clientSecret) {
