@@ -1,6 +1,12 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import React from 'react';
-import { Booking } from '@/types/booking';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import React from "react";
+import { Booking } from "@/types/booking";
 import { ButtonV2 } from "@/components/atoms";
 import { useRouter } from 'next/navigation';
 import { formatInTimezone, getTimezoneAbbreviation } from '@/lib/timezoneUtils';
@@ -18,14 +24,20 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
   const bookingTime = new Date(booking.startTime);
   const bookingCreationTime = new Date(booking.createdAt);
 
-  const timeUntilBooking = (bookingTime.getTime() - now.getTime()) / (1000 * 60 * 60); // in hours
-  const timeSinceBookingCreation = (now.getTime() - bookingCreationTime.getTime()) / (1000 * 60); // in minutes
+  const timeUntilBooking =
+    (bookingTime.getTime() - now.getTime()) / (1000 * 60 * 60); // in hours
+  const timeSinceBookingCreation =
+    (now.getTime() - bookingCreationTime.getTime()) / (1000 * 60); // in minutes
 
   const isSameDayTrip = bookingTime.toDateString() === now.toDateString();
 
   let canCancel = false;
 
-  if (booking.status === "confirmed" || booking.status === "upcoming" || booking.status === "initiated") {
+  if (
+    booking.status === "confirmed" ||
+    booking.status === "upcoming" ||
+    booking.status === "initiated"
+  ) {
     // Free changes/cancel: up to [24 hours] before your drive
     if (timeUntilBooking > 24) {
       canCancel = true;
@@ -147,4 +159,3 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
     </Card>
   );
 };
-
