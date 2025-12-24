@@ -36,11 +36,17 @@ export async function sendMessage(bookingId: string, content: string): Promise<M
       authToken: token,
     });
 
-    if (response.errors && response.errors.length > 0) {
+    if ('errors' in response && response.errors && response.errors.length > 0) {
       throw new Error(response.errors[0].message || 'Failed to send message');
     }
 
-    return response.data.sendMessage;
+    if (!('data' in response) || !response.data) {
+      throw new Error('No data returned from sendMessage');
+    }
+
+    // Type assertion: after checking for 'data', we know it's GraphQLResult
+    const result = response as { data: { sendMessage: Message } };
+    return result.data.sendMessage;
   } catch (error) {
     console.error('Error sending message:', error);
     throw error;
@@ -79,11 +85,17 @@ export async function getMessages(bookingId: string): Promise<MessageList> {
       authToken: token,
     });
 
-    if (response.errors && response.errors.length > 0) {
+    if ('errors' in response && response.errors && response.errors.length > 0) {
       throw new Error(response.errors[0].message || 'Failed to fetch messages');
     }
 
-    return response.data.getMessages || { items: [], nextToken: null };
+    if (!('data' in response) || !response.data) {
+      return { items: [], nextToken: null };
+    }
+
+    // Type assertion: after checking for 'data', we know it's GraphQLResult
+    const result = response as { data: { getMessages?: MessageList } };
+    return result.data.getMessages || { items: [], nextToken: null };
   } catch (error) {
     console.error('Error fetching messages:', error);
     throw error;
@@ -119,11 +131,17 @@ export async function subscribeToMessages(
   `;
 
   // Pass auth token for Lambda authorization
-  const sub = client.graphql({
+  // For subscriptions, graphql returns an observable with subscribe method
+  const graphqlResult = client.graphql({
     query: subscription,
     variables: { bookingId },
     authToken: token,
-  }).subscribe({
+  }) as { subscribe: (handlers: {
+    next: (value: { data?: { onMessageReceived?: Message } }) => void;
+    error: (error: unknown) => void;
+  }) => { unsubscribe: () => void } };
+  
+  const sub = graphqlResult.subscribe({
     next: ({ data }) => {
       if (data && data.onMessageReceived) {
         onMessage(data.onMessageReceived);

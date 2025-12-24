@@ -9,6 +9,10 @@ export interface VehicleType {
   catogory?: string;   // optional, from API
   price?: number;
   currency?: string;
+  displayPriceUsd?: {
+    amount: number;
+    currency: string;
+  };
   featureList?: string[];
   numberOfGuests?: number;
 }
