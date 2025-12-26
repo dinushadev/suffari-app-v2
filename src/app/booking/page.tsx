@@ -159,6 +159,7 @@ function BookingPageContent() {
       imageUrl: v.imageUrl,
       price: v.price,
       currency: v.currency,
+      displayPriceUsd: v.displayPriceUsd,
       featureList: v.featureList,
       numberOfGuests: v.numberOfGuests,
     })) || [];

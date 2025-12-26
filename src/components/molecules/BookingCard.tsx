@@ -130,17 +130,30 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
         </CardDescription>
       </CardHeader>
       <CardContent className="text-base">
-        <p className="mt-2"><strong>Group Size:</strong> Adults: {booking.group.adults}, Children: {booking.group.children} (Total: {booking.group.size})</p>
-        <p className="mt-1"><strong>Pickup Location:</strong> {booking.pickupLocation.address}</p>
-        {booking.status !== "canceled" && (
-          <ButtonV2
-            onClick={() => router.push(`/booking/cancel/${booking.id}`)}
-            disabled={!canCancel}
-            variant="destructive"
-            className="mt-4"
-          >
-            Cancel Booking
-          </ButtonV2>
+        <div className="space-y-2">
+          <p><strong>Group Size:</strong> Adults: {booking.group.adults}, Children: {booking.group.children} (Total: {booking.group.size})</p>
+          <p><strong>Pickup Location:</strong> {booking.pickupLocation.address}</p>
+        </div>
+        {booking.status !== "canceled" && booking.status !== "past" && (
+          <div className="mt-6 flex flex-col sm:flex-row gap-2">
+            <ButtonV2
+              onClick={() => router.push(`/booking/${booking.id}/message`)}
+              variant="primary"
+              size="sm"
+              className="flex-1"
+            >
+              Message
+            </ButtonV2>
+            <ButtonV2
+              onClick={() => router.push(`/booking/cancel/${booking.id}`)}
+              disabled={!canCancel}
+              variant="destructive"
+              size="sm"
+              className="flex-1"
+            >
+              Cancel Booking
+            </ButtonV2>
+          </div>
         )}
       </CardContent>
     </Card>

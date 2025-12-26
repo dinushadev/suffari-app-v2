@@ -5,6 +5,7 @@ import { useState } from "react";
 import Script from 'next/script';
 import Header from "@/components/organisms/Header";
 import Footer from "@/components/organisms/Footer";
+import "@/lib/amplifyConfig"; // Initialize AWS Amplify
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
