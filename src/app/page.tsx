@@ -14,10 +14,10 @@ export default function Home() {
   return (
     <main className="min-h-screen flex flex-col items-center bg-background p-4 sm:p-6 lg:p-8">
       <div className="w-full max-w-6xl mx-auto flex flex-col items-center">
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-foreground mb-2 drop-shadow-sm text-center">
-          RAAHI
+         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-foreground mb-2 drop-shadow-sm text-center">
+         THE JOY OF TRAVELING
         </h1>
-        <p className="mb-8 sm:mb-12 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">
+        {/*<p className="mb-8 sm:mb-12 text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">
           Conscious Travel{" "}
           <Image
             src="/images/logo-raahi.png"
@@ -27,7 +27,7 @@ export default function Home() {
             className="mb-1 w-10 h-10"
           />{" "}
           Responsible Tourism
-        </p>
+        </p> */}
 
         <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 max-w-4xl">
           {/* Guide Tile */}
@@ -45,7 +45,7 @@ export default function Home() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
               <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
                 <h2 className="text-3xl sm:text-4xl font-bold text-white mb-2 drop-shadow-lg">
-                  Guide
+                Expert Guides
                 </h2>
                 <p className="text-white/90 text-sm sm:text-base drop-shadow-md">
                 Worldwide Expert-Led Travel
@@ -62,17 +62,17 @@ export default function Home() {
             <div className="relative aspect-[4/3] w-full">
               <CustomImage
                 src="/images/yala1.jpg"
-                alt="Safari Jeeps"
+                alt="Safari & 4x4 Rides"
                 fill
                 className="object-cover group-hover:scale-110 transition-transform duration-500"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
               <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
                 <h2 className="text-3xl sm:text-4xl font-bold text-white mb-2 drop-shadow-lg">
-                  Safari
+                  Safari & 4x4 Rides
                 </h2>
                 <p className="text-white/90 text-sm sm:text-base drop-shadow-md">
-                  Explore with safari jeeps
+                Explore remote landscapes
                 </p>
               </div>
             </div>

@@ -6,6 +6,16 @@ const Footer = () => {
       <div className="container mx-auto text-center">
         © {new Date().getFullYear()} RAAHI. All rights reserved. Built with care
         for conscious travelers.
+        <div className="mt-2">
+          <a
+            href="https://raahi.io/terms"
+            className="text-foreground hover:text-foreground/80 underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Terms
+          </a>
+        </div>
       </div>
     </footer>
   );

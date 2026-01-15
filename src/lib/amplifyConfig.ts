@@ -1,7 +1,7 @@
 import { Amplify } from 'aws-amplify';
 
 const APPSYNC_ENDPOINT = process.env.NEXT_PUBLIC_APPSYNC_ENDPOINT || 
-  'https://ykf2tk7lgrggvjm5ofzjfbudkm.appsync-api.us-east-1.amazonaws.com/graphql';
+  'https://kqelerbwirgt5haslo3a5hmvue.appsync-api.us-east-1.amazonaws.com/graphql';
 
 Amplify.configure({
   API: {

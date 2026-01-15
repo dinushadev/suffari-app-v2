@@ -126,14 +126,13 @@ const GuidesPage = () => {
             Top Tour Guides, Specialists, and Experts
           </h1>
           <p className="mx-auto mt-3 max-w-2xl text-base text-muted-foreground sm:text-lg">
-            Browse verified guides, explore their strengths, and connect with the
-            perfect storyteller for your next conscious travel experience.
+          Trusted experts turn every trip into a story worth telling.
           </p>
         </header>
 
         <div className="grid w-full gap-4 rounded-3xl border border-border/40 bg-card/60 p-4 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr]">
           <label className="relative flex flex-col gap-1 text-sm font-medium text-muted-foreground sm:col-span-2 lg:col-span-1">
-            Search guides
+          Find here
             <div className="relative">
               <Input
                 value={searchTerm}
