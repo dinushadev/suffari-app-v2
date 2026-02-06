@@ -6,10 +6,12 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import React from "react";
+import Link from "next/link";
 import { Booking } from "@/types/booking";
 import { ButtonV2 } from "@/components/atoms";
 import { useRouter } from 'next/navigation';
 import { formatInTimezone, getTimezoneAbbreviation } from '@/lib/timezoneUtils';
+import { cn } from '@/lib/utils';
 
 interface BookingCardProps {
   booking: Booking;
@@ -81,7 +83,18 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
 
   // Get timezone from booking schedule or default to Asia/Colombo
   const bookingTimezone = booking.schedule?.timezone || 'Asia/Colombo';
-  
+
+  // Booking has ended (for showing "Write a review") — use status or end time
+  const isPastBooking =
+    booking.status === "past" || new Date(booking.endTime).getTime() < now.getTime();
+
+  // Message only for ongoing (started, not ended) or fulfilled (past/completed)
+  const startMs = new Date(booking.startTime).getTime();
+  const endMs = new Date(booking.endTime).getTime();
+  const nowMs = now.getTime();
+  const isOngoing = nowMs >= startMs && nowMs <= endMs;
+  const showMessage = (isOngoing || isPastBooking) && booking.status !== "canceled";
+
   // Format dates in the booking's timezone
   const startDate = new Date(booking.startTime);
   const endDate = new Date(booking.endTime);
@@ -121,7 +134,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
   const timezoneAbbr = getTimezoneAbbreviation(bookingTimezone, new Date(booking.startTime));
 
   return (
-    <Card className={cardClasses}>
+    <Card className={cn(cardClasses, "min-w-0 overflow-hidden")}>
       <CardHeader>
         <CardTitle className="text-xl font-bold">{booking.resourceType?.name || 'N/A'} at {booking.location?.name || 'N/A'}</CardTitle>
         <CardDescription className="text-sm text-muted-foreground">
@@ -129,30 +142,42 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
           <span className="block mt-1"><strong>Date & Time:</strong> {formattedDateTime} {timezoneAbbr}</span>
         </CardDescription>
       </CardHeader>
-      <CardContent className="text-base">
+      <CardContent className="text-base min-w-0">
         <div className="space-y-2">
           <p><strong>Group Size:</strong> Adults: {booking.group.adults}, Children: {booking.group.children} (Total: {booking.group.size})</p>
           <p><strong>Pickup Location:</strong> {booking.pickupLocation.address}</p>
         </div>
-        {booking.status !== "canceled" && booking.status !== "past" && (
-          <div className="mt-6 flex flex-col sm:flex-row gap-2">
-            <ButtonV2
-              onClick={() => router.push(`/booking/${booking.id}/message`)}
-              variant="primary"
-              size="sm"
-              className="flex-1"
-            >
-              Message
-            </ButtonV2>
-            <ButtonV2
-              onClick={() => router.push(`/booking/cancel/${booking.id}`)}
-              disabled={!canCancel}
-              variant="destructive"
-              size="sm"
-              className="flex-1"
-            >
-              Cancel Booking
-            </ButtonV2>
+        {booking.status !== "canceled" && (
+          <div className="mt-6 flex flex-wrap gap-2 w-full min-w-0">
+            {showMessage && (
+              <ButtonV2
+                onClick={() => router.push(`/booking/${booking.id}/message`)}
+                variant="primary"
+                size="sm"
+                className="flex-1 min-w-[7.5rem] max-w-full"
+              >
+                Message host
+              </ButtonV2>
+            )}
+            {!isPastBooking && (
+              <ButtonV2
+                onClick={() => router.push(`/booking/cancel/${booking.id}`)}
+                disabled={!canCancel}
+                variant="destructive"
+                size="sm"
+                className="flex-1 min-w-[7.5rem] max-w-full"
+              >
+                Cancel booking
+              </ButtonV2>
+            )}
+            {isPastBooking && (
+              <Link
+                href={`/review?order_id=${encodeURIComponent(booking.id)}&return=${encodeURIComponent("/booking/history")}`}
+                className="inline-flex flex-1 min-w-[7.5rem] max-w-full items-center justify-center rounded-full bg-primary text-primary-foreground px-4 py-2 text-sm font-semibold hover:bg-primary/90 transition h-9"
+              >
+                Write a review
+              </Link>
+            )}
           </div>
         )}
       </CardContent>

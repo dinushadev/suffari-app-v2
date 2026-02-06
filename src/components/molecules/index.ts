@@ -11,3 +11,4 @@ export { default as GuideCard } from './GuideCard';
 export { default as CustomPickupLocationInput } from './CustomPickupLocationInput';
 export { MessageBubble } from './MessageBubble';
 export { MessageInput } from './MessageInput';
+export { default as StarRatingInput } from './StarRatingInput';

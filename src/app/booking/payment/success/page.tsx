@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import Link from "next/link";
 import { Button } from "../../../../components/atoms";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -289,6 +290,12 @@ function PaymentSuccessPageContent() {
             </ul>
           </div>
 
+          <Link
+            href={`/review?order_id=${encodeURIComponent(bookingId)}&return=${encodeURIComponent(`/booking/payment/success?bookingId=${bookingId}`)}`}
+            className="mt-4 w-full inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground px-4 py-3 font-semibold hover:bg-primary/90 transition"
+          >
+            Write a review
+          </Link>
           <Button
             className="mt-4 w-full"
             variant="primary"

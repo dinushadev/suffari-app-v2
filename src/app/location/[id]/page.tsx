@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { StarIcon, HeartIcon } from "@heroicons/react/24/solid";
 import { useLocationDetails } from "../../../data/useLocationDetails";
@@ -141,7 +142,7 @@ export default function LocationDetailsPage() {
           <h3 className="font-bold text-base mb-2 text-foreground">
             What can do
           </h3>
-          <div className="flex gap-4 flex-wrap mb-8">
+          <div className="flex gap-4 flex-wrap mb-6">
             {location.facilities?.map((f: string, i: number) => (
               <div
                 key={i}
@@ -151,6 +152,12 @@ export default function LocationDetailsPage() {
               </div>
             ))}
           </div>
+          <Link
+            href={`/review?provider_id=${encodeURIComponent(location.id)}&return=${encodeURIComponent(`/location/${location.id}`)}`}
+            className="text-sm font-medium text-primary hover:text-primary/90 transition underline underline-offset-2"
+          >
+            Write a review
+          </Link>
         </div>
         {/* Sticky Book Now Button for mobile */}
         <div className="sticky bottom-0 left-0 right-0 bg-ivory border-t border-ash rounded-b-3xl px-6 pb-6 pt-4 z-20">
