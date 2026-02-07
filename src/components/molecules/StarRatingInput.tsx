@@ -45,7 +45,7 @@ const StarRatingInput: React.FC<StarRatingInputProps> = ({
             }}
             className={cn(
               "p-0.5 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background transition",
-              !disabled && "hover:scale-110 active:scale-95"
+              !disabled ? "hover:scale-110 active:scale-95" : undefined
             )}
             aria-label={`${starValue} star${starValue === 1 ? "" : "s"}`}
             aria-pressed={value === starValue}

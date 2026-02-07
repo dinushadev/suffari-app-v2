@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -12,7 +12,7 @@ import { useBookingDetails } from "@/data/useBookingDetails";
 import { supabase } from "@/data/apiConfig";
 import { cn } from "@/lib/utils";
 
-export default function ReviewPage() {
+function ReviewPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const orderId = searchParams.get("order_id") ?? searchParams.get("orderId") ?? "";
@@ -242,5 +242,19 @@ export default function ReviewPage() {
         </Card>
       </div>
     </main>
+  );
+}
+
+export default function ReviewPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+          <p className="text-foreground font-medium">Loading...</p>
+        </main>
+      }
+    >
+      <ReviewPageContent />
+    </Suspense>
   );
 }

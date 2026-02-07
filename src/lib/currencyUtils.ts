@@ -65,7 +65,7 @@ export function formatCurrency(amount: number, currency: string): string {
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,
     }).format(amount);
-  } catch (error) {
+  } catch {
     // Fallback to simple format if currency is invalid
     return `${currency || getDefaultCurrency()} ${amount.toFixed(2)}`;
   }
