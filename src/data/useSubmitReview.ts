@@ -33,7 +33,7 @@ async function submitReview(payload: ReviewPayload): Promise<ReviewResponse> {
     throw error;
   }
 
-  const res = await fetch(`${REVIEW_API_BASE_URL}/reviews`, {
+  const res = await fetch(`/api/reviews`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
