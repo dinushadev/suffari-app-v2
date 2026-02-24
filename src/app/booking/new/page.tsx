@@ -17,6 +17,7 @@ import {
   FullScreenLoader,
 } from "@/components/atoms";
 import { useGuideDetails } from "@/data/useGuideDetails";
+import { useResourceAvailability } from "@/data/useResourceAvailability";
 import {
   useCreateBooking,
   type BookingPayload,
@@ -127,6 +128,12 @@ function NewBookingPageContent() {
   });
 
   const createBookingMutation = useCreateBooking();
+  const {
+    data: availabilityData,
+    isLoading: isAvailabilityLoading,
+    error: availabilityError,
+    isAvailable,
+  } = useResourceAvailability(guideIdParam, startDate, endDate);
 
   // Fetch place IDs for airports using Google Places API
   useEffect(() => {
@@ -723,6 +730,34 @@ function NewBookingPageContent() {
               </p>
             )}
 
+            {/* Availability check (guide booking) */}
+            {guideIdParam && isDateRangeValid && startDate && endDate && (
+              <div className="rounded-2xl border border-border bg-muted/30 p-4">
+                {isAvailabilityLoading && (
+                  <p className="text-sm text-muted-foreground">
+                    Checking availability…
+                  </p>
+                )}
+                {!isAvailabilityLoading && availabilityError && (
+                  <p className="text-sm text-amber-600 dark:text-amber-400">
+                    Could not verify availability. You can still submit a
+                    request; we&apos;ll confirm availability.
+                  </p>
+                )}
+                {!isAvailabilityLoading && !availabilityError && isAvailable === true && (
+                  <p className="text-sm text-green-600 dark:text-green-400">
+                    Guide is available for these dates.
+                  </p>
+                )}
+                {!isAvailabilityLoading && !availabilityError && isAvailable === false && (
+                  <p className="text-sm text-red-600 dark:text-red-400">
+                    Guide is not available for these dates. Please choose
+                    different dates.
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Dynamic Rate Display */}
             {stayLengthInDays > 0 && guideData && (() => {
               // Prefer daily rate for display, matching calculation logic
@@ -962,7 +997,7 @@ function NewBookingPageContent() {
               className="w-full"
               variant="primary"
               onClick={handleCreateBooking}
-              disabled={!isFormValid}
+              disabled={!isFormValid || isAvailable === false}
               loading={isButtonLoading}
               type="button"
             >
