@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { GuideCard } from "@/components/molecules/GuideCard";
 import { useGuides } from "@/data/useGuides";
+import { useSupportedLanguages } from "@/data/useSupportedLanguages";
 import Loader from "@/components/atoms/Loader";
 import { ErrorDisplay } from "@/components/atoms/ErrorDisplay";
 import type { Guide } from "@/types/guide";
@@ -63,6 +64,9 @@ const GuidesPage = () => {
 
   // Fetch guides from API
   const { data: guidesResponse, isLoading, error, refetch } = useGuides(apiParams);
+
+  // Supported languages from config API for the filter dropdown
+  const { data: supportedLanguages = [] } = useSupportedLanguages();
   
   // Extract guides and pagination info
   const guides = guidesResponse?.data || [];
@@ -70,14 +74,15 @@ const GuidesPage = () => {
   const currentPage = guidesResponse?.page || 1;
   const totalPages = Math.ceil(total / limit);
 
-  // Extract available languages from guides
+  // Use config API languages for the filter; fallback to languages from guides if API not yet loaded
   const languages = useMemo(() => {
-    const values = new Set<string>();
+    if (supportedLanguages.length > 0) return supportedLanguages;
+    const fromGuides = new Set<string>();
     guides.forEach((guide) =>
-      (guide.speakingLanguages || guide.speaking_languages || []).forEach((language) => values.add(language))
+      (guide.speakingLanguages || guide.speaking_languages || []).forEach((lang) => fromGuides.add(lang))
     );
-    return Array.from(values).sort();
-  }, [guides]);
+    return Array.from(fromGuides).sort();
+  }, [supportedLanguages, guides]);
 
   // Category options with display labels
   const categoryOptions = [
