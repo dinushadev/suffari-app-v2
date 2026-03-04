@@ -54,7 +54,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({ onSend, disabled = f
           loading={loading}
           variant="primary"
           size="default"
-          className="rounded-full"
+          className=""
         >
           Send
         </ButtonV2>

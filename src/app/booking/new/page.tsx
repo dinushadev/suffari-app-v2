@@ -119,6 +119,7 @@ function NewBookingPageContent() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isNameValid, setIsNameValid] = useState(false);
   const [isPhoneValid, setIsPhoneValid] = useState(false);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [bookingError, setBookingError] = useState<unknown>(null);
   const [isButtonLoading, setIsButtonLoading] = useState(false);
 
@@ -179,17 +180,17 @@ function NewBookingPageContent() {
                       prev.map((opt) =>
                         opt.id === option.id
                           ? {
-                              ...opt,
-                              pickupLocation: {
-                                ...opt.pickupLocation,
-                                placeId: results[0].place_id,
-                                coordinate: {
-                                  lat: location.lat(),
-                                  lng: location.lng(),
-                                },
-                                address: results[0].formatted_address,
+                            ...opt,
+                            pickupLocation: {
+                              ...opt.pickupLocation,
+                              placeId: results[0].place_id,
+                              coordinate: {
+                                lat: location.lat(),
+                                lng: location.lng(),
                               },
-                            }
+                              address: results[0].formatted_address,
+                            },
+                          }
                           : opt
                       )
                     );
@@ -209,12 +210,12 @@ function NewBookingPageContent() {
                               prev.map((opt) =>
                                 opt.id === option.id
                                   ? {
-                                      ...opt,
-                                      pickupLocation: {
-                                        ...opt.pickupLocation,
-                                        placeId: results[0].place_id,
-                                      },
-                                    }
+                                    ...opt,
+                                    pickupLocation: {
+                                      ...opt.pickupLocation,
+                                      placeId: results[0].place_id,
+                                    },
+                                  }
                                   : opt
                               )
                             );
@@ -241,12 +242,12 @@ function NewBookingPageContent() {
                         prev.map((opt) =>
                           opt.id === option.id
                             ? {
-                                ...opt,
-                                pickupLocation: {
-                                  ...opt.pickupLocation,
-                                  placeId: results[0].place_id,
-                                },
-                              }
+                              ...opt,
+                              pickupLocation: {
+                                ...opt.pickupLocation,
+                                placeId: results[0].place_id,
+                              },
+                            }
                             : opt
                         )
                       );
@@ -272,17 +273,17 @@ function NewBookingPageContent() {
     pickupMode === "airport" ? selectedAirport?.pickupLocation : customPickup;
 
   // Extract data from guide API response
-  const guideName = guideData?.bio?.preferredName || 
-    `${guideData?.bio?.firstName || ""} ${guideData?.bio?.lastName || ""}`.trim() || 
+  const guideName = guideData?.bio?.preferredName ||
+    `${guideData?.bio?.firstName || ""} ${guideData?.bio?.lastName || ""}`.trim() ||
     "Guide";
-  
+
   // Extract resourceTypeId - should be normalized by useGuideDetails hook
   // But keep fallback logic in case API structure is different
-  const guideResourceTypeId = 
+  const guideResourceTypeId =
     guideData?.resourceTypeId ||           // Primary: normalized from hook
     guideData?.resourceType?.id ||          // Fallback: nested in resourceType object
     "";
-  
+
   // Log guide data structure for debugging
   useEffect(() => {
     if (guideData) {
@@ -309,7 +310,7 @@ function NewBookingPageContent() {
       }
     }
   }, [guideData, guideResourceTypeId, locationId, searchParams]);
-  
+
   const guideResourceLabel = guideData?.resourceType?.name || guideData?.resourceType?.description || "";
   // Use 'rates' from API, fallback to 'pricing' for backward compatibility
   const guidePricing: GuidePricing[] | null = guideData?.rates || guideData?.pricing || null;
@@ -324,7 +325,7 @@ function NewBookingPageContent() {
   const paymentEstimate = useMemo(() => {
     // If no guide data, return 0
     if (!guideData) return 0;
-    
+
     // If no dates selected, return 0
     if (stayLengthInDays <= 0) return 0;
 
@@ -333,14 +334,14 @@ function NewBookingPageContent() {
       // Prefer daily rate for multi-day bookings, otherwise use hourly
       const dailyRate = guidePricing.find((r) => r.type === "daily");
       const hourlyRate = guidePricing.find((r) => r.type === "hourly");
-      
+
       // Use daily rate if available, otherwise use hourly
       const selectedRate = dailyRate || hourlyRate;
-      
+
       if (selectedRate) {
         // Use displayPrice.amount if available, otherwise fallback to amount
         const rateAmount = getDisplayAmountFromRate(selectedRate);
-        
+
         if (rateAmount && rateAmount > 0) {
           if (selectedRate.type === "hourly") {
             // Default: 8 hours per day (09:00-17:00)
@@ -355,7 +356,7 @@ function NewBookingPageContent() {
         }
       }
     }
-    
+
     // Fallback: use resource type price if available
     const baseRate = guideData?.resourceType?.price;
     if (baseRate && baseRate > 0) {
@@ -365,18 +366,18 @@ function NewBookingPageContent() {
         Math.max(1, stayLengthInDays);
       return Number.isFinite(fallbackAmount) && fallbackAmount > 0 ? fallbackAmount : 0;
     }
-    
+
     return 0;
   }, [guidePricing, stayLengthInDays, totalGuests, guideData]);
 
   // Calculate USD payment estimate if displayPriceUsd is available
   const paymentEstimateUsd = useMemo(() => {
     if (!guidePricing || guidePricing.length === 0 || stayLengthInDays <= 0) return null;
-    
+
     const dailyRate = guidePricing.find((r) => r.type === "daily");
     const hourlyRate = guidePricing.find((r) => r.type === "hourly");
     const selectedRate = dailyRate || hourlyRate;
-    
+
     if (selectedRate?.displayPriceUsd?.amount) {
       const usdRateAmount = selectedRate.displayPriceUsd.amount;
       if (selectedRate.type === "hourly") {
@@ -389,7 +390,7 @@ function NewBookingPageContent() {
         return Number.isFinite(calculatedAmount) && calculatedAmount > 0 ? calculatedAmount : null;
       }
     }
-    
+
     return null;
   }, [guidePricing, stayLengthInDays]);
 
@@ -404,6 +405,26 @@ function NewBookingPageContent() {
       console.log("Payment Estimate:", paymentEstimate);
     }
   }, [guideData, guidePricing, stayLengthInDays, totalGuests, paymentEstimate]);
+
+  const errors = useMemo(() => {
+    const errs: Record<string, string> = {};
+    if (!startDate) errs.startDate = "Start date is required";
+    if (!endDate) errs.endDate = "End date is required";
+    if (startDate && endDate && calculateStayLength(startDate, endDate) <= 0) {
+      errs.endDate = "End date must be after start date";
+    }
+    if (pickupMode === "airport" && !selectedAirport) {
+      errs.pickup = "Please select an airport";
+    } else if (pickupMode === "custom" && (!customPickup?.address || !customPickup?.coordinate)) {
+      errs.pickup = "Please enter a valid pickup address";
+    }
+    if (totalGuests <= 0) errs.group = "At least one guest is required";
+    if (!name.trim()) errs.name = "Name is required";
+    else if (!isNameValid) errs.name = "Please enter a valid name";
+    if (!phoneNumber.trim()) errs.phoneNumber = "Phone number is required";
+    else if (!isPhoneValid) errs.phoneNumber = "Please enter a valid phone number";
+    return errs;
+  }, [startDate, endDate, pickupMode, selectedAirport, customPickup, totalGuests, name, isNameValid, phoneNumber, isPhoneValid]);
 
   const isDateRangeValid =
     !!startDate && !!endDate && calculateStayLength(startDate, endDate) > 0;
@@ -616,7 +637,7 @@ function NewBookingPageContent() {
             who&apos;s joining. We&apos;ll handle the rest.
           </p>
         </header>
-        
+
         {!guideIdParam && (
           <div className="rounded-3xl border border-red-400 bg-red-50 p-4 text-sm text-red-600 shadow-sm">
             <p className="text-base font-semibold">
@@ -660,351 +681,401 @@ function NewBookingPageContent() {
         {guideData && (
           <section className="w-full">
             <div className="space-y-6 bg-card p-6 rounded-3xl shadow-lg border border-border">
-            <div>
-              <h2 className="font-bold text-lg mb-2 text-foreground">
-                Guide Details
-              </h2>
-              <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 text-sm text-foreground">
-                <p className="text-base font-semibold text-primary">
-                  {guideName}
-                </p>
-                {guideData.bio?.description && (
-                  <p className="text-sm text-muted-foreground mt-2">
-                    {guideData.bio.description}
-                  </p>
-                )}
-                <p className="text-muted-foreground mt-2">
-                  Experience type:{" "}
-                  <span className="font-semibold text-foreground">
-                    {guideResourceLabel || "Guide"}
-                  </span>
-                </p>
-                {guideData.expertise && guideData.expertise.length > 0 && (
-                  <p className="text-muted-foreground mt-2">
-                    Expertise:{" "}
-                    <span className="font-semibold text-foreground">
-                      {guideData.expertise.join(", ")}
-                    </span>
-                  </p>
-                )}
-                {guideData.speaking_languages && guideData.speaking_languages.length > 0 && (
-                  <p className="text-muted-foreground mt-2">
-                    Languages:{" "}
-                    <span className="font-semibold text-foreground">
-                      {guideData.speaking_languages.join(", ")}
-                    </span>
-                  </p>
-                )}
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Need a different guide or experience? Return to the guides
-                  list to switch before submitting.
-                </p>
-              </div>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <h2 className="font-bold text-lg mb-2 text-foreground">
-                  Start Date
+                  Guide Details
                 </h2>
-                <DatePicker
-                  value={startDate}
-                  onChange={setStartDate}
-                  min={new Date().toISOString().split("T")[0]}
-                />
+                <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 text-sm text-foreground">
+                  <p className="text-base font-semibold text-primary">
+                    {guideName}
+                  </p>
+                  {guideData.bio?.description && (
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {guideData.bio.description}
+                    </p>
+                  )}
+                  <p className="text-muted-foreground mt-2">
+                    Experience type:{" "}
+                    <span className="font-semibold text-foreground">
+                      {guideResourceLabel || "Guide"}
+                    </span>
+                  </p>
+                  {guideData.expertise && guideData.expertise.length > 0 && (
+                    <p className="text-muted-foreground mt-2">
+                      Expertise:{" "}
+                      <span className="font-semibold text-foreground">
+                        {guideData.expertise.join(", ")}
+                      </span>
+                    </p>
+                  )}
+                  {guideData.speaking_languages && guideData.speaking_languages.length > 0 && (
+                    <p className="text-muted-foreground mt-2">
+                      Languages:{" "}
+                      <span className="font-semibold text-foreground">
+                        {guideData.speaking_languages.join(", ")}
+                      </span>
+                    </p>
+                  )}
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Need a different guide or experience? Return to the guides
+                    list to switch before submitting.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="font-bold text-lg mb-2 text-foreground">
-                  End Date
-                </h2>
-                <DatePicker
-                  value={endDate}
-                  onChange={setEndDate}
-                  min={startDate || new Date().toISOString().split("T")[0]}
-                />
-              </div>
-            </div>
-            {!isDateRangeValid && startDate && endDate && (
-              <p className="text-sm text-red-600 dark:text-red-400">
-                End date must be on or after the start date.
-              </p>
-            )}
 
-            {/* Availability check (guide booking) */}
-            {guideIdParam && isDateRangeValid && startDate && endDate && (
-              <div className="rounded-2xl border border-border bg-muted/30 p-4">
-                {isAvailabilityLoading && (
-                  <p className="text-sm text-muted-foreground">
-                    Checking availability…
-                  </p>
-                )}
-                {!isAvailabilityLoading && availabilityError && (
-                  <p className="text-sm text-amber-600 dark:text-amber-400">
-                    Could not verify availability. You can still submit a
-                    request; we&apos;ll confirm availability.
-                  </p>
-                )}
-                {!isAvailabilityLoading && !availabilityError && isAvailable === true && (
-                  <p className="text-sm text-green-600 dark:text-green-400">
-                    Guide is available for these dates.
-                  </p>
-                )}
-                {!isAvailabilityLoading && !availabilityError && isAvailable === false && (
-                  <p className="text-sm text-red-600 dark:text-red-400">
-                    Guide is not available for these dates. Please choose
-                    different dates.
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* Dynamic Rate Display */}
-            {stayLengthInDays > 0 && guideData && (() => {
-              // Prefer daily rate for display, matching calculation logic
-              const dailyRate = guidePricing?.find((r) => r.type === "daily");
-              const hourlyRate = guidePricing?.find((r) => r.type === "hourly");
-              const selectedRate = dailyRate || hourlyRate;
-              
-              return (
-                <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4">
-                  <h3 className="text-sm font-semibold text-muted-foreground mb-3">
-                    Booking Rate
-                  </h3>
-                  {selectedRate && (getDisplayAmountFromRate(selectedRate) > 0 || selectedRate.amount > 0) ? (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-foreground">
-                          {selectedRate.type === "hourly" ? "Hourly Rate" : "Daily Rate"}
-                        </span>
-                        <span className="text-sm font-semibold text-foreground flex items-center gap-2">
-                          <span>
-                            {selectedRate.displayPrice?.currency || selectedRate.currency || currency} {getDisplayAmountFromRate(selectedRate).toFixed(2)}/{selectedRate.type === "hourly" ? "hour" : "day"}
-                          </span>
-                          {selectedRate.displayPriceUsd && selectedRate.displayPriceUsd.amount > 0 && (
-                            <span className="text-xs text-muted-foreground">
-                              ({selectedRate.displayPriceUsd.currency} {selectedRate.displayPriceUsd.amount.toFixed(2)})
-                            </span>
-                          )}
-                        </span>
-                      </div>
-                      {selectedRate.type === "hourly" ? (
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>
-                            {stayLengthInDays} day{stayLengthInDays !== 1 ? "s" : ""} × 8 hours/day
-                          </span>
-                          <span>
-                            = {stayLengthInDays * 8} hours
-                          </span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>
-                            {stayLengthInDays} day{stayLengthInDays !== 1 ? "s" : ""}
-                          </span>
-                        </div>
-                      )}
-                      <div className="pt-2 border-t border-border/50 flex items-center justify-between">
-                        <span className="text-base font-bold text-foreground">
-                          Total Rate
-                        </span>
-                        <span className="text-lg font-bold text-primary flex items-center gap-2">
-                          <span>
-                            {selectedRate.displayPrice?.currency || selectedRate.currency || currency} {paymentEstimate.toFixed(2)}
-                          </span>
-                          {paymentEstimateUsd !== null && (
-                            <span className="text-sm font-normal text-muted-foreground">
-                              ({selectedRate.displayPriceUsd?.currency || "USD"} {paymentEstimateUsd.toFixed(2)})
-                            </span>
-                          )}
-                        </span>
-                      </div>
-                    </div>
-                  ) : guideData?.resourceType?.price && guideData.resourceType.price > 0 ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-foreground">
-                        Base Rate per Guest per Day
-                      </span>
-                      <span className="text-sm font-semibold text-foreground">
-                        {currency} {guideData.resourceType.price.toFixed(2)}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>
-                        {stayLengthInDays} day{stayLengthInDays !== 1 ? "s" : ""} × {totalGuests} guest{totalGuests !== 1 ? "s" : ""}
-                      </span>
-                    </div>
-                    <div className="pt-2 border-t border-border/50 flex items-center justify-between">
-                      <span className="text-base font-bold text-foreground">
-                        Estimated Total
-                      </span>
-                      <span className="text-lg font-bold text-primary">
-                        {currency} {paymentEstimate.toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
-                  ) : (
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-foreground">
-                        Estimated Total
-                      </span>
-                      <span className="text-lg font-bold text-primary">
-                        {currency} {paymentEstimate.toFixed(2)}
-                      </span>
-                    </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <h2 className="font-bold text-lg mb-2 text-foreground">
+                    Start Date
+                  </h2>
+                  <DatePicker
+                    value={startDate}
+                    onChange={(val) => {
+                      setStartDate(val);
+                      setTouched((prev) => ({ ...prev, startDate: true }));
+                    }}
+                    min={new Date().toISOString().split("T")[0]}
+                  />
+                  {touched.startDate && errors.startDate && (
+                    <p className="mt-1 text-xs text-red-500">{errors.startDate}</p>
                   )}
                 </div>
-              );
-            })()}
-
-            <div>
-              <h2 className="font-bold text-lg mb-2 text-foreground">
-                Pickup Preference
-              </h2>
-              <div className="flex flex-col gap-3 md:flex-row">
-                <PickupOption
-                  icon={<span role="img" aria-label="airport">✈️</span>}
-                  label="Airport Pickup"
-                  description="Meet you right at arrivals."
-                  checked={pickupMode === "airport"}
-                  onChange={() => setPickupMode("airport")}
-                  value="airport"
-                />
-                <PickupOption
-                  icon={<span role="img" aria-label="pin">📍</span>}
-                  label="Custom Location"
-                  description="Search any hotel or address."
-                  checked={pickupMode === "custom"}
-                  onChange={() => setPickupMode("custom")}
-                  value="custom"
-                />
-              </div>
-
-              {pickupMode === "airport" ? (
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-muted-foreground mb-2">
-                    Select Airport
-                  </label>
-                  <div className="space-y-3">
-                    {airportOptions.map((option) => (
-                      <button
-                        key={option.id}
-                        type="button"
-                        onClick={() => setSelectedAirportId(option.id)}
-                        className={`w-full text-left border-2 rounded-2xl p-4 transition-all ${
-                          selectedAirportId === option.id
-                            ? "border-primary bg-primary/10"
-                            : "border-input bg-background hover:border-accent"
-                        }`}
-                      >
-                        <p className="font-semibold text-foreground">
-                          {option.label}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {option.description}
-                        </p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="mt-4">
-                  <CustomPickupLocationInput
-                    value={customPickup}
-                    onChange={setCustomPickup}
-                    helperText="Search anywhere in Sri Lanka using Google Maps."
+                <div>
+                  <h2 className="font-bold text-lg mb-2 text-foreground">
+                    End Date
+                  </h2>
+                  <DatePicker
+                    value={endDate}
+                    onChange={(val) => {
+                      setEndDate(val);
+                      setTouched((prev) => ({ ...prev, endDate: true }));
+                    }}
+                    min={startDate || new Date().toISOString().split("T")[0]}
                   />
+                  {touched.endDate && errors.endDate && (
+                    <p className="mt-1 text-xs text-red-500">{errors.endDate}</p>
+                  )}
+                </div>
+              </div>
+              {!isDateRangeValid && startDate && endDate && (
+                <p className="text-sm text-red-600 dark:text-red-400">
+                  End date must be on or after the start date.
+                </p>
+              )}
+
+              {/* Availability check (guide booking) */}
+              {guideIdParam && isDateRangeValid && startDate && endDate && (
+                <div className="rounded-2xl border border-border bg-muted/30 p-4">
+                  {isAvailabilityLoading && (
+                    <p className="text-sm text-muted-foreground">
+                      Checking availability…
+                    </p>
+                  )}
+                  {!isAvailabilityLoading && availabilityError && (
+                    <p className="text-sm text-amber-600 dark:text-amber-400">
+                      Could not verify availability. You can still submit a
+                      request; we&apos;ll confirm availability.
+                    </p>
+                  )}
+                  {!isAvailabilityLoading && !availabilityError && isAvailable === true && (
+                    <p className="text-sm text-green-600 dark:text-green-400">
+                      Guide is available for these dates.
+                    </p>
+                  )}
+                  {!isAvailabilityLoading && !availabilityError && isAvailable === false && (
+                    <p className="text-sm text-red-600 dark:text-red-400">
+                      Guide is not available for these dates. Please choose
+                      different dates.
+                    </p>
+                  )}
                 </div>
               )}
-            </div>
 
-            <div>
-              <h2 className="font-bold text-lg mb-2 text-foreground">
-                Group Size
-              </h2>
-              <GroupSizeSelector
-                adults={adults}
-                numChildren={children}
-                onAdultsChange={setAdults}
-                onChildrenChange={setChildren}
-              />
-            </div>
+              {/* Dynamic Rate Display */}
+              {stayLengthInDays > 0 && guideData && (() => {
+                // Prefer daily rate for display, matching calculation logic
+                const dailyRate = guidePricing?.find((r) => r.type === "daily");
+                const hourlyRate = guidePricing?.find((r) => r.type === "hourly");
+                const selectedRate = dailyRate || hourlyRate;
 
-            <div>
-              <h2 className="font-bold text-lg mb-2 text-foreground">
-                Contact Information
-              </h2>
-              <ContactInfo
-                onContactInfoChange={(
-                  newName,
-                  newPhoneNumber,
-                  nameValid,
-                  phoneValid
-                ) => {
-                  setName(newName);
-                  setPhoneNumber(newPhoneNumber);
-                  setIsNameValid(nameValid);
-                  setIsPhoneValid(phoneValid);
-                }}
-              />
-            </div>
+                return (
+                  <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4">
+                    <h3 className="text-sm font-semibold text-muted-foreground mb-3">
+                      Booking Rate
+                    </h3>
+                    {selectedRate && (getDisplayAmountFromRate(selectedRate) > 0 || selectedRate.amount > 0) ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-foreground">
+                            {selectedRate.type === "hourly" ? "Hourly Rate" : "Daily Rate"}
+                          </span>
+                          <span className="text-sm font-semibold text-foreground flex items-center gap-2">
+                            <span>
+                              {selectedRate.displayPrice?.currency || selectedRate.currency || currency} {getDisplayAmountFromRate(selectedRate).toFixed(2)}/{selectedRate.type === "hourly" ? "hour" : "day"}
+                            </span>
+                            {selectedRate.displayPriceUsd && selectedRate.displayPriceUsd.amount > 0 && (
+                              <span className="text-xs text-muted-foreground">
+                                ({selectedRate.displayPriceUsd.currency} {selectedRate.displayPriceUsd.amount.toFixed(2)})
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                        {selectedRate.type === "hourly" ? (
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>
+                              {stayLengthInDays} day{stayLengthInDays !== 1 ? "s" : ""} × 8 hours/day
+                            </span>
+                            <span>
+                              = {stayLengthInDays * 8} hours
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>
+                              {stayLengthInDays} day{stayLengthInDays !== 1 ? "s" : ""}
+                            </span>
+                          </div>
+                        )}
+                        <div className="pt-2 border-t border-border/50 flex items-center justify-between">
+                          <span className="text-base font-bold text-foreground">
+                            Total Rate
+                          </span>
+                          <span className="text-lg font-bold text-primary flex items-center gap-2">
+                            <span>
+                              {selectedRate.displayPrice?.currency || selectedRate.currency || currency} {paymentEstimate.toFixed(2)}
+                            </span>
+                            {paymentEstimateUsd !== null && (
+                              <span className="text-sm font-normal text-muted-foreground">
+                                ({selectedRate.displayPriceUsd?.currency || "USD"} {paymentEstimateUsd.toFixed(2)})
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    ) : guideData?.resourceType?.price && guideData.resourceType.price > 0 ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-foreground">
+                            Base Rate per Guest per Day
+                          </span>
+                          <span className="text-sm font-semibold text-foreground">
+                            {currency} {guideData.resourceType.price.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>
+                            {stayLengthInDays} day{stayLengthInDays !== 1 ? "s" : ""} × {totalGuests} guest{totalGuests !== 1 ? "s" : ""}
+                          </span>
+                        </div>
+                        <div className="pt-2 border-t border-border/50 flex items-center justify-between">
+                          <span className="text-base font-bold text-foreground">
+                            Estimated Total
+                          </span>
+                          <span className="text-lg font-bold text-primary">
+                            {currency} {paymentEstimate.toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-foreground">
+                          Estimated Total
+                        </span>
+                        <span className="text-lg font-bold text-primary">
+                          {currency} {paymentEstimate.toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
-            {bookingError !== null && (
-              <ErrorDisplay
-                error={bookingError}
-                onRetry={handleCreateBooking}
-                onSignIn={() => router.push("/auth")}
-              />
-            )}
+              <div>
+                <h2 className="font-bold text-lg mb-2 text-foreground">
+                  Pickup Preference
+                </h2>
+                <div className="flex flex-col gap-3 md:flex-row">
+                  <PickupOption
+                    icon={<span role="img" aria-label="airport">✈️</span>}
+                    label="Airport Pickup"
+                    description="Meet you right at arrivals."
+                    checked={pickupMode === "airport"}
+                    onChange={() => {
+                      setPickupMode("airport");
+                      setTouched((prev) => ({ ...prev, pickup: true }));
+                    }}
+                    value="airport"
+                  />
+                  <PickupOption
+                    icon={<span role="img" aria-label="pin">📍</span>}
+                    label="Custom Location"
+                    description="Search any hotel or address."
+                    checked={pickupMode === "custom"}
+                    onChange={() => {
+                      setPickupMode("custom");
+                      setTouched((prev) => ({ ...prev, pickup: true }));
+                    }}
+                    value="custom"
+                  />
+                </div>
 
-            {/* Debug: Show validation status */}
-            {process.env.NODE_ENV === "development" && (
-              <div className="rounded-lg border border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-yellow-950/30 p-4 text-xs text-yellow-800 dark:text-yellow-300">
-                <p className="font-semibold mb-2">Form Validation Status:</p>
-                <ul className="space-y-1">
-                  <li className={locationId ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
-                    Location ID: {locationId ? "✓" : "✗"} ({locationId || "empty"}) - Source: {guideData?.locationId ? "guide" : searchParams.get("location") ? "URL" : "default"}
-                  </li>
-                  <li className={guideIdParam ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
-                    Guide ID: {guideIdParam ? "✓" : "✗"}
-                  </li>
-                  <li className={guideResourceTypeId ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
-                    Guide Resource Type ID: {guideResourceTypeId ? "✓" : "✗"} ({guideResourceTypeId || "empty"})
-                  </li>
-                  <li className={isDateRangeValid ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
-                    Date Range: {isDateRangeValid ? "✓" : "✗"}
-                  </li>
-                  <li className={isPickupValid ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
-                    Pickup Location: {isPickupValid ? "✓" : "✗"}
-                  </li>
-                  <li className={totalGuests > 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
-                    Group Size: {totalGuests > 0 ? "✓" : "✗"} ({totalGuests} guests)
-                  </li>
-                  <li className={isNameValid ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
-                    Name Valid: {isNameValid ? "✓" : "✗"} ({name || "empty"})
-                  </li>
-                  <li className={isPhoneValid ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
-                    Phone Valid: {isPhoneValid ? "✓" : "✗"} ({phoneNumber || "empty"})
-                  </li>
-                  <li className={isFormValid ? "text-green-600 dark:text-green-400 font-bold" : "text-red-600 dark:text-red-400 font-bold"}>
-                    Form Valid: {isFormValid ? "✓ READY TO SUBMIT" : "✗ CANNOT SUBMIT"}
-                  </li>
-                </ul>
+                {pickupMode === "airport" ? (
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-muted-foreground mb-2">
+                      Select Airport
+                    </label>
+                    <div className="space-y-3">
+                      {airportOptions.map((option) => (
+                        <button
+                          key={option.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedAirportId(option.id);
+                            setTouched((prev) => ({ ...prev, pickup: true }));
+                          }}
+                          className={`w-full text-left border-2 rounded-2xl p-4 transition-all ${selectedAirportId === option.id
+                            ? "border-primary bg-primary/10"
+                            : "border-input bg-background hover:border-accent"
+                            }`}
+                        >
+                          <p className="font-semibold text-foreground">
+                            {option.label}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {option.description}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-4">
+                    <CustomPickupLocationInput
+                      value={customPickup}
+                      onChange={(val) => {
+                        setCustomPickup(val);
+                        setTouched((prev) => ({ ...prev, pickup: true }));
+                      }}
+                      helperText="Search anywhere in Sri Lanka using Google Maps."
+                    />
+                  </div>
+                )}
+                {touched.pickup && errors.pickup && (
+                  <p className="mt-1 text-xs text-red-500">{errors.pickup}</p>
+                )}
               </div>
-            )}
 
-            <ButtonV2
-              className="w-full"
-              variant="primary"
-              onClick={handleCreateBooking}
-              disabled={!isFormValid || isAvailable === false}
-              loading={isButtonLoading}
-              type="button"
-            >
-              Submit Booking
-            </ButtonV2>
-          </div>
-        </section>
+              <div>
+                <h2 className="font-bold text-lg mb-2 text-foreground">
+                  Group Size
+                </h2>
+                <GroupSizeSelector
+                  adults={adults}
+                  numChildren={children}
+                  onAdultsChange={(val) => {
+                    setAdults(val);
+                    setTouched((prev) => ({ ...prev, group: true }));
+                  }}
+                  onChildrenChange={(val) => {
+                    setChildren(val);
+                    setTouched((prev) => ({ ...prev, group: true }));
+                  }}
+                />
+                {touched.group && errors.group && (
+                  <p className="mt-1 text-xs text-red-500">{errors.group}</p>
+                )}
+              </div>
+
+              <div>
+                <h2 className="font-bold text-lg mb-2 text-foreground">
+                  Contact Information
+                </h2>
+                <ContactInfo
+                  onContactInfoChange={(
+                    newName,
+                    newPhoneNumber,
+                    nameValid,
+                    phoneValid
+                  ) => {
+                    setName(newName);
+                    setPhoneNumber(newPhoneNumber);
+                    setIsNameValid(nameValid);
+                    setIsPhoneValid(phoneValid);
+                    setTouched((prev) => ({
+                      ...prev,
+                      name: true,
+                      phoneNumber: true,
+                    }));
+                  }}
+                />
+                {(touched.name && errors.name) || (touched.phoneNumber && errors.phoneNumber) ? (
+                  <div className="mt-1 space-y-1">
+                    {touched.name && errors.name && (
+                      <p className="text-xs text-red-500">{errors.name}</p>
+                    )}
+                    {touched.phoneNumber && errors.phoneNumber && (
+                      <p className="text-xs text-red-500">{errors.phoneNumber}</p>
+                    )}
+                  </div>
+                ) : null}
+              </div>
+
+              {bookingError !== null && (
+                <ErrorDisplay
+                  error={bookingError}
+                  onRetry={handleCreateBooking}
+                  onSignIn={() => router.push("/auth")}
+                />
+              )}
+
+              {/* Debug: Show validation status */}
+              {process.env.NODE_ENV === "development" && (
+                <div className="rounded-lg border border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-yellow-950/30 p-4 text-xs text-yellow-800 dark:text-yellow-300">
+                  <p className="font-semibold mb-2">Form Validation Status:</p>
+                  <ul className="space-y-1">
+                    <li className={locationId ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
+                      Location ID: {locationId ? "✓" : "✗"} ({locationId || "empty"}) - Source: {guideData?.locationId ? "guide" : searchParams.get("location") ? "URL" : "default"}
+                    </li>
+                    <li className={guideIdParam ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
+                      Guide ID: {guideIdParam ? "✓" : "✗"}
+                    </li>
+                    <li className={guideResourceTypeId ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
+                      Guide Resource Type ID: {guideResourceTypeId ? "✓" : "✗"} ({guideResourceTypeId || "empty"})
+                    </li>
+                    <li className={isDateRangeValid ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
+                      Date Range: {isDateRangeValid ? "✓" : "✗"}
+                    </li>
+                    <li className={isPickupValid ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
+                      Pickup Location: {isPickupValid ? "✓" : "✗"}
+                    </li>
+                    <li className={totalGuests > 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
+                      Group Size: {totalGuests > 0 ? "✓" : "✗"} ({totalGuests} guests)
+                    </li>
+                    <li className={isNameValid ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
+                      Name Valid: {isNameValid ? "✓" : "✗"} ({name || "empty"})
+                    </li>
+                    <li className={isPhoneValid ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
+                      Phone Valid: {isPhoneValid ? "✓" : "✗"} ({phoneNumber || "empty"})
+                    </li>
+                    <li className={isFormValid ? "text-green-600 dark:text-green-400 font-bold" : "text-red-600 dark:text-red-400 font-bold"}>
+                      Form Valid: {isFormValid ? "✓ READY TO SUBMIT" : "✗ CANNOT SUBMIT"}
+                    </li>
+                  </ul>
+                </div>
+              )}
+
+              <ButtonV2
+                className="w-full"
+                variant="primary"
+                onClick={handleCreateBooking}
+                disabled={!isFormValid || isAvailable === false}
+                loading={isButtonLoading}
+                type="button"
+              >
+                Submit Booking
+              </ButtonV2>
+            </div>
+          </section>
         )}
       </div>
     </main>

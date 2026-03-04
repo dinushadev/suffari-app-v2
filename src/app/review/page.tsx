@@ -226,7 +226,7 @@ function ReviewPageContent() {
                   type="submit"
                   disabled={!user || !isFormValid || submitReview.isPending}
                   loading={submitReview.isPending}
-                  className="w-full rounded-xl py-3 text-base"
+                  className="w-full"
                 >
                   Submit review
                 </ButtonV2>

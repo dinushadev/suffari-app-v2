@@ -3,9 +3,10 @@ import { validationRegex, validationMessages } from '../../data/validationConfig
 
 interface ContactInfoProps {
   onContactInfoChange: (name: string, phoneNumber: string, isNameValid: boolean, isPhoneValid: boolean) => void;
+  onFieldTouched?: (field: "name" | "phoneNumber") => void;
 }
 
-const ContactInfo: React.FC<ContactInfoProps> = ({ onContactInfoChange }) => {
+const ContactInfo: React.FC<ContactInfoProps> = ({ onContactInfoChange, onFieldTouched }) => {
   const [name, setName] = useState<string>('');
   const [nameError, setNameError] = useState<string | null>(null);
   const [phoneNumberError, setPhoneNumberError] = useState<string | null>(null);
@@ -59,6 +60,7 @@ const ContactInfo: React.FC<ContactInfoProps> = ({ onContactInfoChange }) => {
     const newName = e.target.value;
     setName(newName);
     setIsNameTouched(true);
+    onFieldTouched?.("name");
     const isNameValid = validateName(newName);
     const isLocalPhoneValid = validateLocalPhoneNumber(localPhoneNumber);
     const isCountryCodeValid = validateCountryCode(countryCode);
@@ -69,6 +71,7 @@ const ContactInfo: React.FC<ContactInfoProps> = ({ onContactInfoChange }) => {
     const newCountryCode = e.target.value;
     setCountryCode(newCountryCode);
     setIsCountryCodeTouched(true);
+    onFieldTouched?.("phoneNumber");
     const isCountryCodeValid = validateCountryCode(newCountryCode);
     const isNameValid = validateName(name);
     const isLocalPhoneValid = validateLocalPhoneNumber(localPhoneNumber);
@@ -79,6 +82,7 @@ const ContactInfo: React.FC<ContactInfoProps> = ({ onContactInfoChange }) => {
     const newLocalPhoneNumber = e.target.value;
     setLocalPhoneNumber(newLocalPhoneNumber);
     setIsLocalPhoneNumberTouched(true);
+    onFieldTouched?.("phoneNumber");
     const isLocalPhoneValid = validateLocalPhoneNumber(newLocalPhoneNumber);
     const isNameValid = validateName(name);
     const isCountryCodeValid = validateCountryCode(countryCode);
@@ -104,7 +108,10 @@ const ContactInfo: React.FC<ContactInfoProps> = ({ onContactInfoChange }) => {
           placeholder="e.g., John Doe"
           value={name}
           onChange={handleNameChange}
-          onBlur={() => setIsNameTouched(true)}
+          onBlur={() => {
+            setIsNameTouched(true);
+            onFieldTouched?.("name");
+          }}
         />
         {isNameTouched && nameError && <p className="text-red-600 dark:text-red-400 text-xs mt-1">{nameError}</p>}
       </div>
@@ -118,7 +125,10 @@ const ContactInfo: React.FC<ContactInfoProps> = ({ onContactInfoChange }) => {
             placeholder="+1"
             value={countryCode}
             onChange={handleCountryCodeChange}
-            onBlur={() => setIsCountryCodeTouched(true)}
+            onBlur={() => {
+              setIsCountryCodeTouched(true);
+              onFieldTouched?.("phoneNumber");
+            }}
             pattern="^\+[1-9]\d{0,3}$"
           />
           <input
@@ -128,7 +138,10 @@ const ContactInfo: React.FC<ContactInfoProps> = ({ onContactInfoChange }) => {
             placeholder="e.g., 5551234567"
             value={localPhoneNumber}
             onChange={handleLocalPhoneNumberChange}
-            onBlur={() => setIsLocalPhoneNumberTouched(true)}
+            onBlur={() => {
+              setIsLocalPhoneNumberTouched(true);
+              onFieldTouched?.("phoneNumber");
+            }}
             pattern="[0-9]*"
           />
         </div>

@@ -23,7 +23,7 @@ export default function LocationDetailsPage() {
   if (isLoading) {
     return (
       <main className="min-h-screen flex flex-col items-center bg-background p-4">
-  
+
         <p className="text-lg sm:text-xl text-foreground font-medium text-center max-w-xl drop-shadow-sm flex items-center justify-center gap-2">
           Loading Safari Location...
         </p>
@@ -162,7 +162,8 @@ export default function LocationDetailsPage() {
         {/* Sticky Book Now Button for mobile */}
         <div className="sticky bottom-0 left-0 right-0 bg-ivory border-t border-ash rounded-b-3xl px-6 pb-6 pt-4 z-20">
           <ButtonV2
-            className="w-full text-lg py-4 rounded-2xl shadow-lg "
+            className="w-full"
+            size="lg"
             onClick={handleSelectRide}
             loading={isLoadingBooking}
           >

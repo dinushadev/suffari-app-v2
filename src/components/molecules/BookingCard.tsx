@@ -12,6 +12,12 @@ import { ButtonV2 } from "@/components/atoms";
 import { useRouter } from 'next/navigation';
 import { formatInTimezone, getTimezoneAbbreviation } from '@/lib/timezoneUtils';
 import { cn } from '@/lib/utils';
+import {
+  ChatBubbleLeftRightIcon,
+  XMarkIcon,
+  StarIcon
+} from "@heroicons/react/24/outline";
+
 
 interface BookingCardProps {
   booking: Booking;
@@ -99,7 +105,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
   const startDate = new Date(booking.startTime);
   const endDate = new Date(booking.endTime);
   const isSameDate = startDate.toDateString() === endDate.toDateString();
-  
+
   // Format date/time display - show date range if different dates
   let formattedDateTime: string;
   if (isSameDate) {
@@ -129,12 +135,27 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
     );
     formattedDateTime = `${formattedStartDate} - ${formattedEndDate}`;
   }
-  
+
   // Get timezone abbreviation for display
   const timezoneAbbr = getTimezoneAbbreviation(bookingTimezone, new Date(booking.startTime));
 
+  const [loadingState, setLoadingState] = React.useState<{ [key: string]: boolean }>({});
+
+  const handleAction = async (actionId: string, path: string) => {
+    if (loadingState[actionId]) return;
+
+    setLoadingState(prev => ({ ...prev, [actionId]: true }));
+    try {
+      // Simulate/Trigger API request if needed, then navigate
+      await router.push(path);
+    } catch (error) {
+      console.error(`Action ${actionId} failed:`, error);
+      setLoadingState(prev => ({ ...prev, [actionId]: false }));
+    }
+  };
+
   return (
-    <Card className={cn(cardClasses, "min-w-0 overflow-hidden")}>
+    <Card className={cn(cardClasses, "min-w-0 overflow-hidden transition-all duration-300 hover:shadow-lg")}>
       <CardHeader>
         <CardTitle className="text-xl font-bold">{booking.resourceType?.name || 'N/A'} at {booking.location?.name || 'N/A'}</CardTitle>
         <CardDescription className="text-sm text-muted-foreground">
@@ -148,38 +169,47 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
           <p><strong>Pickup Location:</strong> {booking.pickupLocation.address}</p>
         </div>
         {booking.status !== "canceled" && (
-          <div className="mt-6 flex flex-wrap gap-2 w-full min-w-0">
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full transition-all duration-300">
             {showMessage && (
               <ButtonV2
-                onClick={() => router.push(`/booking/${booking.id}/message`)}
+                onClick={() => handleAction('message', `/booking/${booking.id}/message`)}
+                loading={loadingState['message']}
                 variant="primary"
                 size="sm"
-                className="flex-1 min-w-[7.5rem] max-w-full"
+                className="w-full"
               >
+                <ChatBubbleLeftRightIcon className="w-4 h-4 mr-2" />
                 Message host
               </ButtonV2>
             )}
             {!isPastBooking && (
               <ButtonV2
-                onClick={() => router.push(`/booking/cancel/${booking.id}`)}
-                disabled={!canCancel}
+                onClick={() => handleAction('cancel', `/booking/cancel/${booking.id}`)}
+                loading={loadingState['cancel']}
+                disabled={!canCancel || loadingState['cancel']}
                 variant="destructive"
                 size="sm"
-                className="flex-1 min-w-[7.5rem] max-w-full"
+                className="w-full"
               >
+                <XMarkIcon className="w-4 h-4 mr-2" />
                 Cancel booking
               </ButtonV2>
             )}
             {isPastBooking && (
-              <Link
-                href={`/review?order_id=${encodeURIComponent(booking.id)}&return=${encodeURIComponent("/booking/history")}`}
-                className="inline-flex flex-1 min-w-[7.5rem] max-w-full items-center justify-center rounded-full bg-primary text-primary-foreground px-4 py-2 text-sm font-semibold hover:bg-primary/90 transition h-9"
+              <ButtonV2
+                onClick={() => handleAction('review', `/review?order_id=${encodeURIComponent(booking.id)}&return=${encodeURIComponent("/booking/history")}`)}
+                loading={loadingState['review']}
+                variant="primary"
+                size="sm"
+                className="w-full"
               >
+                <StarIcon className="w-4 h-4 mr-2" />
                 Write a review
-              </Link>
+              </ButtonV2>
             )}
           </div>
         )}
+
       </CardContent>
     </Card>
   );

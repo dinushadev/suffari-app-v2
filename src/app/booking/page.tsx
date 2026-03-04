@@ -71,6 +71,7 @@ function BookingPageContent() {
   );
   const [name, setName] = useState<string>('');
   const [phoneNumber, setPhoneNumber] = useState<string>('');
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [bookingError, setBookingError] = useState<unknown>(null);
   const [isNameValid, setIsNameValid] = useState<boolean>(false);
   const [isPhoneNumberValid, setIsPhoneNumberValid] = useState<boolean>(false);
@@ -104,9 +105,56 @@ function BookingPageContent() {
           setFromGate(!!data.fromGate);
         }
         localStorage.removeItem("pendingBooking");
-      } catch {}
+      } catch { }
     }
   }, []);
+
+  // Map API data to VehicleTypeSelector format
+  const vehicleOptions =
+    vehicleTypes?.map((v) => ({
+      label: v.name,
+      value: v.id,
+      description: v.discription,
+      imageUrl: v.imageUrl,
+      price: v.price,
+      currency: v.currency,
+      displayPriceUsd: v.displayPriceUsd,
+      featureList: v.featureList,
+      numberOfGuests: v.numberOfGuests,
+    })) || [];
+
+  // Extract currency from selected vehicle
+  const selectedVehicleType = vehicleTypes?.find((v) => v.id === vehicle);
+  const currency = selectedVehicleType
+    ? getCurrencyFromResourceType(selectedVehicleType)
+    : getDefaultCurrency();
+
+  // Validation: all fields must be filled
+  const errors = React.useMemo(() => {
+    const errs: Record<string, string> = {};
+    if (!vehicle) errs.vehicle = "Vehicle type is required";
+    if (!date) errs.date = "Date is required";
+    if (!timeSlot) errs.timeSlot = "Time slot is required";
+    if (!fromGate && (!pickup?.address || pickup.address.trim().length === 0)) {
+      errs.pickup = "Pickup location is required";
+    }
+    if (!name.trim()) errs.name = "Name is required";
+    else if (!isNameValid) errs.name = "Please enter a valid name";
+    if (!phoneNumber.trim()) errs.phoneNumber = "Phone number is required";
+    else if (!isPhoneNumberValid) errs.phoneNumber = "Please enter a valid phone number";
+    if (adults + children <= 0) errs.group = "At least one guest is required";
+    return errs;
+  }, [vehicle, date, timeSlot, pickup, fromGate, name, isNameValid, phoneNumber, isPhoneNumberValid, adults, children]);
+
+  const isFormValid =
+    !!vehicle &&
+    !!date &&
+    !!timeSlot &&
+    ((pickup && pickup.address && pickup.address.trim().length > 0) ||
+      fromGate) &&
+    adults + children > 0 &&
+    isNameValid &&
+    isPhoneNumberValid;
 
   // Redirect if no locationId
   React.useEffect(() => {
@@ -149,36 +197,6 @@ function BookingPageContent() {
       </div>
     );
   }
-
-  // Map API data to VehicleTypeSelector format
-  const vehicleOptions =
-    vehicleTypes?.map((v) => ({
-      label: v.name,
-      value: v.id,
-      description: v.discription,
-      imageUrl: v.imageUrl,
-      price: v.price,
-      currency: v.currency,
-      displayPriceUsd: v.displayPriceUsd,
-      featureList: v.featureList,
-      numberOfGuests: v.numberOfGuests,
-    })) || [];
-
-  // Extract currency from selected vehicle
-  const selectedVehicleType = vehicleTypes?.find((v) => v.id === vehicle);
-  const currency = selectedVehicleType 
-    ? getCurrencyFromResourceType(selectedVehicleType)
-    : getDefaultCurrency();
-
-  // Validation: all fields must be filled
-  const isFormValid =
-    !!vehicle &&
-    !!date &&
-    !!timeSlot &&
-    ((pickup && pickup.address && pickup.address.trim().length > 0) ||
-      fromGate) &&
-    isNameValid &&
-    isPhoneNumberValid;
 
   if (confirmed) {
     return (
@@ -259,7 +277,7 @@ function BookingPageContent() {
           return "09:00:00";
       }
     };
-    
+
     // Convert local time in location's timezone to UTC
     const timeForSlot = getTimeForSlot(timeSlot);
     const startDateTime = date ? convertLocalToUTC(date, timeForSlot, locationTimezone) : "";
@@ -375,7 +393,7 @@ function BookingPageContent() {
             return "09:00:00";
         }
       };
-      
+
       // Convert local time in location's timezone to UTC
       const timeForSlot = getTimeForSlot(timeSlot);
       const startDateTime = date ? convertLocalToUTC(date, timeForSlot, locationTimezone) : "";
@@ -504,7 +522,7 @@ function BookingPageContent() {
           {/* Error displays for data loading */}
           {vehicleTypesError && (
             <div className="mb-4">
-              <ErrorDisplay 
+              <ErrorDisplay
                 error={vehicleTypesError}
                 onRetry={() => {
                   window.location.reload();
@@ -518,7 +536,7 @@ function BookingPageContent() {
 
           {bookingDetailsError && (
             <div className="mb-4">
-              <ErrorDisplay 
+              <ErrorDisplay
                 error={bookingDetailsError}
                 onRetry={() => {
                   window.location.reload();
@@ -536,19 +554,34 @@ function BookingPageContent() {
             </h2>
             <PickupLocationInput
               value={pickup}
-              onChange={setPickup}
+              onChange={(val) => {
+                setPickup(val);
+                setTouched((prev) => ({ ...prev, pickup: true }));
+              }}
               fromGate={fromGate}
-              onToggleGate={setFromGate}
+              onToggleGate={(val) => {
+                setFromGate(val);
+                setTouched((prev) => ({ ...prev, pickup: true }));
+              }}
             />
+            {touched.pickup && errors.pickup && (
+              <p className="mt-1 text-xs text-red-500">{errors.pickup}</p>
+            )}
           </div>
 
           <div className="mb-6">
             <h2 className="font-bold text-lg mb-2 text-foreground">Date</h2>
             <DatePicker
               value={date}
-              onChange={setDate}
+              onChange={(val) => {
+                setDate(val);
+                setTouched((prev) => ({ ...prev, date: true }));
+              }}
               min={new Date().toISOString().split("T")[0]}
             />
+            {touched.date && errors.date && (
+              <p className="mt-1 text-xs text-red-500">{errors.date}</p>
+            )}
           </div>
 
           <div className="mb-6">
@@ -558,8 +591,14 @@ function BookingPageContent() {
             <TimeSlotPicker
               options={timeSlotOptions}
               selected={timeSlot}
-              onSelect={setTimeSlot}
+              onSelect={(val) => {
+                setTimeSlot(val);
+                setTouched((prev) => ({ ...prev, timeSlot: true }));
+              }}
             />
+            {touched.timeSlot && errors.timeSlot && (
+              <p className="mt-1 text-xs text-red-500">{errors.timeSlot}</p>
+            )}
           </div>
 
           <div className="mb-6">
@@ -569,9 +608,18 @@ function BookingPageContent() {
             <GroupSizeSelector
               adults={adults}
               numChildren={children}
-              onAdultsChange={setAdults}
-              onChildrenChange={setChildren}
+              onAdultsChange={(val) => {
+                setAdults(val);
+                setTouched((prev) => ({ ...prev, group: true }));
+              }}
+              onChildrenChange={(val) => {
+                setChildren(val);
+                setTouched((prev) => ({ ...prev, group: true }));
+              }}
             />
+            {touched.group && errors.group && (
+              <p className="mt-1 text-xs text-red-500">{errors.group}</p>
+            )}
           </div>
 
           <div className="mb-6">
@@ -586,8 +634,14 @@ function BookingPageContent() {
               <VehicleTypeSelector
                 options={vehicleOptions}
                 selected={vehicle}
-                onSelect={setVehicle}
+                onSelect={(val) => {
+                  setVehicle(val);
+                  setTouched((prev) => ({ ...prev, vehicle: true }));
+                }}
               />
+            )}
+            {touched.vehicle && errors.vehicle && (
+              <p className="mt-1 text-xs text-red-500">{errors.vehicle}</p>
             )}
           </div>
           <div className="mb-6">
@@ -606,15 +660,28 @@ function BookingPageContent() {
                 setIsNameValid(nameValid);
                 setIsPhoneNumberValid(phoneValid);
               }}
+              onFieldTouched={(field) => {
+                setTouched((prev) => ({ ...prev, [field]: true }));
+              }}
             />
+            {(touched.name && errors.name) || (touched.phoneNumber && errors.phoneNumber) ? (
+              <div className="mt-1 space-y-1">
+                {touched.name && errors.name && (
+                  <p className="text-xs text-red-500">{errors.name}</p>
+                )}
+                {touched.phoneNumber && errors.phoneNumber && (
+                  <p className="text-xs text-red-500">{errors.phoneNumber}</p>
+                )}
+              </div>
+            ) : null}
           </div>
           <div className="mb-8">
             {/* BookingSummary will be shown on the payment page instead */}
           </div>
-          
+
           {bookingError ? (
             <div className="mb-6">
-              <ErrorDisplay 
+              <ErrorDisplay
                 error={bookingError}
                 onRetry={() => {
                   setBookingError(null);
@@ -626,10 +693,10 @@ function BookingPageContent() {
               />
             </div>
           ) : null}
-          
+
           <ButtonV2
             variant="primary"
-            className="w-full transition-transform duration-150 hover:scale-105 disabled:hover:scale-100"
+            className="w-full"
             onClick={handleConfirm}
             disabled={!isFormValid}
             loading={isButtonLoading}

@@ -96,13 +96,13 @@ const Header = () => {
               </button>
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-popover rounded-md shadow-lg py-1 z-20 border border-border">
-                  <Link
+                  {/* <Link
                     href="/profile"
                     className="block px-4 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground"
                     onClick={() => setIsDropdownOpen(false)}
                   >
                     Profile
-                  </Link>
+                  </Link> */}
                   <Link
                     href="/booking/history"
                     className="block px-4 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground"
@@ -122,7 +122,6 @@ const Header = () => {
           ) : (
             <ButtonV2
               variant="primary"
-              className="bg-primary text-primary-foreground py-2 px-4 rounded-full font-semibold hover:bg-primary/90 transition-colors duration-300"
               onClick={handleSignInClick}
               loading={isLoading}
             >

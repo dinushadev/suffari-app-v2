@@ -59,15 +59,15 @@ const CancelBookingPage = () => {
 
   // Get timezone from booking schedule or default to Asia/Colombo
   const bookingTimezone = typedBooking.schedule?.timezone || 'Asia/Colombo';
-  
+
   // Format dates in the booking's timezone
   // Validate dates before creating Date objects
   const startDate = typedBooking.startTime ? new Date(typedBooking.startTime) : null;
   const endDate = typedBooking.endTime ? new Date(typedBooking.endTime) : null;
-  const isSameDate = startDate && endDate && 
+  const isSameDate = startDate && endDate &&
     !isNaN(startDate.getTime()) && !isNaN(endDate.getTime()) &&
     startDate.toDateString() === endDate.toDateString();
-  
+
   // Format date/time display - show date range if different dates
   let formattedDateTime: string;
   if (isSameDate) {
@@ -97,10 +97,10 @@ const CancelBookingPage = () => {
     );
     formattedDateTime = `${formattedStartDate} - ${formattedEndDate}`;
   }
-  
+
   // Get timezone abbreviation for display
   const timezoneAbbr = getTimezoneAbbreviation(
-    bookingTimezone, 
+    bookingTimezone,
     typedBooking.startTime ? new Date(typedBooking.startTime) : new Date()
   );
 
@@ -198,7 +198,15 @@ const CancelBookingPage = () => {
 
       <div className="mt-8 flex flex-col sm:flex-row justify-end gap-4">
         <ButtonV2 variant="ghost" onClick={() => router.back()} className="w-full sm:w-auto">Go Back</ButtonV2>
-        <ButtonV2 onClick={handleConfirmCancellation} disabled={!reason.trim()} variant="destructive" className="w-full sm:w-auto">Confirm Cancellation</ButtonV2>
+        <ButtonV2
+          onClick={handleConfirmCancellation}
+          disabled={!reason.trim() || cancelBookingMutation.isPending}
+          loading={cancelBookingMutation.isPending}
+          variant="destructive"
+          className="w-full sm:w-auto"
+        >
+          Confirm Cancellation
+        </ButtonV2>
       </div>
     </div>
   );

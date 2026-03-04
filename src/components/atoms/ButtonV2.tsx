@@ -9,7 +9,7 @@ interface ButtonV2Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const ButtonV2: React.FC<ButtonV2Props> = ({ children, variant = 'primary', size, className = '', loading = false, ...props }) => {
-  const base = 'flex items-center justify-center px-4 py-2 font-semibold focus:outline-none transition';
+  const base = 'flex items-center justify-center px-4 py-2 font-semibold focus:outline-none transition-all duration-300 active:scale-95 disabled:opacity-70 shadow-sm hover:shadow-md';
   const variants = {
     primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
     secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
@@ -27,8 +27,7 @@ const ButtonV2: React.FC<ButtonV2Props> = ({ children, variant = 'primary', size
   return (
     <button
       className={
-        `${base} ${sizes[(size || 'default') as keyof typeof sizes]} ${
-           variants[variant]
+        `${base} ${sizes[(size || 'default') as keyof typeof sizes]} ${variants[variant]
         } ${className}`
       }
       {...props}

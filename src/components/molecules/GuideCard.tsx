@@ -26,7 +26,7 @@ export const GuideCard = ({ guide, onBook }: GuideCardProps) => {
   const fullName = otherName
     ? `${otherName} (${firstName} ${lastName})`
     : `${firstName} ${lastName}`;
-  
+
   // Get description from bio
   const description = guide.bio?.description?.trim();
   const summary =
@@ -54,7 +54,7 @@ export const GuideCard = ({ guide, onBook }: GuideCardProps) => {
 
   // Get rates (prefer rates over pricing for backward compatibility)
   const rates = guide.rates || guide.pricing || [];
-  
+
   // Get primary rate for mobile display
   const primaryRate = rates.length > 0 ? rates[0] : null;
   const primaryRateLabel = primaryRate?.type === "hourly" ? "Hour" : primaryRate?.type === "daily" ? "Day" : primaryRate?.type || "";
@@ -63,7 +63,7 @@ export const GuideCard = ({ guide, onBook }: GuideCardProps) => {
   const languages = guide.speakingLanguages || guide.speaking_languages || [];
   const visibleLanguages = showAllLanguages ? languages : languages.slice(0, 2);
   const remainingLanguages = languages.length - 2;
-  
+
   // Always show all expertise items
   const expertise = guide.expertise || [];
 
@@ -72,9 +72,9 @@ export const GuideCard = ({ guide, onBook }: GuideCardProps) => {
     if (!guide.profileImage) {
       return "/images/placeholder.svg";
     }
-    
+
     const imageUrl = guide.profileImage.trim();
-    
+
     // Check for common invalid/placeholder URLs
     const invalidPatterns = [
       "example.com",
@@ -83,12 +83,12 @@ export const GuideCard = ({ guide, onBook }: GuideCardProps) => {
       "via.placeholder.com",
       "dummyimage.com",
     ];
-    
+
     // If it's a relative path, use it directly
     if (imageUrl.startsWith("/")) {
       return imageUrl;
     }
-    
+
     try {
       const url = new URL(imageUrl);
       // Check if hostname is invalid or matches placeholder patterns
@@ -120,14 +120,13 @@ export const GuideCard = ({ guide, onBook }: GuideCardProps) => {
               className="object-cover transition duration-500 group-hover:scale-105"
             />
           </div>
-          
+
           {/* Availability Badge - Top Right */}
           <span
-            className={`absolute top-0 right-0 rounded-full px-2.5 py-1 text-[10px] sm:text-xs font-semibold uppercase tracking-wide border ${
-              guide.available
+            className={`absolute top-0 right-0 rounded-full px-2.5 py-1 text-[10px] sm:text-xs font-semibold uppercase tracking-wide border ${guide.available
                 ? "bg-emerald-500/10 text-emerald-700 border-emerald-500/20"
                 : "bg-red-500/10 text-red-700 border-red-500/20"
-            }`}
+              }`}
           >
             {guide.available ? "Available" : "Fully booked"}
           </span>
@@ -168,7 +167,7 @@ export const GuideCard = ({ guide, onBook }: GuideCardProps) => {
               const displayCurrency = rate.displayPrice?.currency ?? rate.currency;
               const usd = rate.displayPriceUsd;
               const hasUsdRate = (usd?.amount ?? 0) > 0;
-              
+
               return (
                 <div
                   key={`${guide.id}-rate-${index}`}
@@ -274,12 +273,12 @@ export const GuideCard = ({ guide, onBook }: GuideCardProps) => {
           </div>
         </div> */}
       </CardContent>
-      
+
       {/* 6. Action: "Book this guide" Button (Primary Color) */}
       <CardFooter className="p-4 pt-0 sm:p-6 sm:pt-0">
         <ButtonV2
           variant="primary"
-          className="w-full rounded-2xl py-2.5 sm:py-3 text-sm sm:text-base font-semibold shadow-sm shadow-primary/40 min-h-[44px]"
+          className="w-full"
           onClick={() => onBook?.(guide)}
         >
           Book this guide

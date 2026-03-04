@@ -61,7 +61,7 @@ function StripePaymentForm({
       // Stripe expects amounts in the smallest currency unit (cents for USD, etc.)
       // Convert to smallest unit by multiplying by 100
       const amountInSmallestUnit = Math.round(amount * 100);
-      
+
       const pr = stripe.paymentRequest({
         country: "US",
         currency: currency.toLowerCase(),
@@ -166,7 +166,8 @@ function StripePaymentForm({
         <ButtonV2
           type="submit"
           variant="primary"
-          className="w-full text-lg py-3"
+          className="w-full"
+          size="lg"
           disabled={isSubmittingPayment || hasConfirmedPaymentIntent}
           loading={isSubmittingPayment}
         >
@@ -252,7 +253,7 @@ function StripePaymentWrapper({
     <>
       {error && (
         <div className="mb-4">
-          <ErrorDisplay 
+          <ErrorDisplay
             error={error}
             onRetry={handleTryAgain}
             onSignIn={() => {
@@ -353,7 +354,7 @@ function PaymentPage() {
     return (
       <div className="min-h-screen flex flex-col items-center bg-background p-4">
         <div className="w-full max-w-lg">
-          <ErrorDisplay 
+          <ErrorDisplay
             error={error}
             onRetry={() => {
               window.location.reload();
@@ -372,7 +373,7 @@ function PaymentPage() {
     return (
       <div className="min-h-screen flex flex-col items-center bg-background p-4">
         <div className="w-full max-w-lg">
-          <ErrorDisplay 
+          <ErrorDisplay
             error={new Error('Resource type not found. Please try again.')}
             onRetry={() => {
               window.location.reload();
@@ -398,10 +399,10 @@ function PaymentPage() {
       try {
         const date = new Date(booking.schedule.date);
         if (!isNaN(date.getTime())) {
-          return date.toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
+          return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
           });
         }
       } catch {
@@ -415,10 +416,10 @@ function PaymentPage() {
       try {
         const date = new Date(booking.startTime);
         if (!isNaN(date.getTime())) {
-          return date.toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
+          return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
           });
         }
       } catch {
@@ -443,16 +444,16 @@ function PaymentPage() {
         const startDate = new Date(booking.startTime);
         const endDate = new Date(booking.endTime);
         if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-          const startFormatted = startDate.toLocaleDateString('en-US', { 
-            month: 'short', 
-            day: 'numeric' 
+          const startFormatted = startDate.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric'
           });
-          const endFormatted = endDate.toLocaleDateString('en-US', { 
-            month: 'short', 
+          const endFormatted = endDate.toLocaleDateString('en-US', {
+            month: 'short',
             day: 'numeric',
             year: 'numeric'
           });
-          
+
           // If same date, show as "Full Day"
           if (startDate.toDateString() === endDate.toDateString()) {
             return "Full Day";
@@ -587,12 +588,12 @@ function DirectBookingConfirmation({
     <div className="mt-8">
       {loading && (
 
-          <FullScreenLoader />
-      
+        <FullScreenLoader />
+
       )}
       {error && (
         <div className="mb-4">
-          <ErrorDisplay 
+          <ErrorDisplay
             error={error}
             onRetry={() => {
               setError(null);
@@ -604,10 +605,11 @@ function DirectBookingConfirmation({
           />
         </div>
       )}
-      <ButtonV2 
-        onClick={handleConfirm} 
-        variant="primary" 
-        className="w-full text-lg py-3" 
+      <ButtonV2
+        onClick={handleConfirm}
+        variant="primary"
+        className="w-full"
+        size="lg"
         disabled={loading}
         loading={loading}
       >
