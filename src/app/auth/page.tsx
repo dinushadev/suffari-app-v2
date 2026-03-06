@@ -162,7 +162,7 @@ function AuthPageContent() {
         options: {
           // set this to false if you do not want the user to be automatically signed up
           shouldCreateUser: true,
-          emailRedirectTo: `${window.location.origin}${returnUrl}`,
+          emailRedirectTo: `${window.location.origin}/auth?returnUrl=${encodeURIComponent(returnUrl)}`,
         },
       });
 
