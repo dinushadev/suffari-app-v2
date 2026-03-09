@@ -10,7 +10,7 @@ import {
 } from "../../components/molecules";
 import { Button, CustomImage, Loader, ErrorDisplay } from "../../components/atoms";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useVehicleTypes } from "../../data/useVehicleTypes";
+import { useBookingConfig, findVehicleForPricingId } from "../../data/useBookingConfig";
 import type { PickupLocation } from "../../components/molecules/PickupLocationInput";
 import {
   useCreateBooking,
@@ -23,30 +23,7 @@ import { useBookingDetails } from "../../data/useBookingDetails";
 import { ButtonV2 } from "../../components/atoms";
 import { FullScreenLoader } from "../../components/atoms";
 import { getTimezoneForLocation, convertLocalToUTC } from "../../lib/timezoneUtils";
-import { getCurrencyFromResourceType, getDefaultCurrency } from "../../lib/currencyUtils";
-
-const timeSlotOptions = [
-  {
-    label: "Full-day",
-    value: "full-day",
-    description: "All-day adventure with lunch. Plenty of time to explore.",
-  },
-  {
-    label: "Morning",
-    value: "morning",
-    description: "Cool, early start as the nature awakens.",
-  },
-  {
-    label: "Afternoon/ Evening",
-    value: "afternoon",
-    description: "Relaxed late-day drive in shifting light",
-  },
-  {
-    label: "Night",
-    value: "night",
-    description: "Explore after dark. Night gears are recommended.",
-  },
-];
+import { getDefaultCurrency } from "../../lib/currencyUtils";
 
 function generateSessionId() {
   return "sess_" + Math.random().toString(36).substr(2, 9) + Date.now();
@@ -59,7 +36,7 @@ function BookingPageContent() {
 
   const [vehicle, setVehicle] = useState("");
   const [date, setDate] = useState("");
-  const [timeSlot, setTimeSlot] = useState("morning");
+  const [timeSlot, setTimeSlot] = useState("");
   const [pickup, setPickup] = useState<PickupLocation>({});
   const [fromGate, setFromGate] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
@@ -82,10 +59,10 @@ function BookingPageContent() {
     error: locationError,
   } = useLocationDetails(locationId || "");
   const {
-    data: vehicleTypes,
-    isLoading: vehicleTypesLoading,
-    error: vehicleTypesError,
-  } = useVehicleTypes();
+    data: bookingConfig,
+    isLoading: configLoading,
+    error: configError,
+  } = useBookingConfig(locationId || "");
   const createBookingMutation = useCreateBooking();
   const {
     error: bookingDetailsError,
@@ -100,7 +77,7 @@ function BookingPageContent() {
         if (data) {
           setVehicle(data.vehicle || "");
           setDate(data.date || "");
-          setTimeSlot(data.timeSlot || "morning");
+          setTimeSlot(data.timeSlot || "");
           setPickup(data.pickup || {});
           setFromGate(!!data.fromGate);
         }
@@ -109,25 +86,74 @@ function BookingPageContent() {
     }
   }, []);
 
-  // Map API data to VehicleTypeSelector format
-  const vehicleOptions =
-    vehicleTypes?.map((v) => ({
-      label: v.name,
-      value: v.id,
-      description: v.discription,
-      imageUrl: v.imageUrl,
-      price: v.price,
-      currency: v.currency,
-      displayPriceUsd: v.displayPriceUsd,
-      featureList: v.featureList,
-      numberOfGuests: v.numberOfGuests,
-    })) || [];
+  // Default to the first timeslot once config is loaded
+  React.useEffect(() => {
+    if (bookingConfig?.timeSlots?.length && !timeSlot) {
+      setTimeSlot(bookingConfig.timeSlots[0].value);
+    }
+  }, [bookingConfig, timeSlot]);
 
-  // Extract currency from selected vehicle
-  const selectedVehicleType = vehicleTypes?.find((v) => v.id === vehicle);
-  const currency = selectedVehicleType
-    ? getCurrencyFromResourceType(selectedVehicleType)
-    : getDefaultCurrency();
+  // Derive timeslot options from config
+  const timeSlotOptions = React.useMemo(
+    () =>
+      bookingConfig?.timeSlots
+        ?.slice()
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((ts) => ({
+          label: ts.label,
+          value: ts.value,
+          description: `${ts.timeRange} · ${ts.description}`,
+        })) ?? [],
+    [bookingConfig]
+  );
+
+  // Derive vehicle options with prices for the currently selected timeslot
+  const vehicleOptions = React.useMemo(() => {
+    if (!bookingConfig) return [];
+    const { vehicles, pricingMatrix } = bookingConfig;
+
+    // Collect unique vehicleIds from pricingMatrix (preserving first-seen order)
+    const seenVehicleIds: string[] = [];
+    for (const entry of pricingMatrix) {
+      if (!seenVehicleIds.includes(entry.vehicleId)) {
+        seenVehicleIds.push(entry.vehicleId);
+      }
+    }
+
+    // Find the active timeslot id that matches the selected timeslot value
+    const activeTimeSlot = bookingConfig.timeSlots.find(
+      (ts) => ts.value === timeSlot
+    );
+
+    return seenVehicleIds.map((vehicleId) => {
+      const vehicle = findVehicleForPricingId(vehicleId, vehicles);
+      const priceEntry = pricingMatrix.find(
+        (p) =>
+          p.vehicleId === vehicleId &&
+          p.timeSlotId === (activeTimeSlot?.id ?? "")
+      );
+      return {
+        label: vehicle?.name ?? vehicleId,
+        value: vehicleId,
+        description: vehicle?.description,
+        imageUrl: vehicle?.imageUrl,
+        featureList: vehicle?.featureList,
+        numberOfGuests: vehicle?.capacity?.recommended,
+        price: priceEntry?.pricing?.local?.amount,
+        currency: priceEntry?.pricing?.local?.currency,
+        displayPriceUsd: priceEntry?.pricing?.usd
+          ? {
+              amount: priceEntry.pricing.usd.amount,
+              currency: priceEntry.pricing.usd.currency,
+            }
+          : undefined,
+      };
+    });
+  }, [bookingConfig, timeSlot]);
+
+  // Extract currency from selected vehicle option
+  const selectedVehicleOption = vehicleOptions.find((v) => v.value === vehicle);
+  const currency = selectedVehicleOption?.currency ?? getDefaultCurrency();
 
   // Validation: all fields must be filled
   const errors = React.useMemo(() => {
@@ -261,21 +287,14 @@ function BookingPageContent() {
       : pickup.country || null;
     const locationTimezone = getTimezoneForLocation(locationId || "", pickupCountry || undefined);
 
-    // For jeep/safari vehicle bookings: convert date + timeSlot to startDateTime
-    // Map timeSlot to a default time (morning: 09:00, afternoon: 12:00, night: 18:00, full-day: 09:00)
+    // Derive start time from config timeSlot's timeRange (e.g. "06:00 - 10:00" → "06:00:00")
     const getTimeForSlot = (slot: string): string => {
-      switch (slot) {
-        case "morning":
-          return "09:00:00";
-        case "afternoon":
-          return "12:00:00";
-        case "night":
-          return "18:00:00";
-        case "full-day":
-          return "09:00:00";
-        default:
-          return "09:00:00";
+      const configSlot = bookingConfig?.timeSlots.find((ts) => ts.value === slot);
+      if (configSlot?.timeRange) {
+        const startPart = configSlot.timeRange.split("-")[0].trim();
+        if (/^\d{2}:\d{2}$/.test(startPart)) return `${startPart}:00`;
       }
+      return "09:00:00";
     };
 
     // Convert local time in location's timezone to UTC
@@ -378,20 +397,14 @@ function BookingPageContent() {
         : pickup.country || null;
       const locationTimezone = getTimezoneForLocation(locationId || "", pickupCountry || undefined);
 
-      // For jeep/safari vehicle bookings: convert date + timeSlot to startDateTime
+      // Derive start time from config timeSlot's timeRange (e.g. "06:00 - 10:00" → "06:00:00")
       const getTimeForSlot = (slot: string): string => {
-        switch (slot) {
-          case "morning":
-            return "09:00:00";
-          case "afternoon":
-            return "12:00:00";
-          case "night":
-            return "18:00:00";
-          case "full-day":
-            return "09:00:00";
-          default:
-            return "09:00:00";
+        const configSlot = bookingConfig?.timeSlots.find((ts) => ts.value === slot);
+        if (configSlot?.timeRange) {
+          const startPart = configSlot.timeRange.split("-")[0].trim();
+          if (/^\d{2}:\d{2}$/.test(startPart)) return `${startPart}:00`;
         }
+        return "09:00:00";
       };
 
       // Convert local time in location's timezone to UTC
@@ -520,10 +533,10 @@ function BookingPageContent() {
 
         <div className="p-6">
           {/* Error displays for data loading */}
-          {vehicleTypesError && (
+          {configError && (
             <div className="mb-4">
               <ErrorDisplay
-                error={vehicleTypesError}
+                error={configError}
                 onRetry={() => {
                   window.location.reload();
                 }}
@@ -616,7 +629,28 @@ function BookingPageContent() {
                 setChildren(val);
                 setTouched((prev) => ({ ...prev, group: true }));
               }}
+              maxAdults={Math.max(0, 6 - children)}
+              maxChildren={Math.max(0, 6 - adults)}
             />
+            {adults + children >= 6 && (
+              <div className="mt-3 flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3">
+                <svg
+                  className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-xs text-amber-700">
+                  <span className="font-semibold">Maximum 6 guests per booking.</span>{" "}
+                  Travelling with a larger group? Simply{" "}
+                  <span className="font-semibold">make a second booking</span>{" "}
+                  for the remaining guests — same date and time works great!
+                </p>
+              </div>
+            )}
             {touched.group && errors.group && (
               <p className="mt-1 text-xs text-red-500">{errors.group}</p>
             )}
@@ -626,9 +660,9 @@ function BookingPageContent() {
             <h2 className="font-bold text-lg mb-2 text-foreground">
               Vehicle Type
             </h2>
-            {vehicleTypesLoading ? (
+            {configLoading ? (
               <Loader />
-            ) : vehicleTypesError ? (
+            ) : configError ? (
               <div className="text-red-600 dark:text-red-400">Failed to load vehicle types.</div>
             ) : (
               <VehicleTypeSelector
