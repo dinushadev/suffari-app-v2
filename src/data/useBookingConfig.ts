@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 const CONFIG_API_BASE_URL =
-  process.env.NEXT_PUBLIC_CONFIG_API_BASE_URL || "http://localhost:3004";
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3004";
 
 export interface ConfigLocation {
   id: string;
