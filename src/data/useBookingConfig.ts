@@ -75,7 +75,7 @@ export interface BookingConfig {
 
 const fetchBookingConfig = async (locationId: string): Promise<BookingConfig> => {
   const res = await fetch(
-    `${CONFIG_API_BASE_URL}/api/config/safari-booking/${locationId}`
+    `${CONFIG_API_BASE_URL}/config/safari-booking/${locationId}`
   );
   if (!res.ok) throw new Error("Failed to fetch booking config");
   const json = await res.json();
