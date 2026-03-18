@@ -574,7 +574,6 @@ function BookingPageContent() {
               fromGate={fromGate}
               onToggleGate={(val) => {
                 setFromGate(val);
-                setTouched((prev) => ({ ...prev, pickup: true }));
               }}
             />
             {touched.pickup && errors.pickup && (
