@@ -5,9 +5,16 @@ export interface Booking {
   resourceTypeId: string;
   resourceType: { id: string; name: string; description: string; category: string; currency?: string };
   location: { id: string; name: string; address: string; description: string; about: string; images: string[]; facilities: string[]; };
+  resource?: {
+    vehicleId: string;
+    plateNumber: string;
+    name: string;
+    imageUrls: string[];
+    drivers: { id: string; firstName: string; lastName: string }[];
+  } | null;
   resourceId: string | null;
   resourceOwnerId: string | null;
-  status: 'initiated' | 'confirmed' | 'canceled' | 'upcoming' | 'past'; // Broadened to include all possible statuses
+  status: 'initiated' | 'confirmed' | 'fulfilled' | 'canceled' | 'upcoming' | 'past';
   paymentAmount: string;
   schedule: { 
     date?: string; 

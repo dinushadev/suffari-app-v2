@@ -78,10 +78,7 @@ const BookingHistoryPage = () => {
           : "12:00:00"
       }`,
     }))
-    .sort(
-      (a, b) =>
-        new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
-    ); // Sort by date, newest first
+;
 
   return (
     <div className="container mx-auto py-8 px-8">
