@@ -155,7 +155,7 @@ const GroupSizeSelector: React.FC<GroupSizeSelectorProps> = ({
           <p className="text-sm text-foreground">
             Total guests:{" "}
             <span className="font-semibold">{totalGuests}</span>
-            <span className="text-muted-foreground"> / 6</span>
+            {/* <span className="text-muted-foreground"> / 6</span> */}
           </p>
         </div>
       )}
