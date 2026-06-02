@@ -25,7 +25,7 @@ async function fetchResourceAvailability(
 ): Promise<ResourceAvailabilityResponse> {
   const params = new URLSearchParams({ from: startDate, to: endDate });
   return apiClient<ResourceAvailabilityResponse>(
-    `/resources/${resourceId}/availability?${params.toString()}`
+    `/resources/${resourceId}/available?${params.toString()}`
   );
 }
 

@@ -12,3 +12,4 @@ export { default as CustomPickupLocationInput } from './CustomPickupLocationInpu
 export { MessageBubble } from './MessageBubble';
 export { MessageInput } from './MessageInput';
 export { default as StarRatingInput } from './StarRatingInput';
+export { default as ServiceFilterBar } from './ServiceFilterBar';

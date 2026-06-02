@@ -29,7 +29,7 @@ export default function Home() {
           Responsible Tourism
         </p> */}
 
-        <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 max-w-4xl">
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-5xl">
           {/* Guide Tile */}
           <button
             onClick={() => handleNavigate("/guide")}
@@ -73,6 +73,24 @@ export default function Home() {
                 </h2>
                 <p className="text-white/90 text-sm sm:text-base drop-shadow-md">
                 Explore remote landscapes
+                </p>
+              </div>
+            </div>
+          </button>
+
+          {/* Services Tile */}
+          <button
+            onClick={() => handleNavigate("/services")}
+            className="group relative overflow-hidden rounded-3xl bg-card border-2 border-border hover:border-primary transition-all duration-300 shadow-lg hover:shadow-2xl transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+          >
+            <div className="relative aspect-[4/3] w-full">
+              <div className="absolute inset-0 bg-gradient-to-br from-violet-500 via-blue-600 to-cyan-500 group-hover:from-violet-600 group-hover:via-blue-700 group-hover:to-cyan-600 transition-all duration-500" />
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                <h2 className="text-3xl sm:text-4xl font-bold text-white mb-2 drop-shadow-lg">
+                  Explore Services
+                </h2>
+                <p className="text-white/90 text-sm sm:text-base drop-shadow-md">
+                  Local guides, drivers & more
                 </p>
               </div>
             </div>

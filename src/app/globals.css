@@ -87,6 +87,12 @@
 
 body {
   font-family: var(--font-common);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+body::-webkit-scrollbar {
+  display: none;
 }
 
 /* Typography */
@@ -124,6 +130,11 @@ p, h1, h2, h3, h4, h5, h6 {
     0%   {clip-path:polygon(50% 50%,0 0,0 0,0 0,0 0,0 0)}
     50%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 0,100% 0,100% 0)}
     75%, 100%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,100% 100%,100% 100%)}
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .main {
